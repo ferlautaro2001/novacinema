@@ -1,0 +1,195 @@
+/* Tokens de NovaCinema. Los tengo acá adentro a propósito: son la base de todo
+   lo visual, así que prefiero que el proyecto compile solo, sin depender de una
+   carpeta externa. Salen del sistema de diseño, así que si cambia un color lo
+   cambio allá y vuelvo a copiar este archivo; no lo edito a mano. */
+
+:root,
+[data-theme="dark"] {
+  --surface-000: #0b0608;
+  --surface-100: #14090b;
+  --surface-200: #1f1013;
+  --surface-300: #2b181c;
+  --surface-inverse: #faf6f0;
+  --scrim: rgba(11, 6, 8, 0.72);
+  --ink-100: #fff4e4;
+  --ink-200: #c9b3a6;
+  --ink-300: #9a8478;
+  --ink-inverse: #14090b;
+  --brand-500: #d81e2c;
+  --brand-600: #a8121d;
+  --brand-400: #f0434f;
+  --brand-700: #6e0a12;
+  --brand-tint: #2e1013;
+  --on-brand: #ffffff;
+  --gold-500: #f5c542;
+  --gold-600: #d9a521;
+  --gold-tint: #2f2410;
+  --on-gold: #2b1206;
+  --success: #2fa36b;
+  --success-tint: #10281d;
+  --warning: #e8a33a;
+  --warning-tint: #2e2210;
+  --danger: #e0413c;
+  --danger-tint: #331312;
+  --info: #4fa3e0;
+  --info-tint: #0f2231;
+  --seat-free: #4a3038;
+  --seat-selected: #f5c542;
+  --seat-taken: #7a5a52;
+  --seat-accessible: #4fa3e0;
+  --screen-glow: #f5c542;
+  --border-100: #3a2328;
+  --border-200: #6b4149;
+  --focus-ring: #f5c542;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 8px 20px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 24px 48px rgba(0, 0, 0, 0.65);
+  --glow-marquee: 0 0 24px rgba(245, 197, 66, 0.45);
+}
+
+[data-theme="light"] {
+  --surface-000: #ffffff;
+  --surface-100: #faf6f0;
+  --surface-200: #ffffff;
+  --surface-300: #f2e9dc;
+  --surface-inverse: #14090b;
+  --scrim: rgba(20, 9, 11, 0.56);
+  --ink-100: #1a0f11;
+  --ink-200: #5a4a44;
+  --ink-300: #6e5c55;
+  --ink-inverse: #fff4e4;
+  --brand-500: #d81e2c;
+  --brand-600: #a8121d;
+  --brand-400: #e0313d;
+  --brand-700: #6e0a12;
+  --brand-tint: #fde8e9;
+  --on-brand: #ffffff;
+  --gold-500: #f5c542;
+  --gold-600: #96690a;
+  --gold-tint: #fdf1d2;
+  --on-gold: #2b1206;
+  --success: #1b7a4b;
+  --success-tint: #e2f4ea;
+  --warning: #8a5a05;
+  --warning-tint: #fbeed4;
+  --danger: #b21e1a;
+  --danger-tint: #fbe3e2;
+  --info: #1667a8;
+  --info-tint: #e3eff9;
+  --seat-free: #d9c9b9;
+  --seat-selected: #f5c542;
+  --seat-taken: #8b7a6d;
+  --seat-accessible: #1667a8;
+  --screen-glow: #d9a521;
+  --border-100: #e3d6c7;
+  --border-200: #a8968a;
+  --focus-ring: #a8121d;
+  --shadow-sm: 0 1px 2px rgba(43, 18, 6, 0.12);
+  --shadow-md: 0 8px 20px rgba(43, 18, 6, 0.14);
+  --shadow-lg: 0 24px 48px rgba(43, 18, 6, 0.18);
+  --glow-marquee: 0 0 20px rgba(245, 197, 66, 0.55);
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-8: 48px;
+  --space-10: 64px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+  --font-display: "Anton", "Haettenschweiler", "Arial Narrow", sans-serif;
+  --font-text: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", monospace;
+}
+
+/* Marquesina */
+.marquee-xl {
+  font-family: var(--font-display);
+  font-size: 56px;
+  line-height: 52px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.marquee-lg {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 40px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.marquee-md {
+  font-family: var(--font-display);
+  font-size: 28px;
+  line-height: 30px;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+}
+
+/* Texto */
+.title-lg {
+  font-family: var(--font-text);
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 700;
+}
+
+.title-md {
+  font-family: var(--font-text);
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 700;
+}
+
+.body {
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 400;
+}
+
+.body-strong {
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+}
+
+.caption {
+  font-family: var(--font-text);
+  font-size: 13px;
+  line-height: 18px;
+  font-weight: 500;
+}
+
+.overline {
+  font-family: var(--font-text);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+/* Datos */
+.code {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.seat-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 12px;
+  font-weight: 600;
+}

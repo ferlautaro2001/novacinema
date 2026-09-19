@@ -1,0 +1,6 @@
+/* Estilos globales. Importo primero los tokens porque todo lo demás los usa. */
+
+@import './styles/tokens.css';
+@import './styles/base.css';
+@import './styles/tema-claro.css';
+@import './styles/impresion.css';
