@@ -1,0 +1,13 @@
+/* Arranco con lo mínimo para que el tema oscuro se vea. El layout de verdad
+   lo armo en la pantalla principal, no acá. */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--surface-000);
+  color: var(--ink-100);
+  font-family: var(--font-text);
+}

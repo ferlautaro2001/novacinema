@@ -1,0 +1,58 @@
+# Dependencias
+/node_modules
+
+# Salida del build y cache de Angular
+/dist
+/tmp
+/out-tsc
+/.angular/cache
+*.tsbuildinfo
+npm-debug.log
+yarn-error.log
+
+# Nada de credenciales en el repo. El .env real queda solo en mi maquina;
+# lo que se versiona es .env.example con los valores en blanco.
+.env
+.env.*
+!.env.example
+
+# Los environments con credenciales reales. En el repo queda solo el
+# environment.example.ts para que se sepa que hay que crear.
+/src/environments/environment.ts
+/src/environments/environment.development.ts
+
+# Mis scripts de tooling, los llevo por fuera del repo
+/scripts
+
+# La base la administro aparte, con el CLI de Supabase; no la versiono acá
+/supabase
+
+# Material de cátedra y documentación del TP: son repos y documentos que
+# llevo por fuera del código
+/A344
+/programacion-iv-2026-c2
+/epics
+/design-system
+/CLAUDE.md
+/Cursada.md
+/NovaCinema.md
+/Estructura-del-proyecto.md
+/Modelo-de-datos.md
+
+# Editores
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+.project
+.classpath
+.settings/
+.history/
+*.launch
+*.sublime-workspace
+
+# Sistema
+.DS_Store
+Thumbs.db
