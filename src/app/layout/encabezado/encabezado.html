@@ -5,14 +5,25 @@
       Nova<span class="marca-acento">Cinema</span>
     </a>
     <nc-navegacion />
-    <!-- Mi cuenta y Salir se suman en US-02.04. -->
     <div class="sesion">
       @if (auth.perfil(); as perfil) {
         <span class="saludo body-strong">Hola, {{ perfil.nombre }}</span>
+        <a class="nc-btn nc-btn--ghost nc-btn--sm" routerLink="/cuenta/perfil">Mi perfil</a>
+        <button
+          type="button"
+          class="nc-btn nc-btn--secondary nc-btn--sm"
+          [disabled]="cerrando()"
+          (click)="cerrarSesion()"
+        >
+          {{ cerrando() ? 'Cerrando…' : 'Cerrar sesión' }}
+        </button>
       } @else if (!auth.usuario()) {
         <a class="nc-btn nc-btn--ghost nc-btn--sm" routerLink="/auth/login">Ingresar</a>
         <a class="nc-btn nc-btn--secondary nc-btn--sm" routerLink="/auth/registro">Crear cuenta</a>
       }
     </div>
+    @if (error(); as mensaje) {
+      <p class="error caption" role="alert">{{ mensaje }}</p>
+    }
   </div>
 </header>

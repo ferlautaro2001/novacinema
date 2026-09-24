@@ -34,3 +34,8 @@
 .saludo {
   color: var(--ink-100);
 }
+
+.error {
+  flex-basis: 100%;
+  color: var(--danger);
+}
