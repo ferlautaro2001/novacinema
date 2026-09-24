@@ -1,4 +1,5 @@
 :host{display:block;width:100%;height:100%;--s-bg:#06070b;--s-p:rgba(14,16,24,.88);--s-b:rgba(255,255,255,.1);--s-t:#e9ebf3;--s-m:#8c91a5;--s-a:#4f7dff}
+[hidden]{display:none !important}
 .mapa-wrapper{position:relative;width:100%;height:100%;min-height:580px;background:var(--s-bg);color:var(--s-t);display:flex;flex-direction:column;overflow:hidden;border-radius:12px;border:1px solid var(--s-b)}
 .mapa-topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--s-b);background:rgba(10,12,18,.95);backdrop-filter:blur(10px);z-index:10;gap:12px;flex-wrap:wrap}
 .vista-seg{display:flex;background:rgba(255,255,255,.05);border:1px solid var(--s-b);border-radius:999px;padding:3px;gap:4px}
@@ -15,6 +16,7 @@
 .ref-ic{width:12px;height:12px}
 .mapa-viewport{position:relative;flex:1;display:flex;overflow:hidden}
 .mapa-2d-contenedor{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:24px 16px 70px}
+.mapa-2d-contenedor[hidden],.mapa-3d-contenedor[hidden]{display:none !important}
 .pantalla-curva{width:55%;max-width:540px;height:10px;margin-bottom:24px;border-top:3px solid var(--s-a);border-radius:50% 50% 0 0/100% 100% 0 0;display:flex;justify-content:center;box-shadow:0 -3px 14px rgba(79,125,255,.35)}
 .pantalla-curva span{font-size:.6rem;letter-spacing:.2em;color:var(--s-m);margin-top:10px}
 .mapa-cuadricula{display:flex;flex-direction:column;gap:4px;transform-origin:center top}

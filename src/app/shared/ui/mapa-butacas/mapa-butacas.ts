@@ -165,6 +165,10 @@ export class MapaButacasComponent {
     this.ocultarTooltip();
     if (nueva === '2d') {
       this.ajustarZoom();
+    } else {
+      setTimeout(() => {
+        this.sala3dRef()?.onResize();
+      }, 50);
     }
   }
 

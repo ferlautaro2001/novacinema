@@ -79,7 +79,7 @@ export class Sala3dDirective implements OnInit, OnChanges, OnDestroy {
   private beamMat: THREE.ShaderMaterial | null = null;
   private dustMat: THREE.ShaderMaterial | null = null;
   private hemi: THREE.HemisphereLight | null = null;
-  private key: THREE.DirectionalLight | null = null;
+  private key: THREE.SpotLight | null = null;
   private bloom: UnrealBloomPass | null = null;
 
   private fly: {
@@ -504,9 +504,15 @@ export class Sala3dDirective implements OnInit, OnChanges, OnDestroy {
     scene.add(hemi);
     this.hemi = hemi;
 
-    const key = new THREE.DirectionalLight(0xfff5eb, 1200);
-    key.position.set(0, 28, 48);
-    key.target.position.set(0, 4, 18);
+    const key = new THREE.SpotLight(0xdfe4ff, 2600, 0, 0.95, 0.85, 2);
+    key.position.set(0, CEIL - 1, 18);
+    key.target.position.set(0, 3, 20);
+    key.castShadow = true;
+    key.shadow.mapSize.set(1024, 1024);
+    key.shadow.camera.near = 5;
+    key.shadow.camera.far = 50;
+    key.shadow.bias = -0.0004;
+    key.shadow.normalBias = 0.03;
     scene.add(key, key.target);
     this.key = key;
 
@@ -525,7 +531,7 @@ export class Sala3dDirective implements OnInit, OnChanges, OnDestroy {
       new RoundedBoxGeometry(w, h, d, 2, r);
 
     const bodyMat = new THREE.MeshStandardMaterial({
-      color: 0x434857,
+      color: 0xffffff,
       roughness: 0.78,
     });
     const armMat = new THREE.MeshStandardMaterial({
@@ -711,18 +717,22 @@ export class Sala3dDirective implements OnInit, OnChanges, OnDestroy {
       : '';
   }
 
-  private onResize(): void {
+  onResize(): void {
     if (!this.renderer || !this.camera) return;
     const canvas = this.el.nativeElement;
     const parent = canvas.parentElement || canvas;
     const width = parent.clientWidth || 800;
     const height = parent.clientHeight || 600;
+    if (width <= 0 || height <= 0) return;
 
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
     if (this.composer) {
       this.composer.setSize(width, height);
+    }
+    if (this.bloom) {
+      this.bloom.resolution.set(width, height);
     }
   }
 
