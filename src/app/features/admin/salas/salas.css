@@ -1,0 +1,120 @@
+.salas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.descripcion,
+.estado,
+.vacio {
+  color: var(--ink-200);
+}
+
+.aviso,
+.error {
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-md);
+  background: var(--success-tint);
+  color: var(--ink-100);
+}
+
+.error {
+  border-left-color: var(--danger);
+  background: var(--danger-tint);
+}
+
+.tabla-contenedor {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  background: var(--surface-200);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th,
+.tabla td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-100);
+}
+
+.tabla th {
+  color: var(--ink-300);
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.accion {
+  text-align: right;
+}
+
+.botones-accion {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.badge-estado {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-sm);
+  color: var(--ink-100);
+}
+
+.badge-activa {
+  border-color: var(--success);
+  background: var(--success-tint);
+  color: var(--success-contrast, var(--ink-100));
+}
+
+.badge-inactiva {
+  border-color: var(--border-200);
+  background: var(--surface-300);
+  color: var(--ink-300);
+}
+
+.btn-secundario,
+.btn-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  background: var(--surface-300);
+  color: var(--ink-100);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-secundario:hover,
+.btn-toggle:hover {
+  background: var(--surface-400, #222638);
+}
+
+.btn-peligro {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.btn-peligro:hover {
+  background: var(--danger-tint);
+}
+
+.btn-toggle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

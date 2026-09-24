@@ -12,6 +12,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 export class Panel {
   secciones = [
     { ruta: 'peliculas', texto: 'Películas' },
+    { ruta: 'salas', texto: 'Salas' },
     { ruta: 'facturacion', texto: 'Facturación' },
     { ruta: 'empleados', texto: 'Empleados' },
   ];

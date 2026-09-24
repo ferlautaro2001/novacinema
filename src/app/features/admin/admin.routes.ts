@@ -41,6 +41,11 @@ export const adminRoutes: Routes = [
         title: 'Panel · Empleados · NovaCinema',
         loadComponent: () => import('./empleados/empleados').then((m) => m.Empleados),
       },
+      {
+        path: 'salas',
+        title: 'Panel · Salas · NovaCinema',
+        loadComponent: () => import('./salas/salas').then((m) => m.Salas),
+      },
     ],
   },
 ];
