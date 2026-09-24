@@ -1,6 +1,8 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { AuthService } from '../../core/auth/auth-service';
+import { SiRol } from '../../shared/directivas/si-rol';
 
 interface Enlace {
   ruta: string;
@@ -9,17 +11,22 @@ interface Enlace {
 
 @Component({
   selector: 'nc-navegacion',
-  imports: [NgTemplateOutlet, RouterLink, RouterLinkActive],
+  imports: [NgTemplateOutlet, RouterLink, RouterLinkActive, SiRol],
   templateUrl: './navegacion.html',
   styleUrl: './navegacion.css',
 })
 export class Navegacion {
-  // Secciones que ve cualquier visitante. Los grupos del cliente, el empleado y el
-  // administrador se suman en US-02.05, cada uno detrás de *appSiRol.
+  protected readonly auth = inject(AuthService);
+
+  // Secciones que ve cualquier visitante.
   protected readonly publicos: Enlace[] = [
     { ruta: '/inicio', texto: 'Inicio' },
     { ruta: '/cartelera', texto: 'Cartelera' },
     { ruta: '/proximamente', texto: 'Próximamente' },
     { ruta: '/candy', texto: 'Candy' },
   ];
+
+  // Secciones del personal, cada grupo detrás de *appSiRol.
+  protected readonly boleteria: Enlace = { ruta: '/boleteria', texto: 'Boletería' };
+  protected readonly panel: Enlace = { ruta: '/admin', texto: 'Panel' };
 }

@@ -1,4 +1,6 @@
 import { Routes } from '@angular/router';
+import { rolGuard } from './core/guards/rol-guard';
+import { sesionGuard } from './core/guards/sesion-guard';
 
 // Cada pantalla se carga recién cuando se visita. Los grupos de ingreso, Panel y
 // boletería van en su propio archivo de rutas para que crezcan sin tocar este.
@@ -27,6 +29,7 @@ export const routes: Routes = [
   },
   {
     path: 'cuenta',
+    canActivate: [sesionGuard],
     loadChildren: () => import('./features/cuenta/cuenta.routes').then((m) => m.cuentaRoutes),
   },
   {
@@ -35,10 +38,14 @@ export const routes: Routes = [
   },
   {
     path: 'admin',
+    canMatch: [rolGuard],
+    data: { roles: ['administrador'] },
     loadChildren: () => import('./features/admin/admin.routes').then((m) => m.adminRoutes),
   },
   {
     path: 'boleteria',
+    canMatch: [rolGuard],
+    data: { roles: ['empleado', 'administrador'] },
     loadChildren: () =>
       import('./features/boleteria/boleteria.routes').then((m) => m.boleteriaRoutes),
   },
