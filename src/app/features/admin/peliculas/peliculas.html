@@ -31,6 +31,7 @@
         <th scope="col">Duración</th>
         <th scope="col">Estreno</th>
         <th scope="col">Estado</th>
+        <th scope="col">Acciones</th>
       </tr>
     </nc-tabla-datos>
   </ng-container>
@@ -45,7 +46,7 @@
           loading="lazy"
         />
         <div>
-          <span class="body-strong titulo">{{ p.titulo }}</span>
+          <a class="body-strong titulo" [routerLink]="[p.id]">{{ p.titulo }}</a>
           <p class="caption">{{ generos(p) }}</p>
           <p class="caption sinopsis">{{ p.sinopsis | textoLargo: 80 }}</p>
         </div>
@@ -55,6 +56,6 @@
     <td class="code">{{ p.duracion_min | duracion }}</td>
     <td class="caption">{{ p.fecha_estreno | date: 'dd/MM/yyyy' }}</td>
     <td class="caption">{{ nombreEstado(p) }}</td>
-
+    <td><a class="nc-btn nc-btn--ghost nc-btn--sm" [routerLink]="[p.id]">Editar</a></td>
   </ng-template>
 </section>

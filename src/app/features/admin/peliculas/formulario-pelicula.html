@@ -100,6 +100,7 @@
               </p>
             }
             <nc-selector-fecha
+              [fechaInicial]="form.controls.fecha_estreno.value"
               (fechaElegida)="elegirFecha($event)"
             />
             @if (invalido('fecha_estreno')) {

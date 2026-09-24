@@ -1,7 +1,7 @@
 import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { CatalogoService } from '../../../core/data/catalogo-service';
 import { PeliculasService, errorPelicula } from '../../../core/data/peliculas-service';
@@ -27,6 +27,7 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
   private readonly catalogo = inject(CatalogoService);
   private readonly peliculas = inject(PeliculasService);
   private readonly storage = inject(StorageService);
+  private readonly ruta = inject(ActivatedRoute);
   private readonly router = inject(Router);
   protected readonly form = this.fb.group({
     titulo: ['', textoRequerido],
@@ -56,15 +57,19 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
   private rutaSubida = '';
   private guardado = false;
   private secuencia = 0;
+  private suscripcion?: Subscription;
   private eventos?: Subscription;
   protected readonly revision = signal(0);
 
   ngOnInit(): void {
     this.eventos = this.form.events.subscribe(() => this.revision.update((v) => v + 1));
-    void this.cargar();
+    this.suscripcion = this.ruta.paramMap.subscribe((params) => {
+      void this.cargar(params.get('id'));
+    });
   }
   ngOnDestroy(): void {
     this.secuencia++;
+    this.suscripcion?.unsubscribe();
     this.eventos?.unsubscribe();
     if (this.objetoUrl) URL.revokeObjectURL(this.objetoUrl);
     // No se borra una subida aquí: una respuesta de red ambigua podría haberla guardado.
@@ -78,26 +83,69 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
       evento.returnValue = '';
     }
   }
-  protected async reintentar(): Promise<void> { await this.cargar(); }
-  private async cargar(): Promise<void> {
+  protected async reintentar(): Promise<void> {
+    await this.cargar(this.ruta.snapshot.paramMap.get('id'));
+  }
+  private async cargar(id: string | null): Promise<void> {
     const secuencia = ++this.secuencia;
-    this.cargando.set(true); this.falloCarga.set(false); this.error.set('');
+    this.cargando.set(true);
+    this.falloCarga.set(false);
+    this.error.set('');
     try {
-      const [generos, clasificaciones] = await Promise.all([
-        this.catalogo.findAllGeneros(), this.catalogo.findAllClasificaciones(),
+      const [generos, clasificaciones, pelicula, bloqueada] = await Promise.all([
+        this.catalogo.findAllGeneros(),
+        this.catalogo.findAllClasificaciones(),
+        id ? this.peliculas.buscar(id) : Promise.resolve(null),
+        id ? this.peliculas.tieneFuncionesFuturas(id) : Promise.resolve(false),
       ]);
       if (secuencia !== this.secuencia) return;
-      this.generos.set(generos.map(g => ({ ...g, nombre: nombreGenero(g.nombre) }))
-        .filter(g => g.activo && GENEROS_PELICULA.includes(g.nombre)));
+      this.original.set(pelicula);
+      this.duracionBloqueada.set(bloqueada);
+      // Las altas ofrecen los 13 géneros del backlog. Una edición conserva también
+      // géneros importados que ya tenía la película, sin reclasificarla a escondidas.
+      this.generos.set(
+        generos
+          .map((g) => ({ ...g, nombre: nombreGenero(g.nombre) }))
+          .filter(
+            (g) =>
+              g.activo &&
+              (GENEROS_PELICULA.includes(g.nombre) ||
+                pelicula?.pelicula_generos.some((pg) => pg.genero.id === g.id)),
+          ),
+      );
       this.clasificaciones.set(clasificaciones);
       this.form.controls.generos.clear();
-      for (const g of this.generos()) this.form.controls.generos.push(this.fb.control(false));
+      for (const g of this.generos()) {
+        this.form.controls.generos.push(
+          this.fb.control(pelicula?.pelicula_generos.some((pg) => pg.genero.id === g.id) ?? false),
+        );
+      }
+      this.form.patchValue(
+        pelicula ?? {
+          titulo: '',
+          sinopsis: '',
+          duracion_min: 120,
+          clasificacion_id: 0,
+          imagen_path: '',
+          fecha_estreno: '',
+          estado: 'proximamente',
+        },
+      );
+      if (bloqueada) this.form.controls.duracion_min.disable();
+      else this.form.controls.duracion_min.enable();
+      this.preview.set(pelicula ? this.storage.urlPublica(pelicula.imagen_path) : '');
+      this.archivo = null;
+      this.rutaSubida = '';
+      this.guardado = false;
+      this.form.markAsPristine();
     } catch {
       if (secuencia === this.secuencia) {
         this.falloCarga.set(true);
-        this.error.set('No se pudieron cargar las opciones. Volvé a intentarlo.');
+        this.error.set('No se pudo abrir la película o cargar sus opciones. Volvé a intentarlo.');
       }
-    } finally { if (secuencia === this.secuencia) this.cargando.set(false); }
+    } finally {
+      if (secuencia === this.secuencia) this.cargando.set(false);
+    }
   }
   protected invalido(campo: keyof typeof this.form.controls): boolean {
     this.revision();
