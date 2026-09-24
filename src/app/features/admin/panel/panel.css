@@ -1,0 +1,52 @@
+.panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+
+@media (min-width: 900px) {
+  .panel {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+}
+
+.titulo {
+  margin-bottom: var(--space-2);
+  color: var(--ink-300);
+}
+
+.secciones ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+@media (min-width: 900px) {
+  .secciones ul {
+    flex-direction: column;
+  }
+}
+
+.seccion {
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--ink-200);
+  text-decoration: none;
+}
+
+.seccion:hover {
+  background: var(--surface-200);
+  color: var(--ink-100);
+}
+
+/* La sección actual lleva barra y aria-current, no solo color. */
+.seccion.activa {
+  border-left-color: var(--brand-400);
+  background: var(--surface-200);
+  color: var(--ink-100);
+}

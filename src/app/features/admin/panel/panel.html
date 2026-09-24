@@ -1,0 +1,21 @@
+<div class="panel">
+  <nav class="secciones" aria-label="Secciones del Panel">
+    <p class="overline titulo">Panel de administración</p>
+    <ul>
+      @for (s of secciones; track s.ruta) {
+        <li>
+          <a
+            class="seccion body-strong"
+            [routerLink]="s.ruta"
+            routerLinkActive="activa"
+            ariaCurrentWhenActive="page"
+            >{{ s.texto }}</a
+          >
+        </li>
+      }
+    </ul>
+  </nav>
+  <div class="contenido">
+    <router-outlet />
+  </div>
+</div>
