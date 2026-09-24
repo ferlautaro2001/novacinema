@@ -21,6 +21,8 @@ export class CampoTexto implements OnInit, OnDestroy {
   readonly etiqueta = input.required<string>();
   readonly tipo = input<TipoCampo>('text');
   readonly control = input.required<FormControl>();
+  // Valor de autocomplete del navegador: 'email', 'new-password', 'given-name'…
+  readonly autocompletar = input('off');
 
   protected readonly mostrarErrores = signal(false);
 
