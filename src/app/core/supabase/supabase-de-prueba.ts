@@ -42,6 +42,10 @@ export function supabaseDePrueba(sesionInicial: Session | null | false = null) {
         data: { user: null, session: null },
         error: new AuthError('Invalid login credentials', 400, 'invalid_credentials'),
       }),
+    signOut: (): Promise<{ error: AuthError | null }> => {
+      oyentes.forEach((oyente) => oyente('SIGNED_OUT', null));
+      return Promise.resolve({ error: null });
+    },
   };
   // Solo cubre la consulta del perfil: from('usuarios').select(...).eq('id', x).single()
   const from = (_tabla: string) => {

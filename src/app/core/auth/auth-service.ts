@@ -125,6 +125,15 @@ export class AuthService {
     return perfil.rol;
   }
 
+  // Cierra la sesión en Supabase y en este navegador. El evento SIGNED_OUT limpia
+  // usuario y perfil; lo hago también acá para que la pantalla cambie en el acto.
+  async cerrarSesion(): Promise<void> {
+    const { error } = await this.supS.Sup.auth.signOut();
+    if (error) throw new Error('No se pudo cerrar la sesión. Probá de nuevo.');
+    this._usuario.set(null);
+    this._perfil.set(null);
+  }
+
   private async cargarPerfil(id: string): Promise<PerfilSesion | null> {
     const { data, error } = await this.supS.Sup.from('usuarios')
       .select('nombre, apellido, rol:roles(codigo)')

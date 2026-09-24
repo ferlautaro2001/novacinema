@@ -52,6 +52,32 @@ describe('AuthService', () => {
     });
   });
 
+  describe('cierre de sesión (US-02.04)', () => {
+    it('cierra la sesión y borra usuario y perfil', async () => {
+      const supabase = supabaseDePrueba({ user: { id: 'u1' } } as Session);
+      supabase.perfiles.set('u1', { nombre: 'Ana', apellido: 'Pérez', rol: { codigo: 'cliente' } });
+      TestBed.configureTestingModule({ providers: [supabase.provider] });
+      const auth = TestBed.inject(AuthService);
+      await vi.waitFor(() => expect(auth.perfil()).not.toBeNull());
+
+      await auth.cerrarSesion();
+
+      expect(auth.usuario()).toBeNull();
+      expect(auth.perfil()).toBeNull();
+    });
+
+    it('avisa si Supabase no pudo cerrarla', async () => {
+      const supabase = supabaseDePrueba();
+      supabase.auth.signOut = () =>
+        Promise.resolve({ error: new AuthError('red', 500, 'unexpected_failure') });
+      TestBed.configureTestingModule({ providers: [supabase.provider] });
+
+      await expect(TestBed.inject(AuthService).cerrarSesion()).rejects.toThrow(
+        'No se pudo cerrar la sesión. Probá de nuevo.',
+      );
+    });
+  });
+
   describe('ingreso (US-02.03)', () => {
     function crear(respuesta: AuthTokenResponsePassword, rol = 'cliente') {
       const supabase = supabaseDePrueba();

@@ -1,0 +1,4 @@
+<h1 class="marquee-lg">Mi perfil</h1>
+@if (auth.perfil(); as perfil) {
+  <p class="title-md nombre">{{ perfil.nombre }} {{ perfil.apellido }}</p>
+}
