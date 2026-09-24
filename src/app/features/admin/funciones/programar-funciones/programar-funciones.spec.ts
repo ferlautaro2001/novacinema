@@ -2,12 +2,12 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { ProgramarFunciones } from './programar-funciones';
-import { PeliculasService } from '../../../core/data/peliculas-service';
+import { PeliculasService } from '../../../../core/data/peliculas-service';
 import {
   ItemResumenProgramacion,
   ProgramacionService,
-} from '../../../core/data/programacion-service';
-import type { PeliculaConCatalogo } from '../../../core/models/pelicula';
+} from '../../../../core/data/programacion-service';
+import type { PeliculaConCatalogo } from '../../../../core/models/pelicula';
 
 describe('ProgramarFunciones (US-04.03, US-04.04, US-04.05)', () => {
   let fixture: ComponentFixture<ProgramarFunciones>;

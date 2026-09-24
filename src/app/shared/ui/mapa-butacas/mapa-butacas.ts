@@ -1,6 +1,5 @@
 import {
   Component,
-  computed,
   ElementRef,
   inject,
   input,
@@ -57,11 +56,11 @@ export class MapaButacasComponent {
   sala3dRef = viewChild(Sala3dDirective);
   mapa2dContainer = viewChild<ElementRef<HTMLDivElement>>('mapScroll');
 
-  layoutBase = computed<LayoutSala>(() => {
+  layoutBase(): LayoutSala {
     return generarDistribucionSala();
-  });
+  }
 
-  butacasLista = computed<ButacaMapa[]>(() => {
+  butacasLista(): ButacaMapa[] {
     const custom = this.butacas();
     const base = custom && custom.length > 0 ? custom : this.layoutBase().butacas;
     const seleccionadasActuales =
@@ -75,9 +74,9 @@ export class MapaButacasComponent {
       ...b,
       seleccionada: seleccionadasActuales.includes(b.id),
     }));
-  });
+  }
 
-  filasVisuales = computed(() => {
+  filasVisuales() {
     const seats = this.butacasLista();
     const mapByFila: Record<string, (ButacaMapa | null)[]> = {};
 
@@ -99,33 +98,40 @@ export class MapaButacasComponent {
       esCirculacion: letra === 'K',
       posiciones: mapByFila[letra] || [],
     }));
-  });
+  }
 
-  zoomPorcentaje = computed(() => Math.round(this.zoom() * 100));
+  zoomPorcentaje(): number {
+    return Math.round(this.zoom() * 100);
+  }
 
-  totalComunes = computed(() =>
-    this.butacasLista().filter((b) => b.tipo === 'comun').length
-  );
-  totalVip = computed(() =>
-    this.butacasLista().filter((b) => b.tipo === 'vip').length
-  );
-  totalAccesibles = computed(() =>
-    this.butacasLista().filter((b) => b.tipo === 'accesible').length
-  );
-  totalButacas = computed(() => this.butacasLista().length);
+  totalComunes(): number {
+    return this.butacasLista().filter((b) => b.tipo === 'comun').length;
+  }
 
-  seleccionDetalle = computed(() => {
+  totalVip(): number {
+    return this.butacasLista().filter((b) => b.tipo === 'vip').length;
+  }
+
+  totalAccesibles(): number {
+    return this.butacasLista().filter((b) => b.tipo === 'accesible').length;
+  }
+
+  totalButacas(): number {
+    return this.butacasLista().length;
+  }
+
+  seleccionDetalle(): ButacaMapa[] {
     const sel = this.seleccionInterna();
     return sel
       .map((id) => this.butacasLista().find((b) => b.id === id))
       .filter((b): b is ButacaMapa => b !== undefined);
-  });
+  }
 
-  totalPrecio = computed(() => {
+  totalPrecio(): number {
     const list = this.seleccionDetalle();
     const pr = this.precios();
     return list.reduce((acc, b) => acc + (pr[b.tipo] || 8500), 0);
-  });
+  }
 
   nombreTipo(tipo: TipoButaca): string {
     switch (tipo) {

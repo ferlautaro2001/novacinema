@@ -1,8 +1,8 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { SalasService } from '../../../core/data/salas-service';
-import type { Sala } from '../../../core/models/sala';
-import { MapaButacasComponent } from '../../../shared/ui/mapa-butacas/mapa-butacas';
+import { SalasService } from '../../../../core/data/salas-service';
+import type { Sala } from '../../../../core/models/sala';
+import { MapaButacasComponent } from '../../../../shared/ui/mapa-butacas/mapa-butacas';
 
 @Component({
   selector: 'nc-sala-detalle',

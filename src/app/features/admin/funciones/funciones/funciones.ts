@@ -4,17 +4,17 @@ import { RouterLink } from '@angular/router';
 import {
   DetalleCancelacionFuncion,
   ProgramacionService,
-} from '../../../core/data/programacion-service';
-import { SalasService } from '../../../core/data/salas-service';
-import { PeliculasService } from '../../../core/data/peliculas-service';
-import type { Funcion } from '../../../core/models/funcion';
-import type { Sala } from '../../../core/models/sala';
-import type { PeliculaConCatalogo } from '../../../core/models/pelicula';
-import { SelectorFecha } from '../../../shared/ui/selector-fecha/selector-fecha';
-import { TablaDatos } from '../../../shared/ui/tabla-datos/tabla-datos';
-import { Cargando, EstadoConsulta } from '../../../shared/directivas/cargando';
-import { Modal } from '../../../shared/ui/modal/modal';
-import { FocoInicial } from '../../../shared/directivas/foco-inicial';
+} from '../../../../core/data/programacion-service';
+import { SalasService } from '../../../../core/data/salas-service';
+import { PeliculasService } from '../../../../core/data/peliculas-service';
+import type { Funcion } from '../../../../core/models/funcion';
+import type { Sala } from '../../../../core/models/sala';
+import type { PeliculaConCatalogo } from '../../../../core/models/pelicula';
+import { SelectorFecha } from '../../../../shared/ui/selector-fecha/selector-fecha';
+import { TablaDatos } from '../../../../shared/ui/tabla-datos/tabla-datos';
+import { Cargando, EstadoConsulta } from '../../../../shared/directivas/cargando';
+import { Modal } from '../../../../shared/ui/modal/modal';
+import { FocoInicial } from '../../../../shared/directivas/foco-inicial';
 
 export interface FuncionFila {
   id: string;

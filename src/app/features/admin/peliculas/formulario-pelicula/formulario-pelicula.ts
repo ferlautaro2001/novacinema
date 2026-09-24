@@ -3,17 +3,17 @@ import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { CatalogoService } from '../../../core/data/catalogo-service';
-import { PeliculasService, errorPelicula } from '../../../core/data/peliculas-service';
-import { StorageService, validarPortada } from '../../../core/data/storage-service';
-import { FormularioConCambios } from '../../../core/guards/cambios-pendientes-guard';
-import { Clasificacion as ClasificacionCatalogo, Genero } from '../../../core/models/catalogo';
-import { EstadoPelicula } from '../../../core/models/enumerados';
-import { GENEROS_PELICULA, nombreGenero, PeliculaConCatalogo } from '../../../core/models/pelicula';
-import { CampoTexto } from '../../../shared/ui/campo-texto/campo-texto';
-import { ErrorCampo } from '../../../shared/ui/error-campo/error-campo';
-import { SelectorFecha } from '../../../shared/ui/selector-fecha/selector-fecha';
-import { alMenosUno, textoRequerido } from '../../../shared/validadores/al-menos-uno';
+import { CatalogoService } from '../../../../core/data/catalogo-service';
+import { PeliculasService, errorPelicula } from '../../../../core/data/peliculas-service';
+import { StorageService, validarPortada } from '../../../../core/data/storage-service';
+import { FormularioConCambios } from '../../../../core/guards/cambios-pendientes-guard';
+import { Clasificacion as ClasificacionCatalogo, Genero } from '../../../../core/models/catalogo';
+import { EstadoPelicula } from '../../../../core/models/enumerados';
+import { GENEROS_PELICULA, nombreGenero, PeliculaConCatalogo } from '../../../../core/models/pelicula';
+import { CampoTexto } from '../../../../shared/ui/campo-texto/campo-texto';
+import { ErrorCampo } from '../../../../shared/ui/error-campo/error-campo';
+import { SelectorFecha } from '../../../../shared/ui/selector-fecha/selector-fecha';
+import { alMenosUno, textoRequerido } from '../../../../shared/validadores/al-menos-uno';
 
 @Component({
   selector: 'nc-formulario-pelicula',

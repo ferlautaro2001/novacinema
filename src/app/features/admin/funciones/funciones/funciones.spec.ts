@@ -1,12 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Funciones } from './funciones';
-import { ProgramacionService } from '../../../core/data/programacion-service';
-import { SalasService } from '../../../core/data/salas-service';
-import { PeliculasService } from '../../../core/data/peliculas-service';
-import type { Funcion } from '../../../core/models/funcion';
-import type { Sala } from '../../../core/models/sala';
-import type { PeliculaConCatalogo } from '../../../core/models/pelicula';
+import { ProgramacionService } from '../../../../core/data/programacion-service';
+import { SalasService } from '../../../../core/data/salas-service';
+import { PeliculasService } from '../../../../core/data/peliculas-service';
+import type { Funcion } from '../../../../core/models/funcion';
+import type { Sala } from '../../../../core/models/sala';
+import type { PeliculaConCatalogo } from '../../../../core/models/pelicula';
 
 describe('Funciones (US-04.06)', () => {
   let fixture: ComponentFixture<Funciones>;

@@ -1,4 +1,4 @@
-import { computed, Directive, input } from '@angular/core';
+import { Directive, input } from '@angular/core';
 import type { TipoButaca } from '../../core/reglas/butacas';
 
 // Directiva de atributo que aplica clases de estilo al elemento según el tipo de butaca (AC-04.02.03).
@@ -17,14 +17,22 @@ import type { TipoButaca } from '../../core/reglas/butacas';
 export class TipoButacaDirective {
   appTipoButaca = input<TipoButaca | 'std' | 'wc'>('comun');
 
-  tipoNormalizado = computed<TipoButaca>(() => {
+  tipoNormalizado(): TipoButaca {
     const val = this.appTipoButaca();
     if (val === 'wc' || val === 'accesible') return 'accesible';
     if (val === 'vip') return 'vip';
     return 'comun';
-  });
+  }
 
-  esComun = computed(() => this.tipoNormalizado() === 'comun');
-  esVip = computed(() => this.tipoNormalizado() === 'vip');
-  esAccesible = computed(() => this.tipoNormalizado() === 'accesible');
+  esComun(): boolean {
+    return this.tipoNormalizado() === 'comun';
+  }
+
+  esVip(): boolean {
+    return this.tipoNormalizado() === 'vip';
+  }
+
+  esAccesible(): boolean {
+    return this.tipoNormalizado() === 'accesible';
+  }
 }

@@ -2,9 +2,9 @@ import { TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap, provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
 import { FormularioPelicula } from './formulario-pelicula';
-import { PeliculasService } from '../../../core/data/peliculas-service';
-import { CatalogoService } from '../../../core/data/catalogo-service';
-import { StorageService } from '../../../core/data/storage-service';
+import { PeliculasService } from '../../../../core/data/peliculas-service';
+import { CatalogoService } from '../../../../core/data/catalogo-service';
+import { StorageService } from '../../../../core/data/storage-service';
 
 describe('Formulario EP-03', () => {
   const guardar = vi.fn();

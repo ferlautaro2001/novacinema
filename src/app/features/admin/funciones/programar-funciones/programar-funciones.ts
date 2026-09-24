@@ -1,15 +1,15 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { PeliculasService } from '../../../core/data/peliculas-service';
+import { PeliculasService } from '../../../../core/data/peliculas-service';
 import {
   ItemResumenProgramacion,
   ProgramacionService,
-} from '../../../core/data/programacion-service';
-import { FormularioConCambios } from '../../../core/guards/cambios-pendientes-guard';
-import type { PeliculaConCatalogo } from '../../../core/models/pelicula';
-import { SelectorFecha } from '../../../shared/ui/selector-fecha/selector-fecha';
+} from '../../../../core/data/programacion-service';
+import { FormularioConCambios } from '../../../../core/guards/cambios-pendientes-guard';
+import type { PeliculaConCatalogo } from '../../../../core/models/pelicula';
+import { SelectorFecha } from '../../../../shared/ui/selector-fecha/selector-fecha';
 
 export interface DiaOpcion {
   numero: number; // 1=Lun ... 7=Dom
@@ -70,17 +70,18 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
     return this.form.get('horarios') as FormArray;
   }
 
-  peliculaSeleccionada = computed(() => {
+  peliculaSeleccionada(): PeliculaConCatalogo | null {
     const id = this.form.controls.pelicula_id.value;
     return this.peliculas().find((p) => p.id === id) || null;
-  });
+  }
 
-  funcionesAsignadasCount = computed(
-    () => this.resumen().filter((i) => i.asignada && i.sala !== null).length
-  );
-  funcionesRechazadas = computed(() =>
-    this.resumen().filter((i) => !i.asignada || i.sala === null)
-  );
+  funcionesAsignadasCount(): number {
+    return this.resumen().filter((i) => i.asignada && i.sala !== null).length;
+  }
+
+  funcionesRechazadas(): ItemResumenProgramacion[] {
+    return this.resumen().filter((i) => !i.asignada || i.sala === null);
+  }
 
   async ngOnInit(): Promise<void> {
     try {

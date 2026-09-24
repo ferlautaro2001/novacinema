@@ -189,7 +189,7 @@
         <div class="alertas-rechazo">
           @for (rechazada of funcionesRechazadas(); track rechazada.ocurrencia.fecha + rechazada.ocurrencia.hora) {
             <div class="alerta-item" role="alert">
-              ⚠️ {{ rechazada.motivo }}
+              {{ rechazada.motivo }}
             </div>
           }
         </div>

@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { SalasService } from '../../../core/data/salas-service';
-import type { Sala } from '../../../core/models/sala';
+import { SalasService } from '../../../../core/data/salas-service';
+import type { Sala } from '../../../../core/models/sala';
 
 @Component({
   selector: 'nc-salas',

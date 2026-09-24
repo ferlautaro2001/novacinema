@@ -2,9 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, provideRouter } from '@angular/router';
 import { By } from '@angular/platform-browser';
 import { SalaDetalle } from './sala-detalle';
-import { SalasService } from '../../../core/data/salas-service';
-import { MapaButacasComponent } from '../../../shared/ui/mapa-butacas/mapa-butacas';
-import type { Sala } from '../../../core/models/sala';
+import { SalasService } from '../../../../core/data/salas-service';
+import { MapaButacasComponent } from '../../../../shared/ui/mapa-butacas/mapa-butacas';
+import type { Sala } from '../../../../core/models/sala';
 
 describe('SalaDetalle (US-04.02, AC-04.02.06)', () => {
   let fixture: ComponentFixture<SalaDetalle>;

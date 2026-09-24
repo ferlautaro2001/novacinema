@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { SalasService } from '../../../core/data/salas-service';
-import type { Sala } from '../../../core/models/sala';
+import { SalasService } from '../../../../core/data/salas-service';
+import type { Sala } from '../../../../core/models/sala';
 import { Salas } from './salas';
 
 describe('Salas (US-04.01)', () => {

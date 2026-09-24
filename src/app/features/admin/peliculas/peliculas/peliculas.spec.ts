@@ -1,9 +1,9 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Peliculas } from './peliculas';
-import { PeliculasService, ERROR_HISTORIAL } from '../../../core/data/peliculas-service';
-import { StorageService } from '../../../core/data/storage-service';
-import { PeliculaConCatalogo } from '../../../core/models/pelicula';
+import { PeliculasService, ERROR_HISTORIAL } from '../../../../core/data/peliculas-service';
+import { StorageService } from '../../../../core/data/storage-service';
+import { PeliculaConCatalogo } from '../../../../core/models/pelicula';
 
 export const peliculaPrueba: PeliculaConCatalogo = {
   id: 'pelicula',
