@@ -58,11 +58,8 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
   private guardado = false;
   private secuencia = 0;
   private suscripcion?: Subscription;
-  private eventos?: Subscription;
-  protected readonly revision = signal(0);
 
   ngOnInit(): void {
-    this.eventos = this.form.events.subscribe(() => this.revision.update((v) => v + 1));
     this.suscripcion = this.ruta.paramMap.subscribe((params) => {
       void this.cargar(params.get('id'));
     });
@@ -70,7 +67,6 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
   ngOnDestroy(): void {
     this.secuencia++;
     this.suscripcion?.unsubscribe();
-    this.eventos?.unsubscribe();
     if (this.objetoUrl) URL.revokeObjectURL(this.objetoUrl);
     // No se borra una subida aquí: una respuesta de red ambigua podría haberla guardado.
   }
@@ -148,7 +144,6 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
     }
   }
   protected invalido(campo: keyof typeof this.form.controls): boolean {
-    this.revision();
     const control = this.form.controls[campo];
     return control.touched && control.invalid;
   }

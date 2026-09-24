@@ -34,11 +34,4 @@ export class Cargando<T> implements OnChanges {
     else if (!estado.datos.length) this.contenedor.createEmbeddedView(this.appCargandoVacio());
     else this.contenedor.createEmbeddedView(this.template, { $implicit: estado.datos });
   }
-
-  static ngTemplateContextGuard<T>(
-    _dir: Cargando<T>,
-    contexto: unknown,
-  ): contexto is { $implicit: T[] } {
-    return true;
-  }
 }

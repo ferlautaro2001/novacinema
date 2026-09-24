@@ -1,9 +1,17 @@
-import { ValidatorFn } from '@angular/forms';
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 
-export const alMenosUno: ValidatorFn = (control) =>
-  Array.isArray(control.value) && control.value.some((valor: unknown) => valor === true)
-    ? null
-    : { alMenosUno: true };
+export const alMenosUno: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const valores = control.value;
+  if (Array.isArray(valores) && valores.some((v) => v === true)) {
+    return null;
+  }
+  return { alMenosUno: true };
+};
 
-export const textoRequerido: ValidatorFn = (control) =>
-  typeof control.value === 'string' && control.value.trim() ? null : { required: true };
+export const textoRequerido: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
+  const valor = control.value;
+  if (typeof valor === 'string' && valor.trim().length > 0) {
+    return null;
+  }
+  return { required: true };
+};

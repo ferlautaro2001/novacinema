@@ -1,9 +1,10 @@
-import { afterNextRender, Directive, ElementRef, inject } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, inject } from '@angular/core';
 
 @Directive({ selector: '[appFocoInicial]' })
-export class FocoInicial {
+export class FocoInicial implements AfterViewInit {
   private readonly elemento = inject<ElementRef<HTMLElement>>(ElementRef);
-  constructor() {
-    afterNextRender(() => this.elemento.nativeElement.focus());
+
+  ngAfterViewInit(): void {
+    this.elemento.nativeElement.focus();
   }
 }

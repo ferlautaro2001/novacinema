@@ -40,10 +40,14 @@ export class SelectorFecha implements OnInit, OnChanges {
     // Tomo "hoy" al crearse y no al construir la clase, así una pantalla que queda
     // abierta de un día para otro arranca en el día correcto al volver a entrar.
     this.hoy = inicioDelDia(new Date());
-    this.ngOnChanges();
+    this.actualizarFecha();
   }
 
   ngOnChanges(): void {
+    this.actualizarFecha();
+  }
+
+  private actualizarFecha(): void {
     const iso = this.fechaInicial();
     const fecha = iso ? inicioDelDia(new Date(iso + 'T12:00:00')) : null;
     this.elegida.set(fecha);

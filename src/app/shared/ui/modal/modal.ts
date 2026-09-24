@@ -1,5 +1,5 @@
 import {
-  afterNextRender,
+  AfterViewInit,
   Component,
   ElementRef,
   inject,
@@ -14,17 +14,16 @@ import {
   templateUrl: './modal.html',
   styleUrl: './modal.css',
 })
-export class Modal implements OnDestroy {
+export class Modal implements AfterViewInit, OnDestroy {
   readonly cierre = output<void>();
   readonly ocupado = input(false);
   private readonly dialogo = viewChild.required<ElementRef<HTMLDialogElement>>('dialogo');
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private anterior: HTMLElement | null = null;
-  constructor() {
-    afterNextRender(() => {
-      this.anterior = this.host.nativeElement.ownerDocument.activeElement as HTMLElement;
-      this.dialogo().nativeElement.showModal();
-    });
+
+  ngAfterViewInit(): void {
+    this.anterior = this.host.nativeElement.ownerDocument.activeElement as HTMLElement;
+    this.dialogo().nativeElement.showModal();
   }
   protected cerrar(evento?: Event): void {
     evento?.preventDefault();
