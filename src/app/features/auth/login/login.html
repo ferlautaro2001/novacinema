@@ -1,0 +1,47 @@
+<section class="login">
+  <h1 class="marquee-md">Ingresar</h1>
+
+  <form class="formulario" [formGroup]="form" (ngSubmit)="ingresar()" novalidate>
+    <nc-campo-texto
+      id="email"
+      etiqueta="Email"
+      tipo="email"
+      autocompletar="email"
+      [control]="form.controls.email"
+    >
+      <nc-error-campo [control]="form.controls.email" error="required">
+        Este campo es obligatorio
+      </nc-error-campo>
+      <nc-error-campo [control]="form.controls.email" error="email">
+        Ingresá un email válido
+      </nc-error-campo>
+    </nc-campo-texto>
+
+    <nc-campo-texto
+      id="clave"
+      etiqueta="Contraseña"
+      tipo="password"
+      autocompletar="current-password"
+      [control]="form.controls.clave"
+    >
+      <nc-error-campo [control]="form.controls.clave" error="required">
+        Este campo es obligatorio
+      </nc-error-campo>
+    </nc-campo-texto>
+
+    @if (error(); as mensaje) {
+      <p class="error body" role="alert">{{ mensaje }}</p>
+    }
+
+    <button
+      type="submit"
+      class="nc-btn nc-btn--primary nc-btn--md nc-btn--block"
+      [disabled]="form.invalid || enviando()"
+      [attr.aria-busy]="enviando() || null"
+    >
+      {{ enviando() ? 'Ingresando…' : 'Ingresar' }}
+    </button>
+  </form>
+
+  <p class="caption pie-login">¿No tenés cuenta? <a routerLink="/auth/registro">Creá una</a></p>
+</section>

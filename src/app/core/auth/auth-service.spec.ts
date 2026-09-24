@@ -1,7 +1,13 @@
 import { TestBed } from '@angular/core/testing';
-import { AuthError, type AuthResponse, type Session, type User } from '@supabase/supabase-js';
+import {
+  AuthError,
+  type AuthResponse,
+  type AuthTokenResponsePassword,
+  type Session,
+  type User,
+} from '@supabase/supabase-js';
 import { supabaseDePrueba } from '../supabase/supabase-de-prueba';
-import { AuthService, DatosRegistro } from './auth-service';
+import { AuthService, DatosRegistro, inicioSegunRol } from './auth-service';
 
 describe('AuthService', () => {
   describe('sesión (US-02.01)', () => {
@@ -19,13 +25,73 @@ describe('AuthService', () => {
       expect(auth.usuario()).toBeNull();
     });
 
-    it('toma el usuario de la sesión recuperada', () => {
-      const sesion = { user: { id: 'u1', email: 'ana@mail.com' } } as Session;
-      TestBed.configureTestingModule({ providers: [supabaseDePrueba(sesion).provider] });
+    it('con sesión recuperada, termina de cargar recién cuando tiene el perfil', async () => {
+      const supabase = supabaseDePrueba({ user: { id: 'u1' } } as Session);
+      supabase.perfiles.set('u1', { nombre: 'Ana', apellido: 'Pérez', rol: { codigo: 'cliente' } });
+      TestBed.configureTestingModule({ providers: [supabase.provider] });
       const auth = TestBed.inject(AuthService);
 
-      expect(auth.cargando()).toBe(false);
       expect(auth.usuario()?.id).toBe('u1');
+      expect(auth.cargando()).toBe(true);
+
+      await vi.waitFor(() => expect(auth.cargando()).toBe(false));
+      expect(auth.perfil()).toEqual({ nombre: 'Ana', apellido: 'Pérez', rol: 'cliente' });
+    });
+
+    it('al cerrarse la sesión borra el perfil', async () => {
+      const supabase = supabaseDePrueba({ user: { id: 'u1' } } as Session);
+      supabase.perfiles.set('u1', { nombre: 'Ana', apellido: 'Pérez', rol: { codigo: 'cliente' } });
+      TestBed.configureTestingModule({ providers: [supabase.provider] });
+      const auth = TestBed.inject(AuthService);
+      await vi.waitFor(() => expect(auth.perfil()).not.toBeNull());
+
+      supabase.emitir('SIGNED_OUT', null);
+
+      expect(auth.usuario()).toBeNull();
+      expect(auth.perfil()).toBeNull();
+    });
+  });
+
+  describe('ingreso (US-02.03)', () => {
+    function crear(respuesta: AuthTokenResponsePassword, rol = 'cliente') {
+      const supabase = supabaseDePrueba();
+      supabase.perfiles.set('u1', { nombre: 'Ana', apellido: 'Pérez', rol: { codigo: rol } });
+      const pedidos: unknown[] = [];
+      supabase.auth.signInWithPassword = (credenciales) => {
+        pedidos.push(credenciales);
+        return Promise.resolve(respuesta);
+      };
+      TestBed.configureTestingModule({ providers: [supabase.provider] });
+      return { auth: TestBed.inject(AuthService), pedidos };
+    }
+    const ok = {
+      data: { user: { id: 'u1' } as User, session: {} as Session },
+      error: null,
+    } as AuthTokenResponsePassword;
+
+    it('inicia sesión, carga el perfil y devuelve el rol (AC-02.03.01)', async () => {
+      const { auth, pedidos } = crear(ok, 'empleado');
+
+      expect(await auth.iniciarSesion(' pablo@novacinema.com ', 'clave123')).toBe('empleado');
+      expect(pedidos).toEqual([{ email: 'pablo@novacinema.com', password: 'clave123' }]);
+      expect(auth.perfil()?.nombre).toBe('Ana');
+    });
+
+    it('da un mensaje genérico ante credenciales incorrectas (AC-02.03.02)', async () => {
+      const { auth } = crear({
+        data: { user: null, session: null },
+        error: new AuthError('Invalid login credentials', 400, 'invalid_credentials'),
+      } as AuthTokenResponsePassword);
+
+      await expect(auth.iniciarSesion('ana@mail.com', 'mal')).rejects.toThrow(
+        'Email o contraseña incorrectos',
+      );
+    });
+
+    it('lleva a cada rol a su sección inicial (AC-02.03.01)', () => {
+      expect(inicioSegunRol('cliente')).toBe('/inicio');
+      expect(inicioSegunRol('empleado')).toBe('/boleteria');
+      expect(inicioSegunRol('administrador')).toBe('/admin');
     });
   });
 
