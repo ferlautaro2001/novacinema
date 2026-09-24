@@ -23,6 +23,13 @@ export const adminRoutes: Routes = [
         loadComponent: () =>
           import('./peliculas/formulario-pelicula').then((m) => m.FormularioPelicula),
       },
+      {
+        path: 'peliculas/:id',
+        title: 'Editar película · NovaCinema',
+        canDeactivate: [cambiosPendientesGuard],
+        loadComponent: () =>
+          import('./peliculas/formulario-pelicula').then((m) => m.FormularioPelicula),
+      },
       { path: '', redirectTo: 'facturacion', pathMatch: 'full' },
       {
         path: 'facturacion',

@@ -31,6 +31,27 @@ export class PeliculasService {
     return data as PeliculaConCatalogo[];
   }
 
+  async buscar(id: string): Promise<PeliculaConCatalogo> {
+    const { data, error } = await this.sup
+      .from('peliculas')
+      .select(SELECCION)
+      .eq('id', id)
+      .single();
+    if (error) throw error;
+    return data as PeliculaConCatalogo;
+  }
+
+  async tieneFuncionesFuturas(id: string): Promise<boolean> {
+    const { count, error } = await this.sup
+      .from('funciones')
+      .select('id', { count: 'exact', head: true })
+      .eq('pelicula_id', id)
+      .eq('estado', 'programada')
+      .gt('comienza_en', new Date().toISOString());
+    if (error) throw error;
+    return (count ?? 0) > 0;
+  }
+
   async guardar(
     datos: DatosPelicula,
     generos: number[],
