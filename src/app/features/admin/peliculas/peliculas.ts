@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { PeliculasService, errorPelicula } from '../../../core/data/peliculas-service';
 import { StorageService } from '../../../core/data/storage-service';
 import { nombreGenero, PeliculaConCatalogo } from '../../../core/models/pelicula';
@@ -12,6 +13,7 @@ import { TablaDatos } from '../../../shared/ui/tabla-datos/tabla-datos';
 @Component({
   selector: 'nc-peliculas',
   imports: [
+    RouterLink,
     DatePipe,
     Cargando,
     DuracionPipe,

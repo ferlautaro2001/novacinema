@@ -1786,6 +1786,10 @@ export type Database = {
       };
     };
     Functions: {
+      guardar_pelicula: {
+        Args: { p_id: string | null; p_datos: Json; p_generos: number[]; p_version: string | null };
+        Returns: string;
+      };
       asignar_rol_empleado: {
         Args: { p_empleado: boolean; p_usuario_id: string };
         Returns: undefined;

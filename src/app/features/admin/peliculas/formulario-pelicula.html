@@ -1,0 +1,149 @@
+<section class="editor">
+  <a routerLink="/admin/peliculas" class="volver caption">Volver a Películas</a>
+  <h1 class="marquee-lg">{{ original() ? 'Editar película' : 'Nueva película' }}</h1>
+  @if (cargando()) {
+    <p class="body" role="status">Cargando datos…</p>
+  }
+  @if (error()) {
+    <p class="error body" role="alert">{{ error() }}</p>
+  }
+  @if (falloCarga()) {
+    <button class="nc-btn nc-btn--secondary" (click)="reintentar()">Reintentá</button>
+  }
+  @if (!cargando() && !falloCarga()) {
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <fieldset class="contenido" [disabled]="guardando()">
+        <legend class="solo-lector">Datos de la película</legend>
+        <div class="datos">
+          <nc-campo-texto id="titulo" etiqueta="Nombre" [control]="form.controls.titulo"
+            ><nc-error-campo [control]="form.controls.titulo" error="required"
+              >Ingresá el nombre de la película.</nc-error-campo
+            ></nc-campo-texto
+          >
+          <div class="campo">
+            <label for="sinopsis" class="body-strong">Sinopsis</label
+            ><textarea
+              id="sinopsis"
+              rows="5"
+              formControlName="sinopsis"
+              [attr.aria-invalid]="invalido('sinopsis')"
+              aria-describedby="error-sinopsis"
+            ></textarea>
+            @if (invalido('sinopsis')) {
+              <p id="error-sinopsis" class="error-texto caption">Ingresá la sinopsis.</p>
+            }
+          </div>
+          <div class="dos-columnas">
+            <div>
+              <nc-campo-texto
+                id="duracion"
+                etiqueta="Duración (minutos)"
+                tipo="number"
+                [control]="form.controls.duracion_min"
+              >
+                <nc-error-campo [control]="form.controls.duracion_min" error="required"
+                  >Ingresá la duración.</nc-error-campo
+                >
+                <nc-error-campo [control]="form.controls.duracion_min" error="min"
+                  >La duración debe estar entre 1 y 300 minutos</nc-error-campo
+                >
+                <nc-error-campo [control]="form.controls.duracion_min" error="max"
+                  >La duración debe estar entre 1 y 300 minutos</nc-error-campo
+                >
+                <nc-error-campo [control]="form.controls.duracion_min" error="pattern"
+                  >Usá una cantidad entera de minutos.</nc-error-campo
+                >
+              </nc-campo-texto>
+              @if (duracionBloqueada()) {
+                <p class="caption nota">
+                  No se puede cambiar la duración con funciones programadas
+                </p>
+              }
+            </div>
+            <div class="campo">
+              <label for="clasificacion" class="body-strong">Clasificación por edad</label
+              ><select
+                id="clasificacion"
+                formControlName="clasificacion_id"
+                [attr.aria-invalid]="invalido('clasificacion_id')"
+                aria-describedby="error-clasificacion"
+              >
+                <option [ngValue]="0" disabled>Elegí una clasificación</option>
+                @for (c of clasificaciones(); track c.id) {
+                  <option [ngValue]="c.id">{{ c.codigo }}</option>
+                }
+              </select>
+              @if (invalido('clasificacion_id')) {
+                <p id="error-clasificacion" class="error-texto caption">Elegí una clasificación.</p>
+              }
+            </div>
+          </div>
+          <fieldset class="generos" formArrayName="generos">
+            <legend class="body-strong">Géneros</legend>
+            <p class="caption nota">Podés elegir más de uno.</p>
+            <div class="opciones-genero">
+              @for (g of generos(); track g.id; let i = $index) {
+                <label class="genero body"
+                  ><input type="checkbox" [formControlName]="i" />{{ g.nombre }}</label
+                >
+              }
+            </div>
+            @if (invalido('generos')) {
+              <p class="error-texto caption" role="alert">Elegí al menos un género</p>
+            }
+          </fieldset>
+          <div class="campo">
+            <span class="body-strong">Fecha de estreno</span>
+            @if (form.controls.fecha_estreno.value) {
+              <p class="caption" role="status">
+                Elegida: {{ form.controls.fecha_estreno.value | date: 'dd/MM/yyyy' }}
+              </p>
+            }
+            <nc-selector-fecha
+              (fechaElegida)="elegirFecha($event)"
+            />
+            @if (invalido('fecha_estreno')) {
+              <p class="error-texto caption" role="alert">Elegí la fecha de estreno.</p>
+            }
+          </div>
+          <div class="campo">
+            <label for="estado" class="body-strong">Estado</label
+            ><select id="estado" formControlName="estado">
+              <option value="proximamente">Próximamente</option>
+              <option value="en_cartelera">En cartelera</option>
+              <option value="archivada">Finalizada</option>
+            </select>
+          </div>
+        </div>
+        <aside class="portada">
+          <label for="portada" class="body-strong">Imagen de portada</label>
+          @if (preview()) {
+            <img [src]="preview()" alt="Vista previa de la portada" />
+          } @else {
+            <div class="placeholder caption">La portada aparece acá</div>
+          }
+          <input
+            id="portada"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="elegirArchivo($event)"
+            aria-describedby="ayuda-portada"
+          />
+          <p id="ayuda-portada" class="caption nota">JPEG, PNG o WebP, hasta 10 MB.</p>
+          @if (errorArchivo()) {
+            <p class="error-texto caption" role="alert">{{ errorArchivo() }}</p>
+          }
+          @if (invalido('imagen_path')) {
+            <p class="error-texto caption" role="alert">Elegí una imagen de portada.</p>
+          }
+        </aside>
+      </fieldset>
+      <div class="acciones">
+        <a class="nc-btn nc-btn--secondary" routerLink="/admin/peliculas">Cancelar</a
+        ><button class="nc-btn nc-btn--primary" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardá la película' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>
