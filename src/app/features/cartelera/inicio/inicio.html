@@ -1,1 +1,33 @@
 <h1 class="marquee-lg">Inicio</h1>
+<section class="destacadas" aria-labelledby="destacadas-titulo">
+  <h2 id="destacadas-titulo" class="marquee-md">Películas destacadas</h2>
+  @if (cargando()) {
+    <p class="body" role="status">Cargando películas…</p>
+  } @else if (error()) {
+    <p class="body" role="alert">No se pudieron cargar las destacadas.</p>
+    <button class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button>
+  } @else {
+    <div class="grilla">
+      @for (p of destacadas(); track p.id) {
+        <nc-pelicula-card [pelicula]="p" (verDetalle)="detalle.set($event)" />
+      } @empty {
+        <p class="body">Pronto vas a encontrar nuestras películas destacadas acá.</p>
+      }
+    </div>
+  }
+</section>
+@if (detalle(); as p) {
+  <nc-modal (cierre)="detalle.set(null)">
+    <h2 titulo class="body-strong">{{ p.titulo }}</h2>
+    <div class="metadatos">
+      <nc-clasificacion [codigo]="p.clasificacion.codigo" /><span>{{
+        p.duracion_min | duracion
+      }}</span
+      ><span>Estreno: {{ p.fecha_estreno | date: 'dd/MM/yyyy' }}</span>
+    </div>
+    <p class="sinopsis">{{ p.sinopsis }}</p>
+    <button acciones appFocoInicial class="nc-btn nc-btn--secondary" (click)="detalle.set(null)">
+      Cerrar
+    </button>
+  </nc-modal>
+}

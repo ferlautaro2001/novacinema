@@ -60,7 +60,7 @@ export class Peliculas implements OnInit {
     return this.estados[p.estado];
   }
   protected async accion(
-    tipo: 'finalizar' | 'eliminar',
+    tipo: 'destacar' | 'finalizar' | 'eliminar',
     p: PeliculaConCatalogo,
   ): Promise<void> {
     if (this.trabajando()) return;

@@ -1,0 +1,28 @@
+<article class="pelicula">
+  <img
+    [src]="storage.urlPublica(pelicula().imagen_path)"
+    [alt]="'Portada de ' + pelicula().titulo"
+    loading="lazy"
+    width="240"
+    height="360"
+  />
+  <div class="contenido">
+    <p class="overline">
+      {{ pelicula().estado === 'proximamente' ? 'Próximo estreno' : 'Destacada' }}
+    </p>
+    <h3 class="body-strong">{{ pelicula().titulo }}</h3>
+    <div class="metadatos">
+      <nc-clasificacion [codigo]="pelicula().clasificacion.codigo" /><span class="caption">{{
+        pelicula().duracion_min | duracion
+      }}</span>
+    </div>
+    <p class="sinopsis body">{{ pelicula().sinopsis }}</p>
+    <button
+      class="nc-btn nc-btn--secondary"
+      (click)="verDetalle.emit(pelicula())"
+      [attr.aria-label]="'Ver detalle de ' + pelicula().titulo"
+    >
+      Ver detalle
+    </button>
+  </div>
+</article>
