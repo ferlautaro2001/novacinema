@@ -2,6 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { App } from '../../app';
 import { routes } from '../../app.routes';
+import { supabaseDePrueba } from '../../core/supabase/supabase-de-prueba';
 
 describe('Navegacion (US-01.03)', () => {
   function enlace(raiz: HTMLElement, texto: string): HTMLAnchorElement {
@@ -10,7 +11,9 @@ describe('Navegacion (US-01.03)', () => {
   }
 
   it('resalta la sección actual (AC-01.03.01)', async () => {
-    TestBed.configureTestingModule({ providers: [provideRouter(routes)] });
+    TestBed.configureTestingModule({
+      providers: [provideRouter(routes), supabaseDePrueba().provider],
+    });
     const fixture = TestBed.createComponent(App);
     const raiz: HTMLElement = fixture.nativeElement;
 

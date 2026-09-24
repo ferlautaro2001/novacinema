@@ -1,0 +1,37 @@
+/* El logo va sobre surface-000 y con al menos space-5 de aire alrededor. */
+:host {
+  display: block;
+  height: 100%;
+}
+
+.pantalla {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-5);
+  min-height: 100dvh;
+  padding: var(--space-5);
+  background: var(--surface-000);
+}
+
+.logo {
+  display: block;
+}
+
+.texto {
+  color: var(--ink-200);
+  animation: latido 1.4s ease-in-out infinite;
+}
+
+@keyframes latido {
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .texto {
+    animation: none;
+  }
+}
