@@ -22,3 +22,8 @@
 .marca-acento {
   color: var(--gold-500);
 }
+
+/* Los accesos de la sesión quedan al final de la barra. */
+.acceso {
+  flex: none;
+}
