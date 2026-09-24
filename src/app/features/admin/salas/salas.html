@@ -1,0 +1,73 @@
+<section class="salas">
+  <header>
+    <h2>Salas</h2>
+    <p class="descripcion">
+      Gestioná la disponibilidad de las salas del cine. Las salas inactivas no reciben funciones nuevas en la asignación automática.
+    </p>
+  </header>
+
+  @if (aviso()) {
+    <p class="aviso" role="status">{{ aviso() }}</p>
+  }
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="estado">Cargando salas…</p>
+  } @else if (salas().length === 0) {
+    <p class="vacio">No hay salas registradas en el sistema.</p>
+  } @else {
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Sala</th>
+            <th>Capacidad</th>
+            <th>Estado</th>
+            <th class="accion">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sala of salas(); track sala.id) {
+            <tr>
+              <td>
+                <strong>{{ sala.nombre }}</strong>
+              </td>
+              <td>518 butacas (420 comunes · 84 VIP · 14 accesibles)</td>
+              <td>
+                <span
+                  class="badge-estado"
+                  [class.badge-activa]="sala.activa"
+                  [class.badge-inactiva]="!sala.activa"
+                >
+                  {{ sala.activa ? 'Activa' : 'Inactiva' }}
+                </span>
+              </td>
+              <td class="accion">
+                <div class="botones-accion">
+                  <a
+                    [routerLink]="['/admin/salas', sala.id]"
+                    class="btn-secundario"
+                  >
+                    Ver distribución
+                  </a>
+                  <button
+                    type="button"
+                    class="btn-toggle"
+                    [class.btn-peligro]="sala.activa"
+                    [disabled]="cambiando() === sala.id"
+                    (click)="cambiarEstado(sala)"
+                  >
+                    {{ cambiando() === sala.id ? 'Guardando…' : sala.activa ? 'Desactivar' : 'Activar' }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
