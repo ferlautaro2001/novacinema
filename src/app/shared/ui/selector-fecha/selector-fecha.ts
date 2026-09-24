@@ -1,4 +1,4 @@
-import { Component, OnInit, output, signal } from '@angular/core';
+import { Component, input, OnChanges, OnInit, output, signal } from '@angular/core';
 import {
   diasConsecutivos,
   etiquetaDia,
@@ -24,7 +24,8 @@ const DIAS_POR_SEMANA = 7;
   templateUrl: './selector-fecha.html',
   styleUrl: './selector-fecha.css',
 })
-export class SelectorFecha implements OnInit {
+export class SelectorFecha implements OnInit, OnChanges {
+  readonly fechaInicial = input('');
   readonly fechaElegida = output<Date>();
 
   protected readonly dias = signal<OpcionDia[]>([]);
@@ -39,7 +40,14 @@ export class SelectorFecha implements OnInit {
     // Tomo "hoy" al crearse y no al construir la clase, así una pantalla que queda
     // abierta de un día para otro arranca en el día correcto al volver a entrar.
     this.hoy = inicioDelDia(new Date());
-    this.mostrarSemana(this.hoy);
+    this.ngOnChanges();
+  }
+
+  ngOnChanges(): void {
+    const iso = this.fechaInicial();
+    const fecha = iso ? inicioDelDia(new Date(iso + 'T12:00:00')) : null;
+    this.elegida.set(fecha);
+    this.mostrarSemana(fecha && fecha > this.hoy ? fecha : this.hoy);
   }
 
   protected semanaSiguiente(): void {
