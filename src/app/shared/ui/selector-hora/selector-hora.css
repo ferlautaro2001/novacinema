@@ -1,0 +1,60 @@
+:host {
+  display: block;
+}
+
+.opciones {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Mismo estilo de opción que nc-selector-fecha: se repite a propósito, cada
+   componente trae sus estilos encapsulados. */
+.opcion {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  width: 100%;
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  background: var(--surface-200);
+  color: var(--ink-100);
+  cursor: pointer;
+}
+
+.opcion:hover {
+  background: var(--surface-300);
+}
+
+.opcion:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* La elegida no se marca solo con color: lleva la tilde y aria-pressed. */
+.opcion.elegida {
+  border-color: var(--brand-400);
+  background: var(--brand-tint);
+}
+
+.tilde {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.vacio {
+  grid-column: 1 / -1;
+  color: var(--ink-200);
+}
