@@ -1,0 +1,59 @@
+<section class="catalogo">
+  <header class="cabecera">
+    <div>
+      <p class="overline">Catálogo del cine</p>
+      <h1 class="marquee-lg">Películas</h1>
+    </div>
+  </header>
+  <p class="body descripcion">Consultá los datos principales de las películas del cine.</p>
+  @if (aviso()) {
+    <p class="aviso body" role="status">{{ aviso() }}</p>
+  }
+  @if (error()) {
+    <p class="error body" role="alert">{{ error() }}</p>
+  }
+  <ng-template #vacio
+    ><div class="vacio">
+      <h2 class="body-strong">Todavía no cargaste películas</h2>
+      <p class="body">Empezá por el nombre, la portada y los datos del estreno.</p>
+    </div></ng-template
+  >
+  <ng-template #fallo let-mensaje
+    ><p class="error body" role="alert">{{ mensaje }}</p>
+    <button class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button></ng-template
+  >
+  <ng-container *appCargando="estado(); vacio: vacio; error: fallo; let peliculas">
+    <nc-tabla-datos [filas]="peliculas" [plantillaFila]="fila" titulo="Catálogo de películas">
+      <tr encabezado>
+        <th scope="col">Película</th>
+        <th scope="col">Clasificación</th>
+        <th scope="col">Duración</th>
+        <th scope="col">Estreno</th>
+        <th scope="col">Estado</th>
+      </tr>
+    </nc-tabla-datos>
+  </ng-container>
+  <ng-template #fila let-p>
+    <td>
+      <div class="identidad">
+        <img
+          [src]="storage.urlPublica(p.imagen_path)"
+          [alt]="'Portada de ' + p.titulo"
+          width="64"
+          height="96"
+          loading="lazy"
+        />
+        <div>
+          <span class="body-strong titulo">{{ p.titulo }}</span>
+          <p class="caption">{{ generos(p) }}</p>
+          <p class="caption sinopsis">{{ p.sinopsis | textoLargo: 80 }}</p>
+        </div>
+      </div>
+    </td>
+    <td><nc-clasificacion [codigo]="p.clasificacion.codigo" /></td>
+    <td class="code">{{ p.duracion_min | duracion }}</td>
+    <td class="caption">{{ p.fecha_estreno | date: 'dd/MM/yyyy' }}</td>
+    <td class="caption">{{ nombreEstado(p) }}</td>
+
+  </ng-template>
+</section>
