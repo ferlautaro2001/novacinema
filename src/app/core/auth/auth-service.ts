@@ -122,11 +122,10 @@ export class AuthService {
       password: clave,
     });
     if (error) {
-      throw new Error(
-        error.code === 'invalid_credentials' || error.code === 'email_not_confirmed'
-          ? CREDENCIALES_INCORRECTAS
-          : this.mensajeDeError(error, 'No se pudo iniciar la sesión. Probá de nuevo.'),
-      );
+      if (error.code === 'invalid_credentials' || error.code === 'email_not_confirmed') {
+        throw new Error(CREDENCIALES_INCORRECTAS);
+      }
+      throw new Error(this.mensajeDeError(error, 'No se pudo iniciar la sesión. Probá de nuevo.'));
     }
     const perfil = await this.cargarPerfil(data.user.id);
     if (!perfil) throw new Error('No se pudo leer tu perfil. Probá de nuevo.');
@@ -169,10 +168,17 @@ export class AuthService {
       .select('nombre, apellido, rol:roles(codigo)')
       .eq('id', id)
       .single();
-    const perfil =
-      error || !data?.rol
-        ? null
-        : { nombre: data.nombre, apellido: data.apellido, rol: data.rol.codigo as Rol };
+
+    if (error || !data?.rol) {
+      this._perfil.set(null);
+      return null;
+    }
+
+    const perfil: PerfilSesion = {
+      nombre: data.nombre,
+      apellido: data.apellido,
+      rol: data.rol.codigo as Rol,
+    };
     this._perfil.set(perfil);
     return perfil;
   }
