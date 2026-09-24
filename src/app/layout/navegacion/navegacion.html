@@ -1,0 +1,21 @@
+<!-- Marcado único de cada enlace: lo usan todos los grupos del menú. -->
+<ng-template #enlace let-e>
+  <li>
+    <a
+      class="enlace body-strong"
+      [routerLink]="e.ruta"
+      routerLinkActive="activo"
+      ariaCurrentWhenActive="page"
+    >
+      {{ e.texto }}
+    </a>
+  </li>
+</ng-template>
+
+<nav class="navegacion" aria-label="Principal">
+  <ul class="lista">
+    @for (e of publicos; track e.ruta) {
+      <ng-container *ngTemplateOutlet="enlace; context: { $implicit: e }" />
+    }
+  </ul>
+</nav>
