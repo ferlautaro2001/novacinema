@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { cambiosPendientesGuard } from '../../core/guards/cambios-pendientes-guard';
 
 // Ingreso y registro (EP-02).
 export const authRoutes: Routes = [
@@ -10,6 +11,7 @@ export const authRoutes: Routes = [
   {
     path: 'registro',
     title: 'Crear cuenta · NovaCinema',
+    canDeactivate: [cambiosPendientesGuard],
     loadComponent: () => import('./registro/registro').then((m) => m.Registro),
   },
 ];

@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth-service';
+import { FormularioConCambios } from '../../../core/guards/cambios-pendientes-guard';
 import { CampoFecha } from '../../../shared/ui/campo-fecha/campo-fecha';
 import { CampoTexto } from '../../../shared/ui/campo-texto/campo-texto';
 import { ErrorCampo } from '../../../shared/ui/error-campo/error-campo';
@@ -17,7 +18,7 @@ import {
   templateUrl: './registro.html',
   styleUrl: './registro.css',
 })
-export class Registro {
+export class Registro implements FormularioConCambios {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
@@ -41,6 +42,13 @@ export class Registro {
   protected readonly error = signal<string | null>(null);
   protected readonly revisarEmail = signal(false);
 
+  // Una vez creada la cuenta ya no hay nada que perder al salir.
+  private cuentaCreada = false;
+
+  noGuardado(): boolean {
+    return this.form.dirty && !this.cuentaCreada;
+  }
+
   protected async crearCuenta(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -58,6 +66,7 @@ export class Registro {
         // fechaPorPartes ya garantizó que la fecha existe.
         fechaNacimiento: isoDePartes(datos.nacimiento),
       });
+      this.cuentaCreada = true;
       if (resultado === 'sesion_iniciada') {
         await this.router.navigateByUrl('/inicio');
       } else {
