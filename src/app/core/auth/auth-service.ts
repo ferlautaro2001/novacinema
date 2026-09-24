@@ -1,5 +1,6 @@
 import { inject, Service, signal } from '@angular/core';
 import type { AuthError, User } from '@supabase/supabase-js';
+import type { Rol } from '../models/enumerados';
 import { Supabase } from '../supabase/supabase-client';
 
 export interface DatosRegistro {
@@ -15,6 +16,26 @@ export interface DatosRegistro {
 // recién existe cuando la persona toca el link que le llega.
 export type ResultadoRegistro = 'sesion_iniciada' | 'confirmar_email';
 
+// Lo que la app necesita saber de quien está logueado: cómo nombrarlo y qué rol
+// tiene. Sale de la tabla usuarios, no de los metadatos de Auth.
+export interface PerfilSesion {
+  nombre: string;
+  apellido: string;
+  rol: Rol;
+}
+
+// La sección donde arranca cada rol después de ingresar.
+export function inicioSegunRol(rol: Rol): string {
+  switch (rol) {
+    case 'administrador':
+      return '/admin';
+    case 'empleado':
+      return '/boleteria';
+    default:
+      return '/inicio';
+  }
+}
+
 const MENSAJES_ERROR: Record<string, string> = {
   user_already_exists: 'Ese email ya está registrado',
   email_exists: 'Ese email ya está registrado',
@@ -24,6 +45,10 @@ const MENSAJES_ERROR: Record<string, string> = {
   over_request_rate_limit: 'Hubo demasiados intentos. Probá de nuevo en unos minutos.',
   signup_disabled: 'El registro está deshabilitado por el momento.',
 };
+
+// Mismo mensaje para email inexistente y contraseña equivocada: no se revela cuál
+// de los dos falló.
+const CREDENCIALES_INCORRECTAS = 'Email o contraseña incorrectos';
 
 // Estado de la sesión para toda la app. Me suscribo a onAuthStateChange apenas se
 // crea el servicio: el primer evento (INITIAL_SESSION) llega cuando Supabase
@@ -36,14 +61,24 @@ export class AuthService {
 
   private readonly _cargando = signal(true);
   private readonly _usuario = signal<User | null>(null);
+  private readonly _perfil = signal<PerfilSesion | null>(null);
 
   readonly cargando = this._cargando.asReadonly();
   readonly usuario = this._usuario.asReadonly();
+  readonly perfil = this._perfil.asReadonly();
 
   constructor() {
     this.supS.Sup.auth.onAuthStateChange((_evento, sesion) => {
-      this._usuario.set(sesion?.user ?? null);
-      this._cargando.set(false);
+      const usuario = sesion?.user ?? null;
+      this._usuario.set(usuario);
+      if (!usuario) {
+        this._perfil.set(null);
+        this._cargando.set(false);
+        return;
+      }
+      // Supabase advierte que llamarlo de nuevo desde adentro de este callback
+      // puede trabarse: la consulta del perfil sale en el turno siguiente.
+      setTimeout(() => this.cargarPerfil(usuario.id).finally(() => this._cargando.set(false)));
     });
   }
 
@@ -72,8 +107,42 @@ export class AuthService {
     return data.session ? 'sesion_iniciada' : 'confirmar_email';
   }
 
-  private mensajeDeError(error: AuthError): string {
+  // Devuelve el rol para que la pantalla de ingreso sepa a dónde llevar a cada uno.
+  async iniciarSesion(email: string, clave: string): Promise<Rol> {
+    const { data, error } = await this.supS.Sup.auth.signInWithPassword({
+      email: email.trim(),
+      password: clave,
+    });
+    if (error) {
+      throw new Error(
+        error.code === 'invalid_credentials' || error.code === 'email_not_confirmed'
+          ? CREDENCIALES_INCORRECTAS
+          : this.mensajeDeError(error, 'No se pudo iniciar la sesión. Probá de nuevo.'),
+      );
+    }
+    const perfil = await this.cargarPerfil(data.user.id);
+    if (!perfil) throw new Error('No se pudo leer tu perfil. Probá de nuevo.');
+    return perfil.rol;
+  }
+
+  private async cargarPerfil(id: string): Promise<PerfilSesion | null> {
+    const { data, error } = await this.supS.Sup.from('usuarios')
+      .select('nombre, apellido, rol:roles(codigo)')
+      .eq('id', id)
+      .single();
+    const perfil =
+      error || !data?.rol
+        ? null
+        : { nombre: data.nombre, apellido: data.apellido, rol: data.rol.codigo as Rol };
+    this._perfil.set(perfil);
+    return perfil;
+  }
+
+  private mensajeDeError(
+    error: AuthError,
+    general = 'No se pudo crear la cuenta. Probá de nuevo en unos minutos.',
+  ): string {
     const conocido = error.code ? MENSAJES_ERROR[error.code] : undefined;
-    return conocido ?? 'No se pudo crear la cuenta. Probá de nuevo en unos minutos.';
+    return conocido ?? general;
   }
 }

@@ -1,0 +1,34 @@
+.login {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 400px;
+  margin-inline: auto;
+  padding: var(--space-6) var(--space-4);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-lg);
+  background: var(--surface-200);
+}
+
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+/* El error del servidor lleva texto y borde, no solo color. */
+.error {
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-md);
+  background: var(--danger-tint);
+  color: var(--ink-100);
+}
+
+.pie-login {
+  color: var(--ink-200);
+}
+
+.pie-login a {
+  color: var(--brand-400);
+}

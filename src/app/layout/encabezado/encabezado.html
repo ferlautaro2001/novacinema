@@ -5,11 +5,14 @@
       Nova<span class="marca-acento">Cinema</span>
     </a>
     <nc-navegacion />
-    <!-- Los accesos de la sesión (ingresar, mi cuenta, salir) se completan en US-02.03 y US-02.04. -->
-    @if (!auth.usuario()) {
-      <a class="acceso nc-btn nc-btn--secondary nc-btn--sm" routerLink="/auth/registro"
-        >Crear cuenta</a
-      >
-    }
+    <!-- Mi cuenta y Salir se suman en US-02.04. -->
+    <div class="sesion">
+      @if (auth.perfil(); as perfil) {
+        <span class="saludo body-strong">Hola, {{ perfil.nombre }}</span>
+      } @else if (!auth.usuario()) {
+        <a class="nc-btn nc-btn--ghost nc-btn--sm" routerLink="/auth/login">Ingresar</a>
+        <a class="nc-btn nc-btn--secondary nc-btn--sm" routerLink="/auth/registro">Crear cuenta</a>
+      }
+    </div>
   </div>
 </header>
