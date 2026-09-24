@@ -1,0 +1,81 @@
+<section class="empleados">
+  <h1 class="marquee-lg">Empleados</h1>
+  <p class="body descripcion">
+    Buscá a la persona por email o apellido y habilitala como empleada de boletería.
+  </p>
+
+  <div class="buscador">
+    <label class="body-strong" for="buscador">Buscar</label>
+    <input
+      id="buscador"
+      class="entrada body"
+      type="search"
+      placeholder="Email o apellido"
+      autocomplete="off"
+      [(ngModel)]="busqueda"
+    />
+  </div>
+
+  @if (aviso(); as mensaje) {
+    <p class="aviso body" role="status">{{ mensaje }}</p>
+  }
+  @if (error(); as mensaje) {
+    <p class="error body" role="alert">{{ mensaje }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="body estado" role="status">Cargando usuarios…</p>
+  } @else {
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th scope="col" class="caption">Nombre</th>
+            <th scope="col" class="caption">Email</th>
+            <th scope="col" class="caption">Rol</th>
+            <th scope="col" class="caption"><span class="solo-lector">Acción</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (u of usuarios() | filtro: busqueda() : campos; track u.id) {
+            <tr>
+              <td class="body-strong">{{ u.apellido }}, {{ u.nombre }}</td>
+              <td class="body">{{ u.email }}</td>
+              <td>
+                <span class="rol caption" [class]="'rol caption rol-' + u.rol">{{
+                  nombreRol(u.rol)
+                }}</span>
+              </td>
+              <td class="accion">
+                @if (u.id === auth.usuario()?.id) {
+                  <span class="caption nota">Vos</span>
+                } @else if (u.rol === 'administrador') {
+                  <span class="caption nota">No se cambia desde acá</span>
+                } @else {
+                  <button
+                    type="button"
+                    class="nc-btn nc-btn--secondary nc-btn--sm"
+                    [disabled]="cambiando() === u.id"
+                    (click)="cambiarRol(u)"
+                  >
+                    {{ u.rol === 'empleado' ? 'Volver a cliente' : 'Hacer empleado' }}
+                  </button>
+                }
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4" class="body vacio">
+                @if (busqueda()) {
+                  No hay usuarios que coincidan con “{{ busqueda() }}”.
+                } @else {
+                  Todavía no hay usuarios registrados.
+                }
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
