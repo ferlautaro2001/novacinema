@@ -40,6 +40,19 @@ export interface VersionIdiomaInfo {
   nombre: string;
 }
 
+export interface CompraResumenCancelacion {
+  codigo: string;
+  cantidadEntradas: number;
+}
+
+export interface DetalleCancelacionFuncion {
+  funcionId: string;
+  totalEntradas: number;
+  comprasRegistradas: number;
+  comprasAnonimas: CompraResumenCancelacion[];
+  usuarioIds: string[];
+}
+
 @Service()
 export class ProgramacionService {
   private supS = inject(Supabase);
@@ -233,6 +246,101 @@ export class ProgramacionService {
         throw new Error('No se puede eliminar una función con entradas vendidas');
       }
       throw error;
+    }
+  }
+
+  async obtenerDetalleCancelacion(
+    funcionId: string
+  ): Promise<DetalleCancelacionFuncion> {
+    const { data, error } = await this.supS.Sup
+      .from('entradas')
+      .select(`
+        id,
+        compra_id,
+        compras (
+          id,
+          codigo,
+          usuario_id,
+          estado
+        )
+      `)
+      .eq('funcion_id', funcionId)
+      .is('anulada_en', null);
+
+    if (error) throw error;
+
+    const entradas = (data ?? []) as any[];
+    const comprasMap = new Map<
+      string,
+      { codigo: string; usuario_id: string | null; cantidad: number }
+    >();
+
+    for (const item of entradas) {
+      const c = item.compras;
+      if (!c) continue;
+      const cid = c.id;
+      if (!comprasMap.has(cid)) {
+        comprasMap.set(cid, {
+          codigo: c.codigo || 'SIN-CODIGO',
+          usuario_id: c.usuario_id ?? null,
+          cantidad: 0,
+        });
+      }
+      comprasMap.get(cid)!.cantidad++;
+    }
+
+    let comprasRegistradas = 0;
+    const comprasAnonimas: CompraResumenCancelacion[] = [];
+    const usuarioIdsSet = new Set<string>();
+
+    for (const c of comprasMap.values()) {
+      if (c.usuario_id) {
+        comprasRegistradas++;
+        usuarioIdsSet.add(c.usuario_id);
+      } else {
+        comprasAnonimas.push({
+          codigo: c.codigo,
+          cantidadEntradas: c.cantidad,
+        });
+      }
+    }
+
+    return {
+      funcionId,
+      totalEntradas: entradas.length,
+      comprasRegistradas,
+      comprasAnonimas,
+      usuarioIds: Array.from(usuarioIdsSet),
+    };
+  }
+
+  async cancelarFuncion(
+    funcionId: string,
+    peliculaTitulo?: string,
+    fechaHora?: string
+  ): Promise<void> {
+    const detalle = await this.obtenerDetalleCancelacion(funcionId);
+
+    const { error } = await this.supS.Sup
+      .from('funciones')
+      .update({ estado: 'cancelada' })
+      .eq('id', funcionId);
+
+    if (error) throw error;
+
+    if (detalle.usuarioIds.length > 0) {
+      try {
+        const notificaciones = detalle.usuarioIds.map((uid) => ({
+          usuario_id: uid,
+          titulo: `Función cancelada: ${peliculaTitulo || 'Función'}`,
+          mensaje: `La función de ${peliculaTitulo || 'la película'} programada para el ${fechaHora || 'horario programado'} fue cancelada. Se acreditó el dinero a favor en tu cuenta.`,
+          tipo: 'funcion_cancelada',
+        }));
+
+        await this.supS.Sup.from('notificaciones').insert(notificaciones);
+      } catch {
+        // En caso de que la inserción de notificaciones no esté permitida por RLS
+      }
     }
   }
 }
