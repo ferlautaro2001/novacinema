@@ -231,4 +231,82 @@ describe('Funciones (US-04.06)', () => {
     expect(eliminarFuncionMock).not.toHaveBeenCalled();
     expect(raiz.textContent).toContain('No se puede eliminar una función con entradas vendidas');
   });
+
+  it('abre confirmación de cancelación mostrando compras registradas y anónimas con códigos (AC-04.07.02)', async () => {
+    const programacionService = TestBed.inject(ProgramacionService);
+    const obtenerDetalleSpy = spyOnDetalle(programacionService, {
+      funcionId: 'f-1',
+      totalEntradas: 12,
+      comprasRegistradas: 9,
+      comprasAnonimas: [
+        { codigo: 'ANON-111', cantidadEntradas: 2 },
+        { codigo: 'ANON-222', cantidadEntradas: 1 },
+      ],
+      usuarioIds: ['u1', 'u2'],
+    });
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const estado = component.estado();
+    if (estado.tipo !== 'datos') return;
+    const funcionACancelar = estado.datos[0].funciones[0];
+
+    await component.iniciarCancelacion(funcionACancelar);
+    fixture.detectChanges();
+
+    expect(obtenerDetalleSpy).toHaveBeenCalledWith(funcionACancelar.id);
+    expect(component.confirmacionCancelar()).not.toBeNull();
+    expect(raiz.textContent).toContain('Cancelar función');
+    expect(raiz.textContent).toContain('9 compras con crédito automático');
+    expect(raiz.textContent).toContain('2 compras anónimas a resolver en boletería');
+    expect(raiz.textContent).toContain('ANON-111');
+    expect(raiz.textContent).toContain('ANON-222');
+  });
+
+  it('cancela la función y libera la sala al confirmar (AC-04.07.01, AC-04.07.03)', async () => {
+    const programacionService = TestBed.inject(ProgramacionService);
+    spyOnDetalle(programacionService, {
+      funcionId: 'f-1',
+      totalEntradas: 5,
+      comprasRegistradas: 5,
+      comprasAnonimas: [],
+      usuarioIds: ['u1'],
+    });
+
+    const cancelarSpy = vi.fn().mockResolvedValue(undefined);
+    programacionService.cancelarFuncion = cancelarSpy;
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const estado = component.estado();
+    if (estado.tipo !== 'datos') return;
+    const funcionACancelar = estado.datos[0].funciones[0];
+
+    await component.iniciarCancelacion(funcionACancelar);
+    fixture.detectChanges();
+
+    // Confirmar cancelación
+    consultarFuncionesDelDiaMock.mockResolvedValue(funcionesMock.slice(1));
+    await component.confirmarCancelacion(funcionACancelar);
+    fixture.detectChanges();
+
+    expect(cancelarSpy).toHaveBeenCalledWith(
+      funcionACancelar.id,
+      funcionACancelar.peliculaTitulo,
+      funcionACancelar.comienzaEn
+    );
+    expect(component.confirmacionCancelar()).toBeNull();
+    expect(component.aviso()).toContain('Función cancelada correctamente.');
+  });
 });
+
+function spyOnDetalle(
+  service: ProgramacionService,
+  detalle: any
+): ReturnType<typeof vi.fn> {
+  const spy = vi.fn().mockResolvedValue(detalle);
+  service.obtenerDetalleCancelacion = spy;
+  return spy;
+}

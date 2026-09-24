@@ -75,6 +75,14 @@
       <div class="acciones">
         <button
           type="button"
+          class="nc-btn nc-btn--secondary nc-btn--sm"
+          [disabled]="cancelando() === f.id"
+          (click)="iniciarCancelacion(f)"
+        >
+          Cancelar
+        </button>
+        <button
+          type="button"
           class="nc-btn nc-btn--danger nc-btn--sm"
           [disabled]="eliminando() === f.id"
           (click)="intentarEliminar(f)"
@@ -107,6 +115,62 @@
         (click)="confirmarEliminacion(f)"
       >
         {{ eliminando() === f.id ? 'Eliminando…' : 'Confirmar eliminación' }}
+      </button>
+    </nc-modal>
+  }
+
+  @if (confirmacionCancelar(); as c) {
+    <nc-modal [ocupado]="cancelando() === c.funcion.id" (cierre)="confirmacionCancelar.set(null)">
+      <h2 titulo class="marquee-md">Cancelar función</h2>
+      <div class="cuerpo-cancelacion">
+        <p>
+          ¿Querés cancelar la función de “{{ c.funcion.peliculaTitulo }}” en
+          {{ c.funcion.salaNombre }} ({{ c.funcion.comienzaEn | date:'HH:mm' }})?
+        </p>
+
+        @if (c.detalle.totalEntradas > 0) {
+          <div class="compras-afectadas">
+            <p class="resumen-afectado-item">
+              <strong>{{ c.detalle.comprasRegistradas }} compras con crédito automático</strong>
+            </p>
+            <div class="resumen-afectado-item">
+              <strong>{{ c.detalle.comprasAnonimas.length }} compras anónimas a resolver en boletería</strong>
+              @if (c.detalle.comprasAnonimas.length > 0) {
+                <ul class="lista-codigos-anonimos">
+                  @for (anon of c.detalle.comprasAnonimas; track anon.codigo) {
+                    <li>Código: <code>{{ anon.codigo }}</code> ({{ anon.cantidadEntradas }} {{ anon.cantidadEntradas === 1 ? 'entrada' : 'entradas' }})</li>
+                  }
+                </ul>
+              }
+            </div>
+          </div>
+        } @else {
+          <p class="body">Esta función no tiene entradas vendidas.</p>
+        }
+
+        <p class="nota-cancelacion">
+          Al confirmar, las entradas quedarán anuladas, se devolverá el dinero a los compradores registrados y la sala quedará libre en este horario.
+        </p>
+      </div>
+
+      <button
+        acciones
+        type="button"
+        class="nc-btn nc-btn--secondary"
+        [disabled]="cancelando() === c.funcion.id"
+        (click)="confirmacionCancelar.set(null)"
+      >
+        Volver
+      </button>
+      <button
+        acciones
+        appFocoInicial
+        type="button"
+        class="nc-btn nc-btn--danger"
+        [disabled]="cancelando() === c.funcion.id"
+        (click)="confirmarCancelacion(c.funcion)"
+      >
+        {{ cancelando() === c.funcion.id ? 'Cancelando…' : 'Confirmar cancelación' }}
       </button>
     </nc-modal>
   }

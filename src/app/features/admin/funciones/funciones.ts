@@ -1,7 +1,10 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ProgramacionService } from '../../../core/data/programacion-service';
+import {
+  DetalleCancelacionFuncion,
+  ProgramacionService,
+} from '../../../core/data/programacion-service';
 import { SalasService } from '../../../core/data/salas-service';
 import { PeliculasService } from '../../../core/data/peliculas-service';
 import type { Funcion } from '../../../core/models/funcion';
@@ -55,9 +58,14 @@ export class Funciones implements OnInit {
   fechaSeleccionada = signal<string>(this.obtenerHoyIso());
   estado = signal<EstadoConsulta<SalaGrupo>>({ tipo: 'cargando' });
   confirmacion = signal<FuncionFila | null>(null);
+  confirmacionCancelar = signal<{
+    funcion: FuncionFila;
+    detalle: DetalleCancelacionFuncion;
+  } | null>(null);
   aviso = signal<string>('');
   error = signal<string>('');
   eliminando = signal<string | null>(null);
+  cancelando = signal<string | null>(null);
 
   private salasMap = new Map<string, Sala>();
   private peliculasMap = new Map<string, PeliculaConCatalogo>();
@@ -194,6 +202,40 @@ export class Funciones implements OnInit {
       this.confirmacion.set(null);
     } finally {
       this.eliminando.set(null);
+    }
+  }
+
+  async iniciarCancelacion(funcion: FuncionFila): Promise<void> {
+    this.error.set('');
+    this.aviso.set('');
+    try {
+      const detalle = await this.programacionService.obtenerDetalleCancelacion(
+        funcion.id
+      );
+      this.confirmacionCancelar.set({ funcion, detalle });
+    } catch (e: any) {
+      this.error.set(e?.message || 'Error al consultar las compras de la función');
+    }
+  }
+
+  async confirmarCancelacion(funcion: FuncionFila): Promise<void> {
+    this.cancelando.set(funcion.id);
+    this.error.set('');
+    this.aviso.set('');
+    try {
+      await this.programacionService.cancelarFuncion(
+        funcion.id,
+        funcion.peliculaTitulo,
+        funcion.comienzaEn
+      );
+      this.confirmacionCancelar.set(null);
+      this.aviso.set('Función cancelada correctamente.');
+      await this.cargarFunciones(this.fechaSeleccionada());
+    } catch (e: any) {
+      this.error.set(e?.message || 'Error al cancelar la función');
+      this.confirmacionCancelar.set(null);
+    } finally {
+      this.cancelando.set(null);
     }
   }
 

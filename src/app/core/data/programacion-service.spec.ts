@@ -194,4 +194,76 @@ describe('ProgramacionService (US-04.03)', () => {
       'No se puede eliminar una función con entradas vendidas'
     );
   });
+
+  it('obtiene el detalle de cancelación separando compras registradas y anónimas (AC-04.07.02)', async () => {
+    // 9 entradas de usuarios registrados y 3 de compras anónimas
+    const entradasMock = [
+      ...Array.from({ length: 9 }, (_, i) => ({
+        id: `e-reg-${i}`,
+        compra_id: `c-reg-${i}`,
+        compras: { id: `c-reg-${i}`, codigo: `REG${i}`, usuario_id: `user-${i}` },
+      })),
+      ...Array.from({ length: 3 }, (_, i) => ({
+        id: `e-anon-${i}`,
+        compra_id: `c-anon-${i}`,
+        compras: { id: `c-anon-${i}`, codigo: `ANON${i}`, usuario_id: null },
+      })),
+    ];
+
+    supabaseMock.Sup.from = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      is: vi.fn().mockResolvedValue({ data: entradasMock, error: null }),
+    });
+
+    const detalle = await service.obtenerDetalleCancelacion('func-1');
+
+    expect(detalle.totalEntradas).toBe(12);
+    expect(detalle.comprasRegistradas).toBe(9);
+    expect(detalle.comprasAnonimas.length).toBe(3);
+    expect(detalle.comprasAnonimas[0].codigo).toBe('ANON0');
+    expect(detalle.usuarioIds.length).toBe(9);
+  });
+
+  it('cancela la función actualizando su estado a cancelada (AC-04.07.01, AC-04.07.03)', async () => {
+    const updateMock = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    });
+    const insertNotifMock = vi.fn().mockResolvedValue({ data: null, error: null });
+
+    supabaseMock.Sup.from = vi.fn((tabla: string) => {
+      if (tabla === 'entradas') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          is: vi.fn().mockResolvedValue({
+            data: [
+              {
+                id: 'e1',
+                compra_id: 'c1',
+                compras: { id: 'c1', codigo: 'REG01', usuario_id: 'u1' },
+              },
+            ],
+            error: null,
+          }),
+        };
+      }
+      if (tabla === 'funciones') {
+        return {
+          update: updateMock,
+        };
+      }
+      if (tabla === 'notificaciones') {
+        return {
+          insert: insertNotifMock,
+        };
+      }
+      return {};
+    });
+
+    await service.cancelarFuncion('func-1', 'Dune', '18:00');
+
+    expect(updateMock).toHaveBeenCalledWith({ estado: 'cancelada' });
+    expect(insertNotifMock).toHaveBeenCalled();
+  });
 });

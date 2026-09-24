@@ -77,6 +77,46 @@
   align-items: center;
 }
 
+.cuerpo-cancelacion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compras-afectadas {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.resumen-afectado-item {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #f1f5f9;
+}
+
+.lista-codigos-anonimos {
+  margin: 6px 0 0 16px;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--nc-texto-secundario, #8c91a5);
+}
+
+.lista-codigos-anonimos code {
+  color: #93c5fd;
+  font-weight: 600;
+}
+
+.nota-cancelacion {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--nc-texto-secundario, #8c91a5);
+}
+
 .vacio,
 .error,
 .aviso {
