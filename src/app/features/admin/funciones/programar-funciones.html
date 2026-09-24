@@ -1,0 +1,251 @@
+<section class="programar-funciones">
+  <div class="navegacion-superior">
+    <a routerLink="/admin/funciones" class="btn-volver">
+      ← Volver a funciones
+    </a>
+  </div>
+
+  <header class="encabezado">
+    <h2>Programar funciones</h2>
+    <p class="descripcion">
+      Configurá película, días, horarios y período. Las salas se asignan automáticamente según disponibilidad.
+    </p>
+  </header>
+
+  @if (aviso()) {
+    <p class="aviso" role="status">{{ aviso() }}</p>
+  }
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" class="formulario">
+    <!-- Película -->
+    <div class="campo-grupo">
+      <label for="pelicula-select">Película</label>
+      <select
+        id="pelicula-select"
+        formControlName="pelicula_id"
+        (change)="onPeliculaChange($event)"
+        class="input-select"
+      >
+        <option value="" disabled>Seleccioná una película</option>
+        @for (p of peliculas(); track p.id) {
+          <option [value]="p.id">
+            {{ p.titulo }} ({{ p.duracion_min }} min)
+          </option>
+        }
+      </select>
+    </div>
+
+    <!-- Formato e Idioma (AC-04.05.01) -->
+    <div class="campo-doble">
+      <div class="campo-grupo">
+        <label>Formato</label>
+        <div class="botones-opciones" role="radiogroup" aria-label="Formato">
+          @for (fmt of formatos(); track fmt.id) {
+            <button
+              type="button"
+              class="btn-opcion"
+              [class.activo]="formatoSeleccionado() === fmt.id"
+              (click)="setFormato(fmt.id)"
+            >
+              {{ fmt.codigo }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="campo-grupo">
+        <label>Idioma</label>
+        <div class="botones-opciones" role="radiogroup" aria-label="Idioma">
+          @for (idm of versionesIdioma(); track idm.id) {
+            <button
+              type="button"
+              class="btn-opcion"
+              [class.activo]="versionIdiomaSeleccionada() === idm.id"
+              (click)="setVersionIdioma(idm.id)"
+            >
+              {{ idm.nombre }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Días de la semana (AC-04.03.01) -->
+    <div class="campo-grupo">
+      <label>Días de la semana</label>
+      <div class="botones-opciones dias-semana" role="group" aria-label="Días de la semana">
+        @for (dia of diasSemanaOpciones; track dia.numero) {
+          <button
+            type="button"
+            class="btn-opcion btn-dia"
+            [class.activo]="diasSeleccionados().includes(dia.numero)"
+            (click)="toggleDia(dia.numero)"
+          >
+            {{ dia.etiqueta }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Período (1 a 4 semanas) (AC-04.03.01) -->
+    <div class="campo-grupo">
+      <label>Período</label>
+      <div class="botones-opciones" role="radiogroup" aria-label="Período de programación">
+        @for (sem of semanasOpciones; track sem) {
+          <button
+            type="button"
+            class="btn-opcion"
+            [class.activo]="semanasSeleccionadas() === sem"
+            (click)="setSemanas(sem)"
+          >
+            {{ sem }} {{ sem === 1 ? 'semana' : 'semanas' }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Fecha de inicio -->
+    <div class="campo-grupo">
+      <label>Fecha de inicio</label>
+      <nc-selector-fecha
+        [fechaInicial]="fechaInicio()"
+        (fechaElegida)="onFechaElegida($event)"
+      ></nc-selector-fecha>
+    </div>
+
+    <!-- Horarios (FormArray con selector) -->
+    <div class="campo-grupo">
+      <label>Horarios</label>
+      <div class="horarios-sugeridos">
+        <span class="subetiqueta">Agregar horario:</span>
+        <div class="botones-horas">
+          @for (h of horariosSugeridos; track h) {
+            <button
+              type="button"
+              class="btn-hora-sugerida"
+              (click)="agregarHorario(h)"
+            >
+              + {{ h }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <div formArrayName="horarios" class="horarios-lista">
+        @for (ctrl of horariosArray.controls; track $index; let i = $index) {
+          <div class="horario-fila">
+            <input
+              type="time"
+              [formControlName]="i"
+              class="input-hora"
+              required
+            />
+            <button
+              type="button"
+              class="btn-quitar-horario"
+              (click)="quitarHorario(i)"
+              [disabled]="horariosArray.length <= 1"
+              aria-label="Quitar horario"
+            >
+              ✕
+            </button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Botón calcular resumen previo -->
+    <div class="acciones-formulario">
+      <button
+        type="button"
+        class="btn-secundario"
+        (click)="calcular()"
+        [disabled]="calculando()"
+        id="btn-calcular"
+      >
+        {{ calculando() ? 'Calculando asignación…' : 'Calcular asignación de salas' }}
+      </button>
+    </div>
+  </form>
+
+  <!-- Resumen previo con asignación de salas (AC-04.03.01, AC-04.03.02, AC-04.03.03) -->
+  @if (resumen().length > 0) {
+    <section class="resumen-seccion">
+      <header class="resumen-header">
+        <h3>Resumen previo de funciones</h3>
+        <p class="resumen-detalle">
+          {{ funcionesAsignadasCount() }} funciones con sala asignada
+          @if (funcionesRechazadas().length > 0) {
+            · <span class="aviso-rechazo">{{ funcionesRechazadas().length }} sin sala disponible</span>
+          }
+        </p>
+      </header>
+
+      @if (funcionesRechazadas().length > 0) {
+        <div class="alertas-rechazo">
+          @for (rechazada of funcionesRechazadas(); track rechazada.ocurrencia.fecha + rechazada.ocurrencia.hora) {
+            <div class="alerta-item" role="alert">
+              ⚠️ {{ rechazada.motivo }}
+            </div>
+          }
+        </div>
+      }
+
+      <div class="tabla-resumen-contenedor">
+        <table class="tabla-resumen">
+          <thead>
+            <tr>
+              <th>Fecha y hora</th>
+              <th>Formato e Idioma</th>
+              <th>Sala asignada</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of resumen(); track item.ocurrencia.fecha + item.ocurrencia.hora) {
+              <tr [class.fila-rechazada]="!item.asignada">
+                <td>
+                  <strong>{{ item.ocurrencia.diaNombre }} {{ item.ocurrencia.fecha | date:'dd/MM' }}</strong>
+                  · {{ item.ocurrencia.hora }} hs
+                </td>
+                <td>
+                  <span class="badge-formato">{{ nombreFormato() }} · {{ nombreIdioma() }}</span>
+                </td>
+                <td>
+                  @if (item.sala) {
+                    <span class="badge-sala">{{ item.sala.nombre }}</span>
+                  } @else {
+                    <span class="badge-sin-sala">Sin sala disponible</span>
+                  }
+                </td>
+                <td>
+                  @if (item.asignada) {
+                    <span class="estado-ok">✓ Asignada automáticamente</span>
+                  } @else {
+                    <span class="estado-rechazo">✕ No se creará</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="acciones-finales">
+        <button
+          type="button"
+          class="btn-programar"
+          [disabled]="guardando() || funcionesAsignadasCount() === 0"
+          (click)="programar()"
+          id="btn-programar"
+        >
+          {{ guardando() ? 'Programando…' : 'Programar' }}
+        </button>
+      </div>
+    </section>
+  }
+</section>

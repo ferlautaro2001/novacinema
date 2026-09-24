@@ -13,6 +13,7 @@ export class Panel {
   secciones = [
     { ruta: 'peliculas', texto: 'Películas' },
     { ruta: 'salas', texto: 'Salas' },
+    { ruta: 'funciones', texto: 'Funciones' },
     { ruta: 'facturacion', texto: 'Facturación' },
     { ruta: 'empleados', texto: 'Empleados' },
   ];
