@@ -31,5 +31,22 @@ export class PeliculasService {
     return data as PeliculaConCatalogo[];
   }
 
+  async guardar(
+    datos: DatosPelicula,
+    generos: number[],
+    original: PeliculaConCatalogo | null,
+  ): Promise<string> {
+    // Película y géneros forman una sola operación: la función ejecuta INSERT / UPDATE
+    // con RLS y revierte todo si falla una de las tablas. Evita altas a medias.
+    const { data, error } = await this.sup.rpc('guardar_pelicula', {
+      p_id: original?.id ?? null,
+      p_datos: { ...datos },
+      p_generos: generos,
+      p_version: original?.actualizado_en ?? null,
+    });
+    if (error) throw error;
+    return data;
+  }
+
 
 }

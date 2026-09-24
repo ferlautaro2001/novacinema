@@ -22,4 +22,21 @@ export class StorageService {
     return `${environment.SUPABASE_URL}/storage/v1/object/public/imagenes/${ruta.split('/').map(encodeURIComponent).join('/')}`;
   }
 
+  async subirPortada(archivo: File): Promise<string> {
+    const invalida = validarPortada(archivo);
+    if (invalida) throw new Error(invalida);
+    const extension = archivo.type === 'image/jpeg' ? 'jpg' : archivo.type.split('/')[1];
+    const ruta = `peliculas/${crypto.randomUUID()}.${extension}`;
+    const { error } = await this.sup.storage
+      .from('imagenes')
+      .upload(ruta, archivo, { upsert: false });
+    if (error) throw new Error('No se pudo subir la portada. Probá de nuevo.');
+    return ruta;
+  }
+
+  async eliminarPortada(ruta: string): Promise<void> {
+    if (!ruta.startsWith('peliculas/')) return;
+    const { error } = await this.sup.storage.from('imagenes').remove([ruta]);
+    if (error) throw error;
+  }
 }
