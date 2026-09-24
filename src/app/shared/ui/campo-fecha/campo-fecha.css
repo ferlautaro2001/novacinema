@@ -1,0 +1,63 @@
+:host {
+  display: block;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.etiqueta {
+  padding: 0;
+  color: var(--ink-100);
+}
+
+.partes {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 96px;
+  gap: var(--space-2);
+}
+
+.parte {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.parte label {
+  color: var(--ink-200);
+}
+
+/* Mismo aspecto que nc-campo-texto. */
+.entrada {
+  width: 100%;
+  height: 40px;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  background: var(--surface-300);
+  color: var(--ink-100);
+}
+
+.entrada:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.entrada.invalida {
+  border-color: var(--danger);
+}
+
+select.entrada {
+  padding-right: var(--space-2);
+}
+
+.errores:empty {
+  display: none;
+}

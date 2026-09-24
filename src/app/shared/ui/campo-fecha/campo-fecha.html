@@ -1,0 +1,62 @@
+<fieldset
+  class="campo"
+  [attr.aria-invalid]="mostrarErrores()"
+  [attr.aria-describedby]="mostrarErrores() ? id() + '-errores' : null"
+>
+  <legend class="etiqueta body-strong">{{ etiqueta() }}</legend>
+
+  <div class="partes">
+    <div class="parte parte-corta">
+      <label class="caption" [for]="id() + '-dia'">Día</label>
+      <input
+        class="entrada body"
+        [class.invalida]="mostrarErrores()"
+        [id]="id() + '-dia'"
+        type="text"
+        inputmode="numeric"
+        placeholder="DD"
+        [attr.autocomplete]="nacimiento() ? 'bday-day' : 'off'"
+        [formControl]="grupo().controls.dia"
+        (input)="soloNumeros($event, 'dia', 2)"
+        (blur)="completarDia()"
+      />
+    </div>
+
+    <div class="parte parte-mes">
+      <label class="caption" [for]="id() + '-mes'">Mes</label>
+      <select
+        class="entrada body"
+        [class.invalida]="mostrarErrores()"
+        [id]="id() + '-mes'"
+        [attr.autocomplete]="nacimiento() ? 'bday-month' : 'off'"
+        [formControl]="grupo().controls.mes"
+      >
+        <option value="" disabled>Elegí el mes</option>
+        @for (mes of meses; track mes.valor) {
+          <option [value]="mes.valor">{{ mes.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="parte parte-anio">
+      <label class="caption" [for]="id() + '-anio'">Año</label>
+      <input
+        class="entrada body"
+        [class.invalida]="mostrarErrores()"
+        [id]="id() + '-anio'"
+        type="text"
+        inputmode="numeric"
+        placeholder="AAAA"
+        [attr.autocomplete]="nacimiento() ? 'bday-year' : 'off'"
+        [formControl]="grupo().controls.anio"
+        (input)="soloNumeros($event, 'anio', 4)"
+      />
+    </div>
+  </div>
+
+  <div class="errores" [id]="id() + '-errores'" aria-live="polite">
+    @if (mostrarErrores()) {
+      <ng-content />
+    }
+  </div>
+</fieldset>

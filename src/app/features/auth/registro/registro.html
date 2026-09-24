@@ -65,14 +65,20 @@
         </nc-campo-texto>
       </div>
 
-      <nc-campo-texto
+      <nc-campo-fecha
         id="nacimiento"
-        etiqueta="Fecha de nacimiento (DD/MM/AAAA)"
-        autocompletar="bday"
-        [control]="form.controls.nacimiento"
+        etiqueta="Fecha de nacimiento"
+        [nacimiento]="true"
+        [grupo]="form.controls.nacimiento"
       >
-        <nc-error-campo [control]="form.controls.nacimiento" error="required">
-          Este campo es obligatorio
+        <nc-error-campo [control]="form.controls.nacimiento" error="fechaIncompleta">
+          Completá el día, el mes y el año
+        </nc-error-campo>
+        <nc-error-campo [control]="form.controls.nacimiento" error="diaInvalido">
+          El día tiene que ser un número del 1 al 31
+        </nc-error-campo>
+        <nc-error-campo [control]="form.controls.nacimiento" error="anioFueraDeRango">
+          El año tiene que estar entre {{ anioMinimo }} y {{ anioMaximo }}
         </nc-error-campo>
         <nc-error-campo [control]="form.controls.nacimiento" error="fechaInvalida">
           Ingresá una fecha válida
@@ -80,7 +86,7 @@
         <nc-error-campo [control]="form.controls.nacimiento" error="fechaNoAnterior">
           La fecha debe ser anterior a hoy
         </nc-error-campo>
-      </nc-campo-texto>
+      </nc-campo-fecha>
 
       @if (error(); as mensaje) {
         <p class="error body" role="alert">{{ mensaje }}</p>
