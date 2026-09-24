@@ -7,6 +7,7 @@ import { adminHijosGuard } from '../../core/guards/admin-hijos-guard';
 export const adminRoutes: Routes = [
   {
     path: '',
+    loadComponent: () => import('./panel/panel').then((m) => m.Panel),
     canActivateChild: [adminHijosGuard],
     children: [
       { path: '', redirectTo: 'facturacion', pathMatch: 'full' },
@@ -14,6 +15,11 @@ export const adminRoutes: Routes = [
         path: 'facturacion',
         title: 'Panel · Facturación · NovaCinema',
         loadComponent: () => import('./facturacion/facturacion').then((m) => m.Facturacion),
+      },
+      {
+        path: 'empleados',
+        title: 'Panel · Empleados · NovaCinema',
+        loadComponent: () => import('./empleados/empleados').then((m) => m.Empleados),
       },
     ],
   },
