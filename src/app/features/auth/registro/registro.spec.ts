@@ -122,4 +122,17 @@ describe('Registro (US-02.02)', () => {
     expect(raiz.querySelector('[role=status]')?.textContent).toContain('Revisá tu email');
     expect(raiz.querySelector('form')).toBeNull();
   });
+
+  it('avisa que hay cambios sin guardar hasta que la cuenta se crea (US-02.06)', async () => {
+    vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    const registro = fixture.componentInstance;
+    expect(registro.noGuardado()).toBe(false);
+
+    await completarAna();
+    expect(registro.noGuardado()).toBe(true);
+
+    boton().click();
+    await fixture.whenStable();
+    expect(registro.noGuardado()).toBe(false);
+  });
 });
