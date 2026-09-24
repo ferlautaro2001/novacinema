@@ -1,0 +1,121 @@
+.editor,
+.datos,
+.campo,
+.portada {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.editor {
+  max-width: 1100px;
+}
+.volver {
+  color: var(--ink-200);
+}
+.contenido {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: var(--space-6);
+  border: 0;
+  padding: 0;
+  margin-block: var(--space-4) var(--space-6);
+  min-width: 0;
+}
+.datos {
+  min-width: 0;
+}
+.campo {
+  gap: var(--space-2);
+}
+textarea,
+select,
+input[type='file'] {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--surface-300);
+  color: var(--ink-100);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  font: inherit;
+}
+textarea {
+  resize: vertical;
+}
+.dos-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.generos {
+  padding: var(--space-4);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+}
+.opciones-genero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.genero {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+input[type='checkbox'] {
+  accent-color: var(--brand-500);
+  width: 18px;
+  height: 18px;
+}
+.portada {
+  padding: var(--space-4);
+  align-self: start;
+  background: var(--surface-200);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-100);
+}
+.portada img,
+.placeholder {
+  width: 100%;
+  aspect-ratio: 2/3;
+  object-fit: cover;
+  border-radius: var(--radius-xl);
+  background: var(--surface-300);
+}
+.placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--ink-300);
+}
+.nota {
+  color: var(--ink-200);
+}
+.error {
+  background: var(--danger-tint);
+  border-left: 3px solid var(--danger);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+}
+.error-texto {
+  color: var(--danger);
+}
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+@media (max-width: 800px) {
+  .contenido {
+    grid-template-columns: 1fr;
+  }
+  .portada {
+    max-width: 320px;
+  }
+}
+@media (max-width: 480px) {
+  .dos-columnas {
+    grid-template-columns: 1fr;
+  }
+}
