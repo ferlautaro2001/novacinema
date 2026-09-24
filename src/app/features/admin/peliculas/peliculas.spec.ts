@@ -72,4 +72,20 @@ describe('Catálogo EP-03', () => {
     expect(otro.nativeElement.textContent).toContain('No se pudo cargar el catálogo');
     expect(otro.nativeElement.textContent).not.toContain('Todavía no cargaste');
   });
+  it('no elimina sin confirmación y conserva el historial si la base rechaza', async () => {
+    eliminar.mockRejectedValue(new Error(ERROR_HISTORIAL));
+    const fixture = TestBed.createComponent(Peliculas);
+    await fixture.whenStable();
+    const raiz: HTMLElement = fixture.nativeElement;
+    const boton = (texto: string) =>
+      [...raiz.querySelectorAll('button')].find((b) => b.textContent?.trim() === texto)!;
+    boton('Eliminar').click();
+    await fixture.whenStable();
+    expect(eliminar).not.toHaveBeenCalled();
+    boton('Confirmar eliminación').click();
+    await fixture.whenStable();
+    expect(eliminar).toHaveBeenCalledWith(peliculaPrueba);
+    expect(raiz.querySelector('[role=alert]')?.textContent).toContain(ERROR_HISTORIAL);
+    expect(raiz.textContent).toContain('Dune: Parte Tres');
+  });
 });
