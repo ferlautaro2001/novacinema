@@ -56,6 +56,49 @@
     <td class="code">{{ p.duracion_min | duracion }}</td>
     <td class="caption">{{ p.fecha_estreno | date: 'dd/MM/yyyy' }}</td>
     <td class="caption">{{ nombreEstado(p) }}</td>
-    <td><a class="nc-btn nc-btn--ghost nc-btn--sm" [routerLink]="[p.id]">Editar</a></td>
+    <td>
+      <div class="acciones">
+        <a class="nc-btn nc-btn--ghost nc-btn--sm" [routerLink]="[p.id]">Editar</a>
+        @if (p.activo) {
+          <button
+            class="nc-btn nc-btn--ghost nc-btn--sm"
+            [disabled]="trabajando()"
+            (click)="accion('finalizar', p)"
+          >
+            Finalizar
+          </button>
+        }
+        <button
+          class="nc-btn nc-btn--danger nc-btn--sm"
+          [disabled]="trabajando()"
+          (click)="confirmacion.set(p)"
+        >
+          Eliminar
+        </button>
+      </div>
+    </td>
   </ng-template>
+  @if (confirmacion(); as p) {
+    <nc-modal [ocupado]="trabajando()" (cierre)="confirmacion.set(null)">
+      <h2 titulo class="marquee-md">Eliminar película</h2>
+      <p>¿Querés eliminar “{{ p.titulo }}”? Esta acción no se puede deshacer.</p>
+      <button
+        acciones
+        class="nc-btn nc-btn--secondary"
+        [disabled]="trabajando()"
+        (click)="confirmacion.set(null)"
+      >
+        Cancelar
+      </button>
+      <button
+        acciones
+        appFocoInicial
+        class="nc-btn nc-btn--danger"
+        [disabled]="trabajando()"
+        (click)="accion('eliminar', p)"
+      >
+        {{ trabajando() ? 'Eliminando…' : 'Confirmar eliminación' }}
+      </button>
+    </nc-modal>
+  }
 </section>

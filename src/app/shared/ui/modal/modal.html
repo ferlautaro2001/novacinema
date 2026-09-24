@@ -1,0 +1,5 @@
+<dialog #dialogo aria-labelledby="titulo-modal" (cancel)="cerrar($event)">
+  <header id="titulo-modal"><ng-content select="[titulo]" /></header>
+  <div class="cuerpo body"><ng-content /></div>
+  <footer><ng-content select="[acciones]" /></footer>
+</dialog>

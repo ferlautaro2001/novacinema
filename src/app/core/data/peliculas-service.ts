@@ -69,5 +69,32 @@ export class PeliculasService {
     return data;
   }
 
+  async finalizar(pelicula: PeliculaConCatalogo): Promise<void> {
+    const { error } = await this.sup
+      .from('peliculas')
+      .update({ activo: false, estado: 'archivada', destacada: false })
+      .eq('id', pelicula.id)
+      .eq('actualizado_en', pelicula.actualizado_en)
+      .select('id')
+      .single();
+    if (error) throw error;
+  }
 
+  async eliminar(pelicula: PeliculaConCatalogo): Promise<void> {
+    const { count, error: consultaError } = await this.sup
+      .from('funciones')
+      .select('id', { count: 'exact', head: true })
+      .eq('pelicula_id', pelicula.id);
+    if (consultaError) throw consultaError;
+    // Toda entrada referencia una función: si hay funciones, ya no se puede eliminar.
+    if (count) throw new Error(ERROR_HISTORIAL);
+    const { error } = await this.sup
+      .from('peliculas')
+      .delete()
+      .eq('id', pelicula.id)
+      .eq('actualizado_en', pelicula.actualizado_en)
+      .select('id')
+      .single();
+    if (error) throw error;
+  }
 }
