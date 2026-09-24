@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ProgramacionService } from '../../../core/data/programacion-service';
 import { SalasService } from '../../../core/data/salas-service';
@@ -8,22 +8,42 @@ import type { Funcion } from '../../../core/models/funcion';
 import type { Sala } from '../../../core/models/sala';
 import type { PeliculaConCatalogo } from '../../../core/models/pelicula';
 import { SelectorFecha } from '../../../shared/ui/selector-fecha/selector-fecha';
+import { TablaDatos } from '../../../shared/ui/tabla-datos/tabla-datos';
+import { Cargando, EstadoConsulta } from '../../../shared/directivas/cargando';
+import { Modal } from '../../../shared/ui/modal/modal';
+import { FocoInicial } from '../../../shared/directivas/foco-inicial';
 
 export interface FuncionFila {
   id: string;
+  peliculaId: string;
   peliculaTitulo: string;
+  salaId: string;
   salaNombre: string;
   comienzaEn: string;
   terminaEn: string;
   formatoCodigo: string;
   versionIdiomaNombre: string;
   estado: string;
+  textoResumen: string;
+}
+
+export interface SalaGrupo {
+  id: string;
+  sala: Sala;
+  funciones: FuncionFila[];
 }
 
 @Component({
   selector: 'nc-funciones',
-  standalone: true,
-  imports: [CommonModule, RouterLink, SelectorFecha],
+  imports: [
+    DatePipe,
+    RouterLink,
+    SelectorFecha,
+    TablaDatos,
+    Cargando,
+    Modal,
+    FocoInicial,
+  ],
   templateUrl: './funciones.html',
   styleUrl: './funciones.css',
 })
@@ -33,9 +53,11 @@ export class Funciones implements OnInit {
   private peliculasService = inject(PeliculasService);
 
   fechaSeleccionada = signal<string>(this.obtenerHoyIso());
-  funciones = signal<FuncionFila[]>([]);
-  cargando = signal<boolean>(true);
+  estado = signal<EstadoConsulta<SalaGrupo>>({ tipo: 'cargando' });
+  confirmacion = signal<FuncionFila | null>(null);
+  aviso = signal<string>('');
   error = signal<string>('');
+  eliminando = signal<string | null>(null);
 
   private salasMap = new Map<string, Sala>();
   private peliculasMap = new Map<string, PeliculaConCatalogo>();
@@ -59,7 +81,7 @@ export class Funciones implements OnInit {
       await this.cargarFunciones(this.fechaSeleccionada());
     } catch (e: any) {
       this.error.set(e?.message || 'Error al cargar datos');
-      this.cargando.set(false);
+      this.estado.set({ tipo: 'error', mensaje: e?.message || 'Error al cargar datos' });
     }
   }
 
@@ -69,35 +91,117 @@ export class Funciones implements OnInit {
     const d = String(fecha.getDate()).padStart(2, '0');
     const iso = `${y}-${m}-${d}`;
     this.fechaSeleccionada.set(iso);
+    this.error.set('');
+    this.aviso.set('');
     await this.cargarFunciones(iso);
   }
 
   async cargarFunciones(fechaStr: string): Promise<void> {
-    this.cargando.set(true);
-    this.error.set('');
+    this.estado.set({ tipo: 'cargando' });
     try {
       const datos = await this.programacionService.consultarFuncionesDelDia(fechaStr);
-      const mapeadas: FuncionFila[] = datos.map((f: Funcion) => ({
-        id: f.id,
-        peliculaTitulo: this.peliculasMap.get(f.pelicula_id)?.titulo || 'Película',
-        salaNombre: this.salasMap.get(f.sala_id)?.nombre || 'Sala',
-        comienzaEn: f.comienza_en,
-        terminaEn: f.termina_en,
-        formatoCodigo: this.formatosMap.get(f.formato_id) || '2D',
-        versionIdiomaNombre: this.idiomasMap.get(f.version_idioma_id) || 'Castellano',
-        estado: f.estado,
-      }));
 
-      // Ordenadas cronológicamente
-      mapeadas.sort(
-        (a, b) => new Date(a.comienzaEn).getTime() - new Date(b.comienzaEn).getTime()
+      const mapeadas: FuncionFila[] = datos.map((f: Funcion) => {
+        const titulo = this.peliculasMap.get(f.pelicula_id)?.titulo || 'Película';
+        const salaNombre = this.salasMap.get(f.sala_id)?.nombre || 'Sala';
+        const formato = this.formatosMap.get(f.formato_id) || '2D';
+        const idioma = this.idiomasMap.get(f.version_idioma_id) || 'Castellano';
+        const inicioHora = this.obtenerHoraMinuto(f.comienza_en);
+        const finHora = this.obtenerHoraMinuto(f.termina_en);
+
+        return {
+          id: f.id,
+          peliculaId: f.pelicula_id,
+          peliculaTitulo: titulo,
+          salaId: f.sala_id,
+          salaNombre,
+          comienzaEn: f.comienza_en,
+          terminaEn: f.termina_en,
+          formatoCodigo: formato,
+          versionIdiomaNombre: idioma,
+          estado: f.estado,
+          textoResumen: `${titulo} · ${inicioHora}–${finHora} · ${formato} · ${idioma}`,
+        };
+      });
+
+      // Agrupar funciones por sala
+      const salasConFunciones = new Map<string, FuncionFila[]>();
+      for (const func of mapeadas) {
+        if (!salasConFunciones.has(func.salaId)) {
+          salasConFunciones.set(func.salaId, []);
+        }
+        salasConFunciones.get(func.salaId)!.push(func);
+      }
+
+      // Ordenar funciones por horario dentro de cada sala
+      for (const [, lista] of salasConFunciones) {
+        lista.sort(
+          (a, b) => new Date(a.comienzaEn).getTime() - new Date(b.comienzaEn).getTime()
+        );
+      }
+
+      // Convertir a grupos ordenados por número de sala
+      const grupos: SalaGrupo[] = [];
+      const salasOrdenadas = Array.from(this.salasMap.values()).sort(
+        (a, b) => a.numero - b.numero
       );
-      this.funciones.set(mapeadas);
+
+      for (const sala of salasOrdenadas) {
+        const funcs = salasConFunciones.get(sala.id);
+        if (funcs && funcs.length > 0) {
+          grupos.push({
+            id: sala.id,
+            sala,
+            funciones: funcs,
+          });
+        }
+      }
+
+      this.estado.set({ tipo: 'datos', datos: grupos });
     } catch (e: any) {
-      this.error.set(e?.message || 'Error al consultar las funciones del día');
-    } finally {
-      this.cargando.set(false);
+      const msg = e?.message || 'Error al consultar las funciones del día';
+      this.error.set(msg);
+      this.estado.set({ tipo: 'error', mensaje: msg });
     }
+  }
+
+  async intentarEliminar(funcion: FuncionFila): Promise<void> {
+    this.error.set('');
+    this.aviso.set('');
+    try {
+      const ventas = await this.programacionService.contarEntradasVendidas(funcion.id);
+      if (ventas > 0) {
+        this.error.set('No se puede eliminar una función con entradas vendidas');
+        return;
+      }
+      this.confirmacion.set(funcion);
+    } catch (e: any) {
+      this.error.set(e?.message || 'Error al verificar las entradas vendidas');
+    }
+  }
+
+  async confirmarEliminacion(funcion: FuncionFila): Promise<void> {
+    this.eliminando.set(funcion.id);
+    this.error.set('');
+    this.aviso.set('');
+    try {
+      await this.programacionService.eliminarFuncion(funcion.id);
+      this.confirmacion.set(null);
+      this.aviso.set('Función eliminada correctamente.');
+      await this.cargarFunciones(this.fechaSeleccionada());
+    } catch (e: any) {
+      this.error.set(e?.message || 'Error al eliminar la función');
+      this.confirmacion.set(null);
+    } finally {
+      this.eliminando.set(null);
+    }
+  }
+
+  private obtenerHoraMinuto(iso: string): string {
+    const d = new Date(iso);
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    return `${h}:${m}`;
   }
 
   private obtenerHoyIso(): string {

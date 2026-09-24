@@ -7,12 +7,15 @@
           Consultá y gestioná las funciones programadas por día y por sala.
         </p>
       </div>
-      <a routerLink="/admin/funciones/programar" class="btn-primario" id="btn-nueva-programacion">
+      <a routerLink="/admin/funciones/programar" class="nc-btn nc-btn--primary" id="btn-nueva-programacion">
         + Programar funciones
       </a>
     </div>
   </header>
 
+  @if (aviso()) {
+    <p class="aviso" role="status">{{ aviso() }}</p>
+  }
   @if (error()) {
     <p class="error" role="alert">{{ error() }}</p>
   }
@@ -24,43 +27,87 @@
     ></nc-selector-fecha>
   </div>
 
-  @if (cargando()) {
-    <p class="estado">Cargando funciones…</p>
-  } @else if (funciones().length === 0) {
+  <ng-template #vacio>
     <p class="vacio">No hay funciones programadas para este día.</p>
-  } @else {
-    <div class="tabla-contenedor">
-      <table class="tabla">
-        <thead>
-          <tr>
-            <th>Horario</th>
-            <th>Película</th>
-            <th>Sala</th>
-            <th>Formato / Idioma</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (f of funciones(); track f.id) {
-            <tr>
-              <td>
-                <strong>{{ f.comienzaEn | date:'HH:mm' }}</strong>
-                <span class="hora-fin"> a {{ f.terminaEn | date:'HH:mm' }}</span>
-              </td>
-              <td>{{ f.peliculaTitulo }}</td>
-              <td>
-                <span class="badge-sala">{{ f.salaNombre }}</span>
-              </td>
-              <td>
-                <span class="badge-formato">{{ f.formatoCodigo }} · {{ f.versionIdiomaNombre }}</span>
-              </td>
-              <td>
-                <span class="badge-estado">{{ f.estado }}</span>
-              </td>
+  </ng-template>
+
+  <ng-template #fallo let-mensaje>
+    <p class="error" role="alert">{{ mensaje }}</p>
+    <button class="nc-btn nc-btn--secondary" (click)="cargarFunciones(fechaSeleccionada())">
+      Reintentar
+    </button>
+  </ng-template>
+
+  <ng-container *appCargando="estado(); vacio: vacio; error: fallo; let salasConFunciones">
+    <div class="grilla-salas">
+      @for (grupo of salasConFunciones; track grupo.id) {
+        <article class="sala-grupo">
+          <h3 class="sala-titulo">{{ grupo.sala.nombre }}</h3>
+          <nc-tabla-datos
+            [filas]="grupo.funciones"
+            [plantillaFila]="filaFuncion"
+            [titulo]="'Funciones de ' + grupo.sala.nombre"
+          >
+            <tr encabezado>
+              <th scope="col">Horario</th>
+              <th scope="col">Detalle</th>
+              <th scope="col">Estado</th>
+              <th scope="col">Acciones</th>
             </tr>
-          }
-        </tbody>
-      </table>
+          </nc-tabla-datos>
+        </article>
+      }
     </div>
+  </ng-container>
+
+  <ng-template #filaFuncion let-f>
+    <td>
+      <strong>{{ f.comienzaEn | date:'HH:mm' }}</strong>
+      <span class="hora-fin"> a {{ f.terminaEn | date:'HH:mm' }}</span>
+    </td>
+    <td>
+      <span class="resumen-texto">{{ f.textoResumen }}</span>
+    </td>
+    <td>
+      <span class="badge-estado">{{ f.estado }}</span>
+    </td>
+    <td>
+      <div class="acciones">
+        <button
+          type="button"
+          class="nc-btn nc-btn--danger nc-btn--sm"
+          [disabled]="eliminando() === f.id"
+          (click)="intentarEliminar(f)"
+        >
+          Eliminar
+        </button>
+      </div>
+    </td>
+  </ng-template>
+
+  @if (confirmacion(); as f) {
+    <nc-modal [ocupado]="eliminando() === f.id" (cierre)="confirmacion.set(null)">
+      <h2 titulo class="marquee-md">Eliminar función</h2>
+      <p>¿Querés eliminar la función de “{{ f.peliculaTitulo }}” en {{ f.salaNombre }} ({{ f.comienzaEn | date:'HH:mm' }})? Esta acción no se puede deshacer.</p>
+      <button
+        acciones
+        type="button"
+        class="nc-btn nc-btn--secondary"
+        [disabled]="eliminando() === f.id"
+        (click)="confirmacion.set(null)"
+      >
+        Cancelar
+      </button>
+      <button
+        acciones
+        appFocoInicial
+        type="button"
+        class="nc-btn nc-btn--danger"
+        [disabled]="eliminando() === f.id"
+        (click)="confirmarEliminacion(f)"
+      >
+        {{ eliminando() === f.id ? 'Eliminando…' : 'Confirmar eliminación' }}
+      </button>
+    </nc-modal>
   }
 </section>

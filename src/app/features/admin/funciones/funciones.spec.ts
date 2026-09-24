@@ -8,7 +8,7 @@ import type { Funcion } from '../../../core/models/funcion';
 import type { Sala } from '../../../core/models/sala';
 import type { PeliculaConCatalogo } from '../../../core/models/pelicula';
 
-describe('Funciones (US-04.03)', () => {
+describe('Funciones (US-04.06)', () => {
   let fixture: ComponentFixture<Funciones>;
   let component: Funciones;
   let raiz: HTMLElement;
@@ -22,17 +22,25 @@ describe('Funciones (US-04.03)', () => {
       creado_en: '2026-09-01T00:00:00Z',
       actualizado_en: '2026-09-01T00:00:00Z',
     },
+    {
+      id: 'sala-2',
+      numero: 2,
+      nombre: 'Sala 2',
+      activa: true,
+      creado_en: '2026-09-01T00:00:00Z',
+      actualizado_en: '2026-09-01T00:00:00Z',
+    },
   ];
 
   const peliculasMock: PeliculaConCatalogo[] = [
     {
       id: 'peli-1',
-      titulo: 'Inception',
-      sinopsis: 'Un ladrón que roba secretos corporativos...',
-      duracion_min: 148,
+      titulo: 'Dune: Parte Tres',
+      sinopsis: 'Paul Atreides lidera a los Fremen...',
+      duracion_min: 165,
       clasificacion_id: 2,
-      imagen_path: 'peliculas/inception.jpg',
-      fecha_estreno: '2010-07-16',
+      imagen_path: 'peliculas/dune.jpg',
+      fecha_estreno: '2026-10-01',
       estado: 'en_cartelera',
       activo: true,
       destacada: false,
@@ -43,8 +51,8 @@ describe('Funciones (US-04.03)', () => {
     },
   ];
 
-  const formatosMock = [{ id: 1, codigo: '2D', nombre: 'Tradicional 2D' }];
-  const idiomasMock = [{ id: 1, codigo: 'CAS', nombre: 'Castellano' }];
+  const formatosMock = [{ id: 1, codigo: '3D', nombre: 'Tres dimensiones' }];
+  const idiomasMock = [{ id: 1, codigo: 'sub', nombre: 'Subtitulada' }];
 
   const funcionesMock: Funcion[] = [
     {
@@ -53,10 +61,38 @@ describe('Funciones (US-04.03)', () => {
       sala_id: 'sala-1',
       formato_id: 1,
       version_idioma_id: 1,
-      duracion_min: 148,
-      comienza_en: '2026-09-25T18:00:00Z',
-      termina_en: '2026-09-25T20:28:00Z',
-      libre_desde: '2026-09-25T20:58:00Z',
+      duracion_min: 165,
+      comienza_en: '2026-10-09T18:00:00.000Z',
+      termina_en: '2026-10-09T20:45:00.000Z',
+      libre_desde: '2026-10-09T21:15:00.000Z',
+      estado: 'programada',
+      creada_en: '2026-09-24T12:00:00Z',
+      actualizado_en: '2026-09-24T12:00:00Z',
+    },
+    {
+      id: 'f-2',
+      pelicula_id: 'peli-1',
+      sala_id: 'sala-1',
+      formato_id: 1,
+      version_idioma_id: 1,
+      duracion_min: 165,
+      comienza_en: '2026-10-09T21:30:00.000Z',
+      termina_en: '2026-10-09T00:15:00.000Z',
+      libre_desde: '2026-10-09T00:45:00.000Z',
+      estado: 'programada',
+      creada_en: '2026-09-24T12:00:00Z',
+      actualizado_en: '2026-09-24T12:00:00Z',
+    },
+    {
+      id: 'f-3',
+      pelicula_id: 'peli-1',
+      sala_id: 'sala-2',
+      formato_id: 1,
+      version_idioma_id: 1,
+      duracion_min: 165,
+      comienza_en: '2026-10-09T19:00:00.000Z',
+      termina_en: '2026-10-09T21:45:00.000Z',
+      libre_desde: '2026-10-09T22:15:00.000Z',
       estado: 'programada',
       creada_en: '2026-09-24T12:00:00Z',
       actualizado_en: '2026-09-24T12:00:00Z',
@@ -64,9 +100,26 @@ describe('Funciones (US-04.03)', () => {
   ];
 
   let consultarFuncionesDelDiaMock: ReturnType<typeof vi.fn>;
+  let contarEntradasVendidasMock: ReturnType<typeof vi.fn>;
+  let eliminarFuncionMock: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+      configurable: true,
+      value() {
+        this.open = true;
+      },
+    });
+    Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+      configurable: true,
+      value() {
+        this.open = false;
+      },
+    });
+
     consultarFuncionesDelDiaMock = vi.fn().mockResolvedValue(funcionesMock);
+    contarEntradasVendidasMock = vi.fn().mockResolvedValue(0);
+    eliminarFuncionMock = vi.fn().mockResolvedValue(undefined);
 
     await TestBed.configureTestingModule({
       imports: [Funciones],
@@ -90,6 +143,8 @@ describe('Funciones (US-04.03)', () => {
             obtenerFormatos: vi.fn().mockResolvedValue(formatosMock),
             obtenerVersionesIdioma: vi.fn().mockResolvedValue(idiomasMock),
             consultarFuncionesDelDia: consultarFuncionesDelDiaMock,
+            contarEntradasVendidas: contarEntradasVendidasMock,
+            eliminarFuncion: eliminarFuncionMock,
           },
         },
       ],
@@ -100,34 +155,80 @@ describe('Funciones (US-04.03)', () => {
     raiz = fixture.nativeElement;
   });
 
-  it('debe inicializarse y cargar las funciones del día', async () => {
+  it('muestra las funciones del día agrupadas por sala y ordenadas por horario (AC-04.06.01)', async () => {
     await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(component.funciones().length).toBe(1);
-    expect(component.funciones()[0].peliculaTitulo).toBe('Inception');
-    expect(component.funciones()[0].salaNombre).toBe('Sala 1');
-    expect(raiz.textContent).toContain('Inception');
+    const estado = component.estado();
+    expect(estado.tipo).toBe('datos');
+    if (estado.tipo === 'datos') {
+      expect(estado.datos.length).toBe(2);
+      expect(estado.datos[0].sala.nombre).toBe('Sala 1');
+      expect(estado.datos[0].funciones.length).toBe(2);
+      expect(estado.datos[1].sala.nombre).toBe('Sala 2');
+      expect(estado.datos[1].funciones.length).toBe(1);
+
+      const f1 = estado.datos[0].funciones[0];
+      expect(f1.textoResumen).toContain('Dune: Parte Tres');
+      expect(f1.textoResumen).toContain('3D');
+      expect(f1.textoResumen).toContain('Subtitulada');
+    }
+
     expect(raiz.textContent).toContain('Sala 1');
+    expect(raiz.textContent).toContain('Sala 2');
+    expect(raiz.textContent).toContain('Dune: Parte Tres');
   });
 
-  it('muestra estado vacío si no hay funciones para la fecha', async () => {
+  it('muestra estado vacío cuando no hay funciones para la fecha', async () => {
     consultarFuncionesDelDiaMock.mockResolvedValue([]);
 
-    await component.cargarFunciones('2026-09-30');
+    await component.cargarFunciones('2026-10-15');
     fixture.detectChanges();
 
-    expect(component.funciones().length).toBe(0);
-    expect(raiz.textContent).toContain('No hay funciones programadas');
+    expect(component.estado().tipo).toBe('datos');
+    expect(raiz.textContent).toContain('No hay funciones programadas para este día.');
   });
 
-  it('cambia de fecha correctamente', async () => {
-    consultarFuncionesDelDiaMock.mockResolvedValue([]);
-
-    await component.onFechaElegida(new Date(2026, 8, 28)); // 28 de septiembre
+  it('elimina una función sin ventas tras confirmación (AC-04.06.02)', async () => {
+    await fixture.whenStable();
     fixture.detectChanges();
 
-    expect(component.fechaSeleccionada()).toBe('2026-09-28');
-    expect(consultarFuncionesDelDiaMock).toHaveBeenCalledWith('2026-09-28');
+    const estado = component.estado();
+    if (estado.tipo !== 'datos') return;
+    const funcionAEliminar = estado.datos[0].funciones[0];
+
+    // Intentar eliminar abre modal
+    await component.intentarEliminar(funcionAEliminar);
+    fixture.detectChanges();
+
+    expect(component.confirmacion()).toEqual(funcionAEliminar);
+    expect(raiz.textContent).toContain('¿Querés eliminar la función');
+
+    // Confirmar eliminación
+    consultarFuncionesDelDiaMock.mockResolvedValue(funcionesMock.slice(1));
+    await component.confirmarEliminacion(funcionAEliminar);
+    fixture.detectChanges();
+
+    expect(eliminarFuncionMock).toHaveBeenCalledWith(funcionAEliminar.id);
+    expect(component.aviso()).toContain('Función eliminada correctamente.');
+  });
+
+  it('impide eliminar una función con entradas vendidas (AC-04.06.02)', async () => {
+    contarEntradasVendidasMock.mockResolvedValue(12);
+
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    const estado = component.estado();
+    if (estado.tipo !== 'datos') return;
+    const funcionConVentas = estado.datos[0].funciones[0];
+
+    await component.intentarEliminar(funcionConVentas);
+    fixture.detectChanges();
+
+    expect(component.error()).toBe('No se puede eliminar una función con entradas vendidas');
+    expect(component.confirmacion()).toBeNull();
+    expect(eliminarFuncionMock).not.toHaveBeenCalled();
+    expect(raiz.textContent).toContain('No se puede eliminar una función con entradas vendidas');
   });
 });
