@@ -1,0 +1,37 @@
+:host {
+  display: block;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.etiqueta {
+  color: var(--ink-100);
+}
+
+.entrada {
+  width: 100%;
+  height: 40px;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  background: var(--surface-300);
+  color: var(--ink-100);
+}
+
+.entrada:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* El borde rojo acompaña al mensaje; nunca es la única señal. */
+.entrada.invalida {
+  border-color: var(--danger);
+}
+
+.errores:empty {
+  display: none;
+}

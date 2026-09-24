@@ -1,0 +1,17 @@
+<div class="campo">
+  <label class="etiqueta body-strong" [for]="id()">{{ etiqueta() }}</label>
+  <input
+    class="entrada body"
+    [class.invalida]="mostrarErrores()"
+    [id]="id()"
+    [type]="tipo()"
+    [formControl]="control()"
+    [attr.aria-invalid]="mostrarErrores()"
+    [attr.aria-describedby]="mostrarErrores() ? id() + '-errores' : null"
+  />
+  <div class="errores" [id]="id() + '-errores'" aria-live="polite">
+    @if (mostrarErrores()) {
+      <ng-content />
+    }
+  </div>
+</div>
