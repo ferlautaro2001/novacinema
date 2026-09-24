@@ -2,14 +2,18 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth-service';
+import { CampoFecha } from '../../../shared/ui/campo-fecha/campo-fecha';
 import { CampoTexto } from '../../../shared/ui/campo-texto/campo-texto';
 import { ErrorCampo } from '../../../shared/ui/error-campo/error-campo';
-import { aISO, leerDDMMAAAA } from '../../../shared/utilidades/fechas';
-import { fechaDDMMAAAA } from '../../../shared/validadores/fecha-ddmmaaaa';
+import {
+  ANIO_MINIMO,
+  fechaPorPartes,
+  isoDePartes,
+} from '../../../shared/validadores/fecha-por-partes';
 
 @Component({
   selector: 'nc-registro',
-  imports: [ReactiveFormsModule, RouterLink, CampoTexto, ErrorCampo],
+  imports: [ReactiveFormsModule, RouterLink, CampoFecha, CampoTexto, ErrorCampo],
   templateUrl: './registro.html',
   styleUrl: './registro.css',
 })
@@ -17,13 +21,21 @@ export class Registro {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
 
-  protected readonly form = inject(FormBuilder).nonNullable.group({
+  private readonly fb = inject(FormBuilder).nonNullable;
+
+  protected readonly form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     clave: ['', [Validators.required, Validators.minLength(6)]],
     nombre: ['', Validators.required],
     apellido: ['', Validators.required],
-    nacimiento: ['', [Validators.required, fechaDDMMAAAA({ soloAnteriorAHoy: true })]],
+    nacimiento: this.fb.group(
+      { dia: '', mes: '', anio: '' },
+      { validators: fechaPorPartes({ soloAnteriorAHoy: true }) },
+    ),
   });
+
+  protected readonly anioMinimo = ANIO_MINIMO;
+  protected readonly anioMaximo = new Date().getFullYear();
 
   protected readonly enviando = signal(false);
   protected readonly error = signal<string | null>(null);
@@ -43,8 +55,8 @@ export class Registro {
         clave: datos.clave,
         nombre: datos.nombre,
         apellido: datos.apellido,
-        // El validador ya garantizó que la fecha existe.
-        fechaNacimiento: aISO(leerDDMMAAAA(datos.nacimiento)!),
+        // fechaPorPartes ya garantizó que la fecha existe.
+        fechaNacimiento: isoDePartes(datos.nacimiento),
       });
       if (resultado === 'sesion_iniciada') {
         await this.router.navigateByUrl('/inicio');

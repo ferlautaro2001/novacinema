@@ -20,12 +20,26 @@ describe('Registro (US-02.02)', () => {
     await fixture.whenStable();
   }
 
+  async function elegirMes(valor: string): Promise<void> {
+    const mes = raiz.querySelector<HTMLSelectElement>('#nacimiento-mes')!;
+    mes.value = valor;
+    mes.dispatchEvent(new Event('change'));
+    mes.dispatchEvent(new Event('blur'));
+    await fixture.whenStable();
+  }
+
+  async function nacimiento(dia: string, mes: string, anio: string): Promise<void> {
+    await escribir('nacimiento-dia', dia);
+    await elegirMes(mes);
+    await escribir('nacimiento-anio', anio);
+  }
+
   async function completarAna(): Promise<void> {
     await escribir('email', 'ana@mail.com');
     await escribir('clave', 'cine2026');
     await escribir('nombre', 'Ana');
     await escribir('apellido', 'Pérez');
-    await escribir('nacimiento', '14/02/1990');
+    await nacimiento('14', '02', '1990');
   }
 
   beforeEach(async () => {
@@ -79,7 +93,7 @@ describe('Registro (US-02.02)', () => {
 
   it('valida el email y la fecha de nacimiento', async () => {
     await escribir('email', 'ana@');
-    await escribir('nacimiento', '31/02/2000');
+    await nacimiento('31', '02', '2000');
 
     expect(errores('email')).toBe('Ingresá un email válido');
     expect(errores('nacimiento')).toBe('Ingresá una fecha válida');
