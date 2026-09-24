@@ -1,0 +1,61 @@
+# Publica en Firebase Hosting cada vez que algo entra a main, después de que
+# pasen los tests. Así lo que está en main y lo que está en línea coinciden.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Un deploy por vez. Si entran dos merges seguidos, el segundo espera al
+# primero en lugar de cancelarlo a mitad de la subida.
+concurrency:
+  group: deploy-hosting
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # A diferencia del CI, acá sí hacen falta los valores reales de Supabase.
+      # Salen de los secrets del repo; la clave es la publicable, no la service_role.
+      - name: Environments desde los secrets
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+        run: |
+          test -n "$SUPABASE_URL" && test -n "$SUPABASE_KEY"
+          for f in environment environment.development; do
+            prod=$([ "$f" = environment ] && echo true || echo false)
+            cat > "src/environments/$f.ts" <<TS
+          export const environment = {
+            production: $prod,
+            SUPABASE_URL: '$SUPABASE_URL',
+            SUPABASE_KEY: '$SUPABASE_KEY',
+          };
+          TS
+          done
+
+      - run: npx ng test --watch=false
+
+      - run: npx ng build
+
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: novacinema-7df88
+          channelId: live
