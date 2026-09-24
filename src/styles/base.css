@@ -1,5 +1,6 @@
-/* Arranco con lo mínimo para que el tema oscuro se vea. El layout de verdad
-   lo armo en la pantalla principal, no acá. */
+/* Base de todas las pantallas. bundle.css es copia textual del design system
+   (design-system/components/bundle.css): no lo edito, lo que haga falta ajustar
+   para Angular va acá. */
 
 * {
   box-sizing: border-box;
@@ -7,7 +8,40 @@
 
 body {
   margin: 0;
-  background: var(--surface-000);
+  background: var(--surface-100);
   color: var(--ink-100);
   font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 22px;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* El brand book pide mayúsculas en las clases de marquesina. Lo resuelvo con CSS
+   para que el texto siga escrito normal en el template y en los lectores de
+   pantalla. */
+.marquee-xl,
+.marquee-lg,
+.marquee-md {
+  text-transform: uppercase;
+}
+
+/* El bundle piensa el botón como <button>; cuando navega uso un <a> con las
+   mismas clases y le saco el subrayado. */
+a.nc-btn {
+  text-decoration: none;
 }

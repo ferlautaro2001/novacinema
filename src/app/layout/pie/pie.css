@@ -1,0 +1,23 @@
+/* El logo va sobre surface-000, con al menos space-5 de aire alrededor. */
+.pie {
+  background: var(--surface-000);
+  border-top: 1px solid var(--border-100);
+}
+
+.contenido {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  max-width: 1200px;
+  margin-inline: auto;
+  padding: var(--space-5) var(--space-4);
+}
+
+.logo {
+  display: block;
+}
+
+.caption {
+  color: var(--ink-300);
+}

@@ -1,3 +1,47 @@
 import { Routes } from '@angular/router';
 
-export const routes: Routes = [];
+// Cada pantalla se carga recién cuando se visita. Los grupos de ingreso, Panel y
+// boletería van en su propio archivo de rutas para que crezcan sin tocar este.
+export const routes: Routes = [
+  { path: '', redirectTo: 'inicio', pathMatch: 'full' },
+  {
+    path: 'inicio',
+    title: 'Inicio · NovaCinema',
+    loadComponent: () => import('./features/cartelera/inicio/inicio').then((m) => m.Inicio),
+  },
+  {
+    path: 'cartelera',
+    title: 'Cartelera · NovaCinema',
+    loadComponent: () => import('./features/cartelera/listado/listado').then((m) => m.Listado),
+  },
+  {
+    path: 'proximamente',
+    title: 'Próximamente · NovaCinema',
+    loadComponent: () =>
+      import('./features/cartelera/proximamente/proximamente').then((m) => m.Proximamente),
+  },
+  {
+    path: 'candy',
+    title: 'Candy · NovaCinema',
+    loadComponent: () => import('./features/candy/menu/menu').then((m) => m.Menu),
+  },
+  {
+    path: 'auth',
+    loadChildren: () => import('./features/auth/auth.routes').then((m) => m.authRoutes),
+  },
+  {
+    path: 'admin',
+    loadChildren: () => import('./features/admin/admin.routes').then((m) => m.adminRoutes),
+  },
+  {
+    path: 'boleteria',
+    loadChildren: () =>
+      import('./features/boleteria/boleteria.routes').then((m) => m.boleteriaRoutes),
+  },
+  {
+    path: '**',
+    title: 'Página no encontrada · NovaCinema',
+    loadComponent: () =>
+      import('./features/no-encontrado/no-encontrado').then((m) => m.NoEncontrado),
+  },
+];
