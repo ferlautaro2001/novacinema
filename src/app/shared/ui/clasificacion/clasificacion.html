@@ -1,0 +1,8 @@
+<span
+  class="distintivo caption"
+  [class.atp]="codigo() === 'ATP'"
+  [class.mayores]="codigo() === '+18'"
+  [class.intermedia]="codigo() === '+13' || codigo() === '+16'"
+  [attr.title]="'Edad mínima: ' + edades[codigo()] + ' años'"
+  >{{ codigo() }}</span
+>

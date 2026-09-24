@@ -13,7 +13,7 @@ export type EstadoConsulta<T> =
 
 @Component({
   selector: 'nc-carga-consulta',
-  template: '<p class="body" role="status">Cargando películas…</p>',
+  templateUrl: './carga-consulta.html',
 })
 class CargaConsulta {}
 

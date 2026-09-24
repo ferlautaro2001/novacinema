@@ -1,0 +1,11 @@
+.contenedor {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  background: var(--surface-200);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
