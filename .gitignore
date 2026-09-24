@@ -56,3 +56,6 @@ yarn-error.log
 # Sistema
 .DS_Store
 Thumbs.db
+
+# Caché del CLI de Firebase
+.firebase/
