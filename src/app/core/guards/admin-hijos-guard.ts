@@ -10,7 +10,8 @@ export const adminHijosGuard: CanActivateChildFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   const vigente = await auth.sesionVigente();
-  return vigente && auth.perfil()?.rol === 'administrador'
-    ? true
-    : router.createUrlTree(['/auth/login']);
+  if (vigente && auth.perfil()?.rol === 'administrador') {
+    return true;
+  }
+  return router.createUrlTree(['/auth/login']);
 };

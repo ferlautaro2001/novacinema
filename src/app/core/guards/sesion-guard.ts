@@ -9,5 +9,8 @@ export const sesionGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
   await auth.listo();
-  return auth.usuario() ? true : router.createUrlTree(['/auth/login']);
+  if (auth.usuario()) {
+    return true;
+  }
+  return router.createUrlTree(['/auth/login']);
 };

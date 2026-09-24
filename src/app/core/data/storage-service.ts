@@ -1,6 +1,5 @@
 import { inject, Service } from '@angular/core';
 import { Supabase } from '../supabase/supabase-client';
-import { environment } from '../../../environments/environment';
 
 export const TIPOS_PORTADA = ['image/jpeg', 'image/png', 'image/webp'];
 export const MAX_PORTADA = 10 * 1024 * 1024;
@@ -18,8 +17,10 @@ export class StorageService {
 
   urlPublica(ruta: string): string {
     // Las portadas importadas pueden ser URLs externas; las nuevas guardan su ruta.
-    if (/^https:\/\//.test(ruta)) return ruta;
-    return `${environment.SUPABASE_URL}/storage/v1/object/public/imagenes/${ruta.split('/').map(encodeURIComponent).join('/')}`;
+    if (ruta.startsWith('http://') || ruta.startsWith('https://')) {
+      return ruta;
+    }
+    return this.sup.storage.from('imagenes').getPublicUrl(ruta).data.publicUrl;
   }
 
   async subirPortada(archivo: File): Promise<string> {

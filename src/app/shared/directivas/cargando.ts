@@ -28,10 +28,14 @@ export class Cargando<T> implements OnChanges {
   ngOnChanges(): void {
     this.contenedor.clear();
     const estado = this.appCargando();
-    if (estado.tipo === 'cargando') this.contenedor.createComponent(CargaConsulta);
-    else if (estado.tipo === 'error')
+    if (estado.tipo === 'cargando') {
+      this.contenedor.createComponent(CargaConsulta);
+    } else if (estado.tipo === 'error') {
       this.contenedor.createEmbeddedView(this.appCargandoError(), { $implicit: estado.mensaje });
-    else if (!estado.datos.length) this.contenedor.createEmbeddedView(this.appCargandoVacio());
-    else this.contenedor.createEmbeddedView(this.template, { $implicit: estado.datos });
+    } else if (estado.datos.length === 0) {
+      this.contenedor.createEmbeddedView(this.appCargandoVacio());
+    } else {
+      this.contenedor.createEmbeddedView(this.template, { $implicit: estado.datos });
+    }
   }
 }

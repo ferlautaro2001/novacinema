@@ -10,5 +10,9 @@ export const MENSAJE_CAMBIOS_SIN_GUARDAR = 'Tenés cambios sin guardar. ¿Queré
 
 // Si el formulario tiene cambios sin guardar, pide confirmación antes de salir.
 // Con "Cancelar" la navegación se cancela y el formulario queda como estaba.
-export const cambiosPendientesGuard: CanDeactivateFn<FormularioConCambios> = (componente) =>
-  !componente.noGuardado() || confirm(MENSAJE_CAMBIOS_SIN_GUARDAR);
+export const cambiosPendientesGuard: CanDeactivateFn<FormularioConCambios> = (componente) => {
+  if (componente.noGuardado()) {
+    return confirm(MENSAJE_CAMBIOS_SIN_GUARDAR);
+  }
+  return true;
+};
