@@ -51,6 +51,18 @@ export const adminRoutes: Routes = [
         title: 'Distribución de sala · NovaCinema',
         loadComponent: () => import('./salas/sala-detalle').then((m) => m.SalaDetalle),
       },
+      {
+        path: 'funciones',
+        title: 'Panel · Funciones · NovaCinema',
+        loadComponent: () => import('./funciones/funciones').then((m) => m.Funciones),
+      },
+      {
+        path: 'funciones/programar',
+        title: 'Programar funciones · NovaCinema',
+        canDeactivate: [cambiosPendientesGuard],
+        loadComponent: () =>
+          import('./funciones/programar-funciones').then((m) => m.ProgramarFunciones),
+      },
     ],
   },
 ];

@@ -1,0 +1,66 @@
+<section class="funciones-seccion">
+  <header class="encabezado">
+    <div class="titulo-acciones">
+      <div>
+        <h2>Funciones</h2>
+        <p class="descripcion">
+          Consultá y gestioná las funciones programadas por día y por sala.
+        </p>
+      </div>
+      <a routerLink="/admin/funciones/programar" class="btn-primario" id="btn-nueva-programacion">
+        + Programar funciones
+      </a>
+    </div>
+  </header>
+
+  @if (error()) {
+    <p class="error" role="alert">{{ error() }}</p>
+  }
+
+  <div class="selector-fecha-contenedor">
+    <nc-selector-fecha
+      [fechaInicial]="fechaSeleccionada()"
+      (fechaElegida)="onFechaElegida($event)"
+    ></nc-selector-fecha>
+  </div>
+
+  @if (cargando()) {
+    <p class="estado">Cargando funciones…</p>
+  } @else if (funciones().length === 0) {
+    <p class="vacio">No hay funciones programadas para este día.</p>
+  } @else {
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th>Horario</th>
+            <th>Película</th>
+            <th>Sala</th>
+            <th>Formato / Idioma</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (f of funciones(); track f.id) {
+            <tr>
+              <td>
+                <strong>{{ f.comienzaEn | date:'HH:mm' }}</strong>
+                <span class="hora-fin"> a {{ f.terminaEn | date:'HH:mm' }}</span>
+              </td>
+              <td>{{ f.peliculaTitulo }}</td>
+              <td>
+                <span class="badge-sala">{{ f.salaNombre }}</span>
+              </td>
+              <td>
+                <span class="badge-formato">{{ f.formatoCodigo }} · {{ f.versionIdiomaNombre }}</span>
+              </td>
+              <td>
+                <span class="badge-estado">{{ f.estado }}</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
