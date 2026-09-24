@@ -1,0 +1,101 @@
+<section class="registro">
+  <h1 class="marquee-md">Crear cuenta</h1>
+
+  @if (revisarEmail()) {
+    <div class="aviso" role="status">
+      <p class="body-strong">Revisá tu email</p>
+      <p class="body">
+        Te mandamos un link a {{ form.controls.email.value }} para confirmar la cuenta. Cuando lo
+        toques, vas a quedar con la sesión iniciada.
+      </p>
+    </div>
+  } @else {
+    <form class="formulario" [formGroup]="form" (ngSubmit)="crearCuenta()" novalidate>
+      <nc-campo-texto
+        id="email"
+        etiqueta="Email"
+        tipo="email"
+        autocompletar="email"
+        [control]="form.controls.email"
+      >
+        <nc-error-campo [control]="form.controls.email" error="required">
+          Este campo es obligatorio
+        </nc-error-campo>
+        <nc-error-campo [control]="form.controls.email" error="email">
+          Ingresá un email válido
+        </nc-error-campo>
+      </nc-campo-texto>
+
+      <nc-campo-texto
+        id="clave"
+        etiqueta="Contraseña"
+        tipo="password"
+        autocompletar="new-password"
+        [control]="form.controls.clave"
+      >
+        <nc-error-campo [control]="form.controls.clave" error="required">
+          Este campo es obligatorio
+        </nc-error-campo>
+        <nc-error-campo [control]="form.controls.clave" error="minlength">
+          La contraseña debe tener al menos 6 caracteres
+        </nc-error-campo>
+      </nc-campo-texto>
+
+      <div class="fila">
+        <nc-campo-texto
+          id="nombre"
+          etiqueta="Nombre"
+          autocompletar="given-name"
+          [control]="form.controls.nombre"
+        >
+          <nc-error-campo [control]="form.controls.nombre" error="required">
+            Este campo es obligatorio
+          </nc-error-campo>
+        </nc-campo-texto>
+
+        <nc-campo-texto
+          id="apellido"
+          etiqueta="Apellido"
+          autocompletar="family-name"
+          [control]="form.controls.apellido"
+        >
+          <nc-error-campo [control]="form.controls.apellido" error="required">
+            Este campo es obligatorio
+          </nc-error-campo>
+        </nc-campo-texto>
+      </div>
+
+      <nc-campo-texto
+        id="nacimiento"
+        etiqueta="Fecha de nacimiento (DD/MM/AAAA)"
+        autocompletar="bday"
+        [control]="form.controls.nacimiento"
+      >
+        <nc-error-campo [control]="form.controls.nacimiento" error="required">
+          Este campo es obligatorio
+        </nc-error-campo>
+        <nc-error-campo [control]="form.controls.nacimiento" error="fechaInvalida">
+          Ingresá una fecha válida
+        </nc-error-campo>
+        <nc-error-campo [control]="form.controls.nacimiento" error="fechaNoAnterior">
+          La fecha debe ser anterior a hoy
+        </nc-error-campo>
+      </nc-campo-texto>
+
+      @if (error(); as mensaje) {
+        <p class="error body" role="alert">{{ mensaje }}</p>
+      }
+
+      <button
+        type="submit"
+        class="nc-btn nc-btn--primary nc-btn--md nc-btn--block"
+        [disabled]="form.invalid || enviando()"
+        [attr.aria-busy]="enviando() || null"
+      >
+        {{ enviando() ? 'Creando la cuenta…' : 'Crear cuenta' }}
+      </button>
+    </form>
+  }
+
+  <p class="caption pie-registro">¿Ya tenés cuenta? <a routerLink="/auth/login">Ingresá</a></p>
+</section>

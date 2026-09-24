@@ -75,3 +75,10 @@ export function leerDDMMAAAA(texto: string): Date | null {
     fecha.getFullYear() === anio && fecha.getMonth() === mes - 1 && fecha.getDate() === dia;
   return existe ? fecha : null;
 }
+
+// Fecha local a texto ISO ("1990-02-14"), el formato que entiende Postgres para
+// una columna date sin depender de la configuración regional del servidor.
+export function aISO(fecha: Date): string {
+  const dos = (n: number) => String(n).padStart(2, '0');
+  return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}`;
+}

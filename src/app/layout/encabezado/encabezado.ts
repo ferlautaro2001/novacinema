@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../core/auth/auth-service';
 import { Navegacion } from '../navegacion/navegacion';
 
 @Component({
@@ -8,4 +9,6 @@ import { Navegacion } from '../navegacion/navegacion';
   templateUrl: './encabezado.html',
   styleUrl: './encabezado.css',
 })
-export class Encabezado {}
+export class Encabezado {
+  protected readonly auth = inject(AuthService);
+}

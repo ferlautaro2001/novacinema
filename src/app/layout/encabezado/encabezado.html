@@ -5,5 +5,11 @@
       Nova<span class="marca-acento">Cinema</span>
     </a>
     <nc-navegacion />
+    <!-- Los accesos de la sesión (ingresar, mi cuenta, salir) se completan en US-02.03 y US-02.04. -->
+    @if (!auth.usuario()) {
+      <a class="acceso nc-btn nc-btn--secondary nc-btn--sm" routerLink="/auth/registro"
+        >Crear cuenta</a
+      >
+    }
   </div>
 </header>

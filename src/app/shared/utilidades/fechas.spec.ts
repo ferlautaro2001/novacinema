@@ -1,4 +1,5 @@
 import {
+  aISO,
   diasConsecutivos,
   etiquetaDia,
   fechaLarga,
@@ -49,5 +50,10 @@ describe('fechas', () => {
     expect(leerDDMMAAAA('29/02/2023')).toBeNull();
     expect(leerDDMMAAAA('1/2/1990')).toBeNull();
     expect(leerDDMMAAAA('1990-02-14')).toBeNull();
+  });
+
+  it('pasa una fecha a ISO para guardarla', () => {
+    expect(aISO(new Date(1990, 1, 14))).toBe('1990-02-14');
+    expect(aISO(new Date(2026, 11, 3, 23, 59))).toBe('2026-12-03');
   });
 });
