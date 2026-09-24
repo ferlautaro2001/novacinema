@@ -1,0 +1,41 @@
+# Corre los tests y el build en cada PR contra main y en cada push a main.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Si llega un push nuevo al mismo PR, cancelo la corrida anterior.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-y-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      # Los environments reales no se versionan. Para compilar y testear alcanza
+      # con la plantilla: los tests no se conectan a Supabase.
+      - name: Environments desde la plantilla
+        run: |
+          cp src/environments/environment.example.ts src/environments/environment.ts
+          cp src/environments/environment.example.ts src/environments/environment.development.ts
+
+      - run: npx ng test --watch=false
+
+      - run: npx ng build
