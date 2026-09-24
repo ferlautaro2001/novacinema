@@ -4,7 +4,7 @@ import {
   esPasillo,
   generarDistribucionSala,
   tipoDeButaca,
-} from './butacas';
+} from './distribucion';
 
 describe('butacas (US-04.02)', () => {
   describe('AC-04.02.01: Disposición de 518 butacas', () => {

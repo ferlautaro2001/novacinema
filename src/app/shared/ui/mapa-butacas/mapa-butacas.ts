@@ -15,7 +15,7 @@ import {
   generarDistribucionSala,
   LayoutSala,
   TipoButaca,
-} from '../../../core/reglas/butacas';
+} from './distribucion';
 import { SiWebgl, soportaWebgl } from '../../directivas/si-webgl';
 import { TipoButacaDirective } from '../../directivas/tipo-butaca';
 import { Sala3dDirective } from './sala-3d';

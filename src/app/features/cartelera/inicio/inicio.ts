@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { PeliculasService } from '../../../core/data/peliculas-service';
+import { StorageService } from '../../../core/data/storage-service';
 import { PeliculaConCatalogo } from '../../../core/models/pelicula';
 import { PeliculaCard } from '../../../shared/ui/pelicula-card/pelicula-card';
 import { Modal } from '../../../shared/ui/modal/modal';
@@ -17,6 +18,7 @@ import { FocoInicial } from '../../../shared/directivas/foco-inicial';
 })
 export class Inicio implements OnInit {
   private peliculas = inject(PeliculasService);
+  storage = inject(StorageService);
   destacadas = signal<PeliculaConCatalogo[]>([]);
   detalle = signal<PeliculaConCatalogo | null>(null);
   cargando = signal(true);

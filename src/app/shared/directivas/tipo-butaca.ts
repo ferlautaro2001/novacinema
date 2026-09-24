@@ -1,5 +1,5 @@
 import { Directive, input } from '@angular/core';
-import type { TipoButaca } from '../../core/reglas/butacas';
+import type { TipoButaca } from '../ui/mapa-butacas/distribucion';
 
 // Directiva de atributo que aplica clases de estilo al elemento según el tipo de butaca (AC-04.02.03).
 // Puede recibir 'comun', 'vip' o 'accesible' (o alias de seatmap 'std', 'wc').
