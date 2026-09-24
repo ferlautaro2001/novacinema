@@ -26,6 +26,8 @@ export interface PerfilDePrueba {
 export function supabaseDePrueba(sesionInicial: Session | null | false = null) {
   const oyentes: OyenteSesion[] = [];
   const perfiles = new Map<string, PerfilDePrueba>();
+  // La sesión que hay guardada en el navegador en cada momento.
+  let sesionGuardada: Session | null = sesionInicial || null;
   const auth = {
     onAuthStateChange(oyente: OyenteSesion) {
       oyentes.push(oyente);
@@ -42,7 +44,9 @@ export function supabaseDePrueba(sesionInicial: Session | null | false = null) {
         data: { user: null, session: null },
         error: new AuthError('Invalid login credentials', 400, 'invalid_credentials'),
       }),
+    getSession: () => Promise.resolve({ data: { session: sesionGuardada }, error: null }),
     signOut: (): Promise<{ error: AuthError | null }> => {
+      sesionGuardada = null;
       oyentes.forEach((oyente) => oyente('SIGNED_OUT', null));
       return Promise.resolve({ error: null });
     },
@@ -71,7 +75,14 @@ export function supabaseDePrueba(sesionInicial: Session | null | false = null) {
     provider: { provide: Supabase, useValue: { Sup: { auth, from } } },
     auth,
     perfiles,
-    emitir: (evento: AuthChangeEvent, sesion: Session | null) =>
-      oyentes.forEach((oyente) => oyente(evento, sesion)),
+    emitir: (evento: AuthChangeEvent, sesion: Session | null) => {
+      sesionGuardada = sesion;
+      oyentes.forEach((oyente) => oyente(evento, sesion));
+    },
+    // Otra pestaña cerró la sesión: el almacenamiento ya no la tiene, pero esta
+    // pestaña todavía no recibió ningún evento.
+    cerrarEnOtraPestana: () => {
+      sesionGuardada = null;
+    },
   };
 }

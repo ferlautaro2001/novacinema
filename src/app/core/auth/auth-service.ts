@@ -67,18 +67,26 @@ export class AuthService {
   readonly usuario = this._usuario.asReadonly();
   readonly perfil = this._perfil.asReadonly();
 
+  // Se resuelve una sola vez, cuando se terminó de recuperar la sesión y el perfil.
+  // Los guards la esperan: si alguien abre /admin directo, el guard corre antes de
+  // que Supabase haya leído la sesión guardada.
+  private terminarCarga!: () => void;
+  private readonly cargaTerminada = new Promise<void>(
+    (resolver) => (this.terminarCarga = resolver),
+  );
+
   constructor() {
     this.supS.Sup.auth.onAuthStateChange((_evento, sesion) => {
       const usuario = sesion?.user ?? null;
       this._usuario.set(usuario);
       if (!usuario) {
         this._perfil.set(null);
-        this._cargando.set(false);
+        this.marcarListo();
         return;
       }
       // Supabase advierte que llamarlo de nuevo desde adentro de este callback
       // puede trabarse: la consulta del perfil sale en el turno siguiente.
-      setTimeout(() => this.cargarPerfil(usuario.id).finally(() => this._cargando.set(false)));
+      setTimeout(() => this.cargarPerfil(usuario.id).finally(() => this.marcarListo()));
     });
   }
 
@@ -125,6 +133,23 @@ export class AuthService {
     return perfil.rol;
   }
 
+  listo(): Promise<void> {
+    return this.cargaTerminada;
+  }
+
+  // Vuelve a leer la sesión en lugar de confiar en la que quedó en memoria: si se
+  // cerró en otra pestaña, acá se entera. Supabase la lee del almacenamiento del
+  // navegador, que las pestañas comparten.
+  async sesionVigente(): Promise<boolean> {
+    const { data } = await this.supS.Sup.auth.getSession();
+    if (!data.session) {
+      this._usuario.set(null);
+      this._perfil.set(null);
+      return false;
+    }
+    return true;
+  }
+
   // Cierra la sesión en Supabase y en este navegador. El evento SIGNED_OUT limpia
   // usuario y perfil; lo hago también acá para que la pantalla cambie en el acto.
   async cerrarSesion(): Promise<void> {
@@ -132,6 +157,11 @@ export class AuthService {
     if (error) throw new Error('No se pudo cerrar la sesión. Probá de nuevo.');
     this._usuario.set(null);
     this._perfil.set(null);
+  }
+
+  private marcarListo(): void {
+    this._cargando.set(false);
+    this.terminarCarga();
   }
 
   private async cargarPerfil(id: string): Promise<PerfilSesion | null> {

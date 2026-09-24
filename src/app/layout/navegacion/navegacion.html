@@ -17,5 +17,13 @@
     @for (e of publicos; track e.ruta) {
       <ng-container *ngTemplateOutlet="enlace; context: { $implicit: e }" />
     }
+
+    <!-- Solo cambia lo que se muestra: el acceso lo controlan rolGuard y RLS. -->
+    <ng-container *appSiRol="['empleado', 'administrador']; actual: auth.perfil()?.rol">
+      <ng-container *ngTemplateOutlet="enlace; context: { $implicit: boleteria }" />
+    </ng-container>
+    <ng-container *appSiRol="['administrador']; actual: auth.perfil()?.rol">
+      <ng-container *ngTemplateOutlet="enlace; context: { $implicit: panel }" />
+    </ng-container>
   </ul>
 </nav>
