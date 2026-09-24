@@ -6,5 +6,5 @@ import { Component } from '@angular/core';
   styleUrl: './pie.css',
 })
 export class Pie {
-  protected readonly anio = new Date().getFullYear();
+  anio = new Date().getFullYear();
 }

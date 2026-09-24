@@ -12,5 +12,5 @@ import { Pie } from './layout/pie/pie';
   templateUrl: './app.html',
 })
 export class App {
-  protected readonly auth = inject(AuthService);
+  auth = inject(AuthService);
 }

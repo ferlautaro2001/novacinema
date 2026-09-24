@@ -15,7 +15,7 @@ import {
   template: `<form [formGroup]="form"><textarea formControlName="sinopsis"></textarea></form>`,
 })
 class EdicionPelicula implements FormularioConCambios {
-  readonly form = inject(FormBuilder).nonNullable.group({
+  form = inject(FormBuilder).nonNullable.group({
     sinopsis: 'Paul Atreides llega a Arrakis.',
   });
   noGuardado(): boolean {

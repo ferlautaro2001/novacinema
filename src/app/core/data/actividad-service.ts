@@ -15,7 +15,7 @@ import { Supabase } from '../supabase/supabase-client';
 // ni baja.
 @Service()
 export class ActividadService {
-  private readonly supS = inject(Supabase);
+  private supS = inject(Supabase);
 
   // Del más reciente al más antiguo, con autor, acción y detalle legibles.
   async findAll(): Promise<RegistroActividad[]> {

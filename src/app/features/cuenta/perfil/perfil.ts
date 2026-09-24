@@ -9,5 +9,5 @@ import { AuthService } from '../../../core/auth/auth-service';
   styleUrl: './perfil.css',
 })
 export class Perfil {
-  protected readonly auth = inject(AuthService);
+  auth = inject(AuthService);
 }

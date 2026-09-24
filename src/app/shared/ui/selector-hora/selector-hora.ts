@@ -8,10 +8,10 @@ import { Component, input, OnChanges, output, signal } from '@angular/core';
   styleUrl: './selector-hora.css',
 })
 export class SelectorHora implements OnChanges {
-  readonly horarios = input.required<string[]>();
-  readonly horaElegida = output<string>();
+  horarios = input.required<string[]>();
+  horaElegida = output<string>();
 
-  protected readonly elegida = signal<string | null>(null);
+  elegida = signal<string | null>(null);
 
   ngOnChanges(): void {
     // Si cambian los horarios (por ejemplo, otro día) y la hora elegida ya no está,
@@ -22,7 +22,7 @@ export class SelectorHora implements OnChanges {
     }
   }
 
-  protected elegir(hora: string): void {
+  elegir(hora: string): void {
     this.elegida.set(hora);
     this.horaElegida.emit(hora);
   }

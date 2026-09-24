@@ -11,7 +11,7 @@ import { DuracionPipe } from '../../pipes/duracion-pipe';
   styleUrl: './pelicula-card.css',
 })
 export class PeliculaCard {
-  readonly pelicula = input.required<PeliculaConCatalogo>();
-  readonly verDetalle = output<PeliculaConCatalogo>();
-  protected readonly storage = inject(StorageService);
+  pelicula = input.required<PeliculaConCatalogo>();
+  verDetalle = output<PeliculaConCatalogo>();
+  storage = inject(StorageService);
 }

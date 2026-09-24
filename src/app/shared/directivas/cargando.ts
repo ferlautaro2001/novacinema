@@ -19,11 +19,11 @@ class CargaConsulta {}
 
 @Directive({ selector: '[appCargando]' })
 export class Cargando<T> implements OnChanges {
-  readonly appCargando = input.required<EstadoConsulta<T>>();
-  readonly appCargandoVacio = input.required<TemplateRef<unknown>>();
-  readonly appCargandoError = input.required<TemplateRef<{ $implicit: string }>>();
-  private readonly template = inject<TemplateRef<{ $implicit: T[] }>>(TemplateRef);
-  private readonly contenedor = inject(ViewContainerRef);
+  appCargando = input.required<EstadoConsulta<T>>();
+  appCargandoVacio = input.required<TemplateRef<unknown>>();
+  appCargandoError = input.required<TemplateRef<{ $implicit: string }>>();
+  private template = inject<TemplateRef<{ $implicit: T[] }>>(TemplateRef);
+  private contenedor = inject(ViewContainerRef);
 
   ngOnChanges(): void {
     this.contenedor.clear();

@@ -15,17 +15,17 @@ import {
   styleUrl: './modal.css',
 })
 export class Modal implements AfterViewInit, OnDestroy {
-  readonly cierre = output<void>();
-  readonly ocupado = input(false);
-  private readonly dialogo = viewChild.required<ElementRef<HTMLDialogElement>>('dialogo');
-  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
+  cierre = output<void>();
+  ocupado = input(false);
+  private dialogo = viewChild.required<ElementRef<HTMLDialogElement>>('dialogo');
+  private host = inject<ElementRef<HTMLElement>>(ElementRef);
   private anterior: HTMLElement | null = null;
 
   ngAfterViewInit(): void {
     this.anterior = this.host.nativeElement.ownerDocument.activeElement as HTMLElement;
     this.dialogo().nativeElement.showModal();
   }
-  protected cerrar(evento?: Event): void {
+  cerrar(evento?: Event): void {
     evento?.preventDefault();
     if (!this.ocupado()) this.cierre.emit();
   }

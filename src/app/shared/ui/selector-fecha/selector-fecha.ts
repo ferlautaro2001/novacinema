@@ -25,13 +25,13 @@ const DIAS_POR_SEMANA = 7;
   styleUrl: './selector-fecha.css',
 })
 export class SelectorFecha implements OnInit, OnChanges {
-  readonly fechaInicial = input('');
-  readonly fechaElegida = output<Date>();
+  fechaInicial = input('');
+  fechaElegida = output<Date>();
 
-  protected readonly dias = signal<OpcionDia[]>([]);
-  protected readonly meses = signal('');
-  protected readonly elegida = signal<Date | null>(null);
-  protected readonly esPrimeraSemana = signal(true);
+  dias = signal<OpcionDia[]>([]);
+  meses = signal('');
+  elegida = signal<Date | null>(null);
+  esPrimeraSemana = signal(true);
 
   private hoy = inicioDelDia(new Date());
   private desde = this.hoy;
@@ -54,20 +54,20 @@ export class SelectorFecha implements OnInit, OnChanges {
     this.mostrarSemana(fecha && fecha > this.hoy ? fecha : this.hoy);
   }
 
-  protected semanaSiguiente(): void {
+  semanaSiguiente(): void {
     this.mostrarSemana(sumarDias(this.desde, DIAS_POR_SEMANA));
   }
 
-  protected semanaAnterior(): void {
+  semanaAnterior(): void {
     this.mostrarSemana(sumarDias(this.desde, -DIAS_POR_SEMANA));
   }
 
-  protected elegir(dia: OpcionDia): void {
+  elegir(dia: OpcionDia): void {
     this.elegida.set(dia.fecha);
     this.fechaElegida.emit(dia.fecha);
   }
 
-  protected estaElegida(dia: OpcionDia): boolean {
+  estaElegida(dia: OpcionDia): boolean {
     const elegida = this.elegida();
     return elegida !== null && mismoDia(elegida, dia.fecha);
   }

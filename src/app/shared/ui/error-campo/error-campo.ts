@@ -11,10 +11,10 @@ import { Subscription } from 'rxjs';
   styleUrl: './error-campo.css',
 })
 export class ErrorCampo implements OnInit, OnDestroy {
-  readonly control = input.required<AbstractControl>();
-  readonly error = input.required<string>();
+  control = input.required<AbstractControl>();
+  error = input.required<string>();
 
-  protected readonly visible = signal(false);
+  visible = signal(false);
   private suscripcion?: Subscription;
 
   ngOnInit(): void {

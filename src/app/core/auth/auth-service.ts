@@ -57,30 +57,26 @@ const CREDENCIALES_INCORRECTAS = 'Email o contraseña incorrectos';
 // pantalla de carga en vez de una sección que quizás no corresponde.
 @Service()
 export class AuthService {
-  private readonly supS = inject(Supabase);
+  private supS = inject(Supabase);
 
-  private readonly _cargando = signal(true);
-  private readonly _usuario = signal<User | null>(null);
-  private readonly _perfil = signal<PerfilSesion | null>(null);
-
-  readonly cargando = this._cargando.asReadonly();
-  readonly usuario = this._usuario.asReadonly();
-  readonly perfil = this._perfil.asReadonly();
+  cargando = signal(true);
+  usuario = signal<User | null>(null);
+  perfil = signal<PerfilSesion | null>(null);
 
   // Se resuelve una sola vez, cuando se terminó de recuperar la sesión y el perfil.
   // Los guards la esperan: si alguien abre /admin directo, el guard corre antes de
   // que Supabase haya leído la sesión guardada.
   private terminarCarga!: () => void;
-  private readonly cargaTerminada = new Promise<void>(
+  private cargaTerminada = new Promise<void>(
     (resolver) => (this.terminarCarga = resolver),
   );
 
   constructor() {
     this.supS.Sup.auth.onAuthStateChange((_evento, sesion) => {
       const usuario = sesion?.user ?? null;
-      this._usuario.set(usuario);
+      this.usuario.set(usuario);
       if (!usuario) {
-        this._perfil.set(null);
+        this.perfil.set(null);
         this.marcarListo();
         return;
       }
@@ -142,8 +138,8 @@ export class AuthService {
   async sesionVigente(): Promise<boolean> {
     const { data } = await this.supS.Sup.auth.getSession();
     if (!data.session) {
-      this._usuario.set(null);
-      this._perfil.set(null);
+      this.usuario.set(null);
+      this.perfil.set(null);
       return false;
     }
     return true;
@@ -154,12 +150,12 @@ export class AuthService {
   async cerrarSesion(): Promise<void> {
     const { error } = await this.supS.Sup.auth.signOut();
     if (error) throw new Error('No se pudo cerrar la sesión. Probá de nuevo.');
-    this._usuario.set(null);
-    this._perfil.set(null);
+    this.usuario.set(null);
+    this.perfil.set(null);
   }
 
   private marcarListo(): void {
-    this._cargando.set(false);
+    this.cargando.set(false);
     this.terminarCarga();
   }
 
@@ -170,7 +166,7 @@ export class AuthService {
       .single();
 
     if (error || !data?.rol) {
-      this._perfil.set(null);
+      this.perfil.set(null);
       return null;
     }
 
@@ -179,7 +175,7 @@ export class AuthService {
       apellido: data.apellido,
       rol: data.rol.codigo as Rol,
     };
-    this._perfil.set(perfil);
+    this.perfil.set(perfil);
     return perfil;
   }
 

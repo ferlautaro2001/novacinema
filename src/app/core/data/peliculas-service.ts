@@ -22,7 +22,7 @@ export function errorPelicula(error: unknown): string {
 
 @Service()
 export class PeliculasService {
-  private readonly sup = inject(Supabase).Sup;
+  private sup = inject(Supabase).Sup;
 
   async listar(soloDestacadas = false): Promise<PeliculaConCatalogo[]> {
     let consulta = this.sup.from('peliculas').select(SELECCION).order('titulo');

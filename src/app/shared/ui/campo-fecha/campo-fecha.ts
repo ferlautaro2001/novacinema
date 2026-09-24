@@ -20,14 +20,14 @@ export type GrupoFecha = FormGroup<{
   styleUrl: './campo-fecha.css',
 })
 export class CampoFecha implements OnInit, OnDestroy {
-  readonly id = input.required<string>();
-  readonly etiqueta = input.required<string>();
-  readonly grupo = input.required<GrupoFecha>();
+  id = input.required<string>();
+  etiqueta = input.required<string>();
+  grupo = input.required<GrupoFecha>();
   // true cuando es la fecha de nacimiento: activa el autocompletado del navegador.
-  readonly nacimiento = input(false);
+  nacimiento = input(false);
 
-  protected readonly meses = MESES_DEL_ANIO;
-  protected readonly mostrarErrores = signal(false);
+  meses = MESES_DEL_ANIO;
+  mostrarErrores = signal(false);
   private suscripciones: Subscription[] = [];
 
   ngOnInit(): void {
@@ -45,7 +45,7 @@ export class CampoFecha implements OnInit, OnDestroy {
   }
 
   // Solo números: si se escribe o se pega otra cosa, se descarta en el momento.
-  protected soloNumeros(evento: Event, parte: 'dia' | 'anio', largo: number): void {
+  soloNumeros(evento: Event, parte: 'dia' | 'anio', largo: number): void {
     const campo = evento.target as HTMLInputElement;
     const limpio = campo.value.replace(/\D/g, '').slice(0, largo);
     if (limpio !== campo.value) {
@@ -54,7 +54,7 @@ export class CampoFecha implements OnInit, OnDestroy {
   }
 
   // El día se puede escribir "1": al salir del campo se guarda como "01".
-  protected completarDia(): void {
+  completarDia(): void {
     const dia = this.grupo().controls.dia;
     if (/^[1-9]$/.test(dia.value)) dia.setValue(`0${dia.value}`);
   }

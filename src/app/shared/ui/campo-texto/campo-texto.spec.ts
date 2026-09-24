@@ -28,7 +28,7 @@ import { CampoTexto } from './campo-texto';
   `,
 })
 class FormularioDePrueba {
-  readonly form = new FormGroup({
+  form = new FormGroup({
     nombre: new FormControl('', { nonNullable: true, validators: Validators.required }),
     email: new FormControl('', {
       nonNullable: true,

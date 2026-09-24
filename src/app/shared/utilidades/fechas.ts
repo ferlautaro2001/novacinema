@@ -19,7 +19,7 @@ const MESES = [
 ];
 
 // Opciones del desplegable de mes: el valor ya viaja como número de dos dígitos.
-export const MESES_DEL_ANIO: readonly { valor: string; nombre: string }[] = MESES.map((mes, i) => ({
+export const MESES_DEL_ANIO: { valor: string; nombre: string }[] = MESES.map((mes, i) => ({
   valor: String(i + 1).padStart(2, '0'),
   nombre: mes[0].toUpperCase() + mes.slice(1),
 }));

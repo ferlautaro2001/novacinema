@@ -16,10 +16,10 @@ interface Enlace {
   styleUrl: './navegacion.css',
 })
 export class Navegacion {
-  protected readonly auth = inject(AuthService);
+  auth = inject(AuthService);
 
   // Secciones que ve cualquier visitante.
-  protected readonly publicos: Enlace[] = [
+  publicos: Enlace[] = [
     { ruta: '/inicio', texto: 'Inicio' },
     { ruta: '/cartelera', texto: 'Cartelera' },
     { ruta: '/proximamente', texto: 'Próximamente' },
@@ -27,6 +27,6 @@ export class Navegacion {
   ];
 
   // Secciones del personal, cada grupo detrás de *appSiRol.
-  protected readonly boleteria: Enlace = { ruta: '/boleteria', texto: 'Boletería' };
-  protected readonly panel: Enlace = { ruta: '/admin', texto: 'Panel' };
+  boleteria: Enlace = { ruta: '/boleteria', texto: 'Boletería' };
+  panel: Enlace = { ruta: '/admin', texto: 'Panel' };
 }

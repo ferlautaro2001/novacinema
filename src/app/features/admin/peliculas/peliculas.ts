@@ -29,14 +29,14 @@ import { TablaDatos } from '../../../shared/ui/tabla-datos/tabla-datos';
   styleUrl: './peliculas.css',
 })
 export class Peliculas implements OnInit {
-  private readonly servicio = inject(PeliculasService);
-  protected readonly storage = inject(StorageService);
-  protected readonly estado = signal<EstadoConsulta<PeliculaConCatalogo>>({ tipo: 'cargando' });
-  protected readonly confirmacion = signal<PeliculaConCatalogo | null>(null);
-  protected readonly trabajando = signal(false);
-  protected readonly error = signal('');
-  protected readonly aviso = signal(history.state?.peliculaGuardada ?? '');
-  protected readonly estados = {
+  private servicio = inject(PeliculasService);
+  storage = inject(StorageService);
+  estado = signal<EstadoConsulta<PeliculaConCatalogo>>({ tipo: 'cargando' });
+  confirmacion = signal<PeliculaConCatalogo | null>(null);
+  trabajando = signal(false);
+  error = signal('');
+  aviso = signal(history.state?.peliculaGuardada ?? '');
+  estados = {
     proximamente: 'Próximamente',
     en_cartelera: 'En cartelera',
     archivada: 'Finalizada',
@@ -45,7 +45,7 @@ export class Peliculas implements OnInit {
   ngOnInit(): void {
     void this.cargar();
   }
-  protected async cargar(): Promise<void> {
+  async cargar(): Promise<void> {
     this.estado.set({ tipo: 'cargando' });
     try {
       this.estado.set({ tipo: 'datos', datos: await this.servicio.listar() });
@@ -53,13 +53,13 @@ export class Peliculas implements OnInit {
       this.estado.set({ tipo: 'error', mensaje: 'No se pudo cargar el catálogo. Probá de nuevo.' });
     }
   }
-  protected generos(p: PeliculaConCatalogo): string {
+  generos(p: PeliculaConCatalogo): string {
     return p.pelicula_generos.map((g) => nombreGenero(g.genero.nombre)).join(', ');
   }
-  protected nombreEstado(p: PeliculaConCatalogo): string {
+  nombreEstado(p: PeliculaConCatalogo): string {
     return this.estados[p.estado];
   }
-  protected async accion(
+  async accion(
     tipo: 'destacar' | 'finalizar' | 'eliminar',
     p: PeliculaConCatalogo,
   ): Promise<void> {

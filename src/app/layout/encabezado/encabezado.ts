@@ -10,14 +10,14 @@ import { Navegacion } from '../navegacion/navegacion';
   styleUrl: './encabezado.css',
 })
 export class Encabezado {
-  protected readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
+  auth = inject(AuthService);
+  private router = inject(Router);
 
-  protected readonly cerrando = signal(false);
-  protected readonly error = signal<string | null>(null);
+  cerrando = signal(false);
+  error = signal<string | null>(null);
 
   // Al salir se vuelve a Inicio como visitante.
-  protected async cerrarSesion(): Promise<void> {
+  async cerrarSesion(): Promise<void> {
     this.cerrando.set(true);
     this.error.set(null);
     try {

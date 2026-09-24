@@ -16,15 +16,15 @@ import { FocoInicial } from '../../../shared/directivas/foco-inicial';
   styleUrl: './inicio.css',
 })
 export class Inicio implements OnInit {
-  private readonly peliculas = inject(PeliculasService);
-  protected readonly destacadas = signal<PeliculaConCatalogo[]>([]);
-  protected readonly detalle = signal<PeliculaConCatalogo | null>(null);
-  protected readonly cargando = signal(true);
-  protected readonly error = signal(false);
+  private peliculas = inject(PeliculasService);
+  destacadas = signal<PeliculaConCatalogo[]>([]);
+  detalle = signal<PeliculaConCatalogo | null>(null);
+  cargando = signal(true);
+  error = signal(false);
   ngOnInit(): void {
     void this.cargar();
   }
-  protected async cargar(): Promise<void> {
+  async cargar(): Promise<void> {
     this.cargando.set(true);
     this.error.set(false);
     try {

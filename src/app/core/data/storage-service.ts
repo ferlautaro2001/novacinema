@@ -13,7 +13,7 @@ export function validarPortada(archivo: File): string | null {
 
 @Service()
 export class StorageService {
-  private readonly sup = inject(Supabase).Sup;
+  private sup = inject(Supabase).Sup;
 
   urlPublica(ruta: string): string {
     // Las portadas importadas pueden ser URLs externas; las nuevas guardan su ruta.

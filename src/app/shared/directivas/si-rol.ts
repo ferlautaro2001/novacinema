@@ -10,12 +10,12 @@ import { Directive, inject, input, OnChanges, TemplateRef, ViewContainerRef } fr
 // muestra: quién puede entrar lo resuelven los guards, y qué datos ve, RLS.
 @Directive({ selector: '[appSiRol]' })
 export class SiRol implements OnChanges {
-  readonly appSiRol = input.required<readonly string[]>();
-  readonly appSiRolActual = input<string | null | undefined>(null);
-  readonly appSiRolSino = input<TemplateRef<unknown> | null>(null);
+  appSiRol = input.required<string[]>();
+  appSiRolActual = input<string | null | undefined>(null);
+  appSiRolSino = input<TemplateRef<unknown> | null>(null);
 
-  private readonly template = inject(TemplateRef);
-  private readonly contenedor = inject(ViewContainerRef);
+  private template = inject(TemplateRef);
+  private contenedor = inject(ViewContainerRef);
 
   ngOnChanges(): void {
     // Siempre se limpia antes de crear: si no, cada cambio sumaría otra copia.

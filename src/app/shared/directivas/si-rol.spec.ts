@@ -13,7 +13,7 @@ import { SiRol } from './si-rol';
   `,
 })
 class Anfitrion {
-  readonly rol = signal<string | null>(null);
+  rol = signal<string | null>(null);
 }
 
 describe('SiRol (US-02.05)', () => {

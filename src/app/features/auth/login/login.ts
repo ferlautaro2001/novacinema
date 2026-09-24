@@ -12,18 +12,18 @@ import { ErrorCampo } from '../../../shared/ui/error-campo/error-campo';
   styleUrl: './login.css',
 })
 export class Login {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
+  private auth = inject(AuthService);
+  private router = inject(Router);
 
-  protected readonly form = inject(FormBuilder).nonNullable.group({
+  form = inject(FormBuilder).nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     clave: ['', Validators.required],
   });
 
-  protected readonly enviando = signal(false);
-  protected readonly error = signal<string | null>(null);
+  enviando = signal(false);
+  error = signal<string | null>(null);
 
-  protected async ingresar(): Promise<void> {
+  async ingresar(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

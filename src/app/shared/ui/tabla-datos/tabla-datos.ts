@@ -8,7 +8,7 @@ import { NgTemplateOutlet } from '@angular/common';
   styleUrl: './tabla-datos.css',
 })
 export class TablaDatos<T extends { id: string | number }> {
-  readonly filas = input.required<T[]>();
-  readonly plantillaFila = input.required<TemplateRef<{ $implicit: T }>>();
-  readonly titulo = input('Listado');
+  filas = input.required<T[]>();
+  plantillaFila = input.required<TemplateRef<{ $implicit: T }>>();
+  titulo = input('Listado');
 }

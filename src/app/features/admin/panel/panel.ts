@@ -10,7 +10,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
   styleUrl: './panel.css',
 })
 export class Panel {
-  protected readonly secciones = [
+  secciones = [
     { ruta: 'peliculas', texto: 'Películas' },
     { ruta: 'facturacion', texto: 'Facturación' },
     { ruta: 'empleados', texto: 'Empleados' },

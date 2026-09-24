@@ -18,17 +18,17 @@ const NOMBRES_ROL: Record<Rol, string> = {
   styleUrl: './empleados.css',
 })
 export class Empleados implements OnInit {
-  protected readonly auth = inject(AuthService);
-  private readonly usuariosS = inject(UsuariosService);
+  auth = inject(AuthService);
+  private usuariosS = inject(UsuariosService);
 
-  protected readonly usuarios = signal<UsuarioConRol[]>([]);
-  protected readonly busqueda = signal('');
-  protected readonly campos: (keyof UsuarioConRol)[] = ['email', 'apellido'];
+  usuarios = signal<UsuarioConRol[]>([]);
+  busqueda = signal('');
+  campos: (keyof UsuarioConRol)[] = ['email', 'apellido'];
 
-  protected readonly cargando = signal(true);
-  protected readonly cambiando = signal<string | null>(null);
-  protected readonly aviso = signal<string | null>(null);
-  protected readonly error = signal<string | null>(null);
+  cargando = signal(true);
+  cambiando = signal<string | null>(null);
+  aviso = signal<string | null>(null);
+  error = signal<string | null>(null);
 
   async ngOnInit(): Promise<void> {
     try {
@@ -40,13 +40,13 @@ export class Empleados implements OnInit {
     }
   }
 
-  protected nombreRol(rol: Rol): string {
+  nombreRol(rol: Rol): string {
     return NOMBRES_ROL[rol];
   }
 
   // Alterna entre cliente y empleado. El nuevo rol rige desde el próximo ingreso
   // o recarga de esa persona.
-  protected async cambiarRol(usuario: UsuarioConRol): Promise<void> {
+  async cambiarRol(usuario: UsuarioConRol): Promise<void> {
     const nuevoRol: Rol = usuario.rol === 'empleado' ? 'cliente' : 'empleado';
     this.cambiando.set(usuario.id);
     this.aviso.set(null);

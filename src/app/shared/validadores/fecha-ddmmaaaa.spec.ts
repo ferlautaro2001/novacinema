@@ -54,7 +54,7 @@ describe('fechaDDMMAAAA (US-01.05)', () => {
   `,
 })
 class CampoNacimiento {
-  readonly control = new FormControl('', fechaDDMMAAAA({ soloAnteriorAHoy: true }));
+  control = new FormControl('', fechaDDMMAAAA({ soloAnteriorAHoy: true }));
 }
 
 describe('fecha de nacimiento escrita (AC-01.05.03)', () => {

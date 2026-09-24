@@ -23,13 +23,13 @@ import { alMenosUno, textoRequerido } from '../../../shared/validadores/al-menos
   host: { '(window:beforeunload)': 'antesDeSalir($event)' },
 })
 export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambios {
-  private readonly fb = inject(FormBuilder).nonNullable;
-  private readonly catalogo = inject(CatalogoService);
-  private readonly peliculas = inject(PeliculasService);
-  private readonly storage = inject(StorageService);
-  private readonly ruta = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  protected readonly form = this.fb.group({
+  private fb = inject(FormBuilder).nonNullable;
+  private catalogo = inject(CatalogoService);
+  private peliculas = inject(PeliculasService);
+  private storage = inject(StorageService);
+  private ruta = inject(ActivatedRoute);
+  private router = inject(Router);
+  form = this.fb.group({
     titulo: ['', textoRequerido],
     sinopsis: ['', textoRequerido],
     duracion_min: [
@@ -42,16 +42,16 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
     estado: this.fb.control<EstadoPelicula>('proximamente'),
     generos: this.fb.array<boolean>([], alMenosUno),
   });
-  protected readonly generos = signal<Genero[]>([]);
-  protected readonly clasificaciones = signal<ClasificacionCatalogo[]>([]);
-  protected readonly original = signal<PeliculaConCatalogo | null>(null);
-  protected readonly cargando = signal(true);
-  protected readonly falloCarga = signal(false);
-  protected readonly guardando = signal(false);
-  protected readonly error = signal('');
-  protected readonly errorArchivo = signal('');
-  protected readonly preview = signal('');
-  protected readonly duracionBloqueada = signal(false);
+  generos = signal<Genero[]>([]);
+  clasificaciones = signal<ClasificacionCatalogo[]>([]);
+  original = signal<PeliculaConCatalogo | null>(null);
+  cargando = signal(true);
+  falloCarga = signal(false);
+  guardando = signal(false);
+  error = signal('');
+  errorArchivo = signal('');
+  preview = signal('');
+  duracionBloqueada = signal(false);
   private archivo: File | null = null;
   private objetoUrl = '';
   private rutaSubida = '';
@@ -73,13 +73,13 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
   noGuardado(): boolean {
     return this.form.dirty && !this.guardado;
   }
-  protected antesDeSalir(evento: BeforeUnloadEvent): void {
+  antesDeSalir(evento: BeforeUnloadEvent): void {
     if (this.noGuardado()) {
       evento.preventDefault();
       evento.returnValue = '';
     }
   }
-  protected async reintentar(): Promise<void> {
+  async reintentar(): Promise<void> {
     await this.cargar(this.ruta.snapshot.paramMap.get('id'));
   }
   private async cargar(id: string | null): Promise<void> {
@@ -143,16 +143,16 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
       if (secuencia === this.secuencia) this.cargando.set(false);
     }
   }
-  protected invalido(campo: keyof typeof this.form.controls): boolean {
+  invalido(campo: keyof typeof this.form.controls): boolean {
     const control = this.form.controls[campo];
     return control.touched && control.invalid;
   }
-  protected elegirFecha(fecha: Date): void {
+  elegirFecha(fecha: Date): void {
     const iso = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
     this.form.controls.fecha_estreno.setValue(iso);
     this.form.controls.fecha_estreno.markAsDirty();
   }
-  protected elegirArchivo(evento: Event): void {
+  elegirArchivo(evento: Event): void {
     const input = evento.target as HTMLInputElement;
     const archivo = input.files?.[0];
     if (!archivo) return;
@@ -170,7 +170,7 @@ export class FormularioPelicula implements OnInit, OnDestroy, FormularioConCambi
     this.form.controls.imagen_path.setValue(archivo.name);
     this.form.controls.imagen_path.markAsDirty();
   }
-  protected async guardar(): Promise<void> {
+  async guardar(): Promise<void> {
     if (this.guardando()) return;
     this.form.markAllAsTouched();
     if (this.form.invalid || this.errorArchivo()) return;

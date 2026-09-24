@@ -14,7 +14,7 @@ function normalizar(texto: string): string {
 //   usuarios | filtro: busqueda : ['email', 'apellido']
 @Pipe({ name: 'filtro' })
 export class FiltroPipe implements PipeTransform {
-  transform<T>(items: readonly T[] | null, texto: string, campos: readonly (keyof T)[]): T[] {
+  transform<T>(items: T[] | null, texto: string, campos: (keyof T)[]): T[] {
     if (!items) return [];
     const buscado = normalizar(texto ?? '');
     if (!buscado) return [...items];

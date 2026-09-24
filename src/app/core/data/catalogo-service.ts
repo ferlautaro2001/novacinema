@@ -16,7 +16,7 @@ import type {
 // pantalla.
 @Service()
 export class CatalogoService {
-  private readonly supS = inject(Supabase);
+  private supS = inject(Supabase);
 
   async findAllGeneros(): Promise<Genero[]> {
     const { data, error } = await this.supS.Sup.from('generos').select('*').order('nombre');

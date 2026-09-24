@@ -21,7 +21,7 @@ const MENSAJES_RPC: Record<string, string> = {
 
 @Service()
 export class UsuariosService {
-  private readonly supS = inject(Supabase);
+  private supS = inject(Supabase);
 
   // RLS deja leer todos los perfiles solo al personal (US-01.07).
   async findAllConRol(): Promise<UsuarioConRol[]> {

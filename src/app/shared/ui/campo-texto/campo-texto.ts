@@ -17,14 +17,14 @@ export type TipoCampo = 'text' | 'email' | 'password' | 'number' | 'tel';
   styleUrl: './campo-texto.css',
 })
 export class CampoTexto implements OnInit, OnDestroy {
-  readonly id = input.required<string>();
-  readonly etiqueta = input.required<string>();
-  readonly tipo = input<TipoCampo>('text');
-  readonly control = input.required<FormControl>();
+  id = input.required<string>();
+  etiqueta = input.required<string>();
+  tipo = input<TipoCampo>('text');
+  control = input.required<FormControl>();
   // Valor de autocomplete del navegador: 'email', 'new-password', 'given-name'…
-  readonly autocompletar = input('off');
+  autocompletar = input('off');
 
-  protected readonly mostrarErrores = signal(false);
+  mostrarErrores = signal(false);
 
   // Los componentes son OnPush por defecto: si el template leyera control.touched
   // directamente no se enteraría de los cambios. Escucho los eventos del control y

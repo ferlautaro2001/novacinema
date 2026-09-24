@@ -19,7 +19,7 @@ import { CampoFecha } from './campo-fecha';
   `,
 })
 class FormularioFecha {
-  readonly grupo = inject(FormBuilder).nonNullable.group(
+  grupo = inject(FormBuilder).nonNullable.group(
     { dia: '', mes: '', anio: '' },
     { validators: fechaPorPartes({ soloAnteriorAHoy: true }) },
   );

@@ -19,12 +19,12 @@ import {
   styleUrl: './registro.css',
 })
 export class Registro implements FormularioConCambios {
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
+  private auth = inject(AuthService);
+  private router = inject(Router);
 
-  private readonly fb = inject(FormBuilder).nonNullable;
+  private fb = inject(FormBuilder).nonNullable;
 
-  protected readonly form = this.fb.group({
+  form = this.fb.group({
     email: ['', [Validators.required, Validators.email]],
     clave: ['', [Validators.required, Validators.minLength(6)]],
     nombre: ['', Validators.required],
@@ -35,12 +35,12 @@ export class Registro implements FormularioConCambios {
     ),
   });
 
-  protected readonly anioMinimo = ANIO_MINIMO;
-  protected readonly anioMaximo = new Date().getFullYear();
+  anioMinimo = ANIO_MINIMO;
+  anioMaximo = new Date().getFullYear();
 
-  protected readonly enviando = signal(false);
-  protected readonly error = signal<string | null>(null);
-  protected readonly revisarEmail = signal(false);
+  enviando = signal(false);
+  error = signal<string | null>(null);
+  revisarEmail = signal(false);
 
   // Una vez creada la cuenta ya no hay nada que perder al salir.
   private cuentaCreada = false;
@@ -49,7 +49,7 @@ export class Registro implements FormularioConCambios {
     return this.form.dirty && !this.cuentaCreada;
   }
 
-  protected async crearCuenta(): Promise<void> {
+  async crearCuenta(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;

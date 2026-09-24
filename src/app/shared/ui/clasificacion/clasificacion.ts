@@ -7,6 +7,6 @@ import { Clasificacion as Codigo, EDADES_MINIMAS } from '../../../core/models/pe
   styleUrl: './clasificacion.css',
 })
 export class Clasificacion {
-  readonly codigo = input.required<Codigo>();
-  protected readonly edades = EDADES_MINIMAS;
+  codigo = input.required<Codigo>();
+  edades = EDADES_MINIMAS;
 }
