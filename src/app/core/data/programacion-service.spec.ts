@@ -141,4 +141,57 @@ describe('ProgramacionService (US-04.03)', () => {
     expect(resultado.creadas).toBe(1);
     expect(resultado.fallidas).toBe(0);
   });
+
+  it('cuenta las entradas vendidas de una función', async () => {
+    supabaseMock.Sup.from = vi.fn().mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      is: vi.fn().mockResolvedValue({ count: 5, error: null }),
+    });
+
+    const total = await service.contarEntradasVendidas('func-1');
+    expect(total).toBe(5);
+  });
+
+  it('elimina una función sin ventas (AC-04.06.02)', async () => {
+    const deleteMock = vi.fn().mockReturnValue({
+      eq: vi.fn().mockResolvedValue({ data: null, error: null }),
+    });
+
+    supabaseMock.Sup.from = vi.fn((tabla: string) => {
+      if (tabla === 'entradas') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          is: vi.fn().mockResolvedValue({ count: 0, error: null }),
+        };
+      }
+      if (tabla === 'funciones') {
+        return {
+          delete: deleteMock,
+        };
+      }
+      return {};
+    });
+
+    await service.eliminarFuncion('func-sin-ventas');
+    expect(deleteMock).toHaveBeenCalled();
+  });
+
+  it('falla al eliminar una función con entradas vendidas (AC-04.06.02)', async () => {
+    supabaseMock.Sup.from = vi.fn((tabla: string) => {
+      if (tabla === 'entradas') {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          is: vi.fn().mockResolvedValue({ count: 12, error: null }),
+        };
+      }
+      return {};
+    });
+
+    await expect(service.eliminarFuncion('func-con-ventas')).rejects.toThrow(
+      'No se puede eliminar una función con entradas vendidas'
+    );
+  });
 });

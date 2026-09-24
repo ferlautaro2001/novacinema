@@ -205,4 +205,34 @@ export class ProgramacionService {
 
     return { creadas, fallidas, errores };
   }
+
+  async contarEntradasVendidas(funcionId: string): Promise<number> {
+    const { count, error } = await this.supS.Sup
+      .from('entradas')
+      .select('*', { count: 'exact', head: true })
+      .eq('funcion_id', funcionId)
+      .is('anulada_en', null);
+
+    if (error) throw error;
+    return count ?? 0;
+  }
+
+  async eliminarFuncion(funcionId: string): Promise<void> {
+    const entradas = await this.contarEntradasVendidas(funcionId);
+    if (entradas > 0) {
+      throw new Error('No se puede eliminar una función con entradas vendidas');
+    }
+
+    const { error } = await this.supS.Sup
+      .from('funciones')
+      .delete()
+      .eq('id', funcionId);
+
+    if (error) {
+      if (error.code === '23503') {
+        throw new Error('No se puede eliminar una función con entradas vendidas');
+      }
+      throw error;
+    }
+  }
 }
