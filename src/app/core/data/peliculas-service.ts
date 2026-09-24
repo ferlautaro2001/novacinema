@@ -24,8 +24,10 @@ export function errorPelicula(error: unknown): string {
 export class PeliculasService {
   private readonly sup = inject(Supabase).Sup;
 
-  async listar(): Promise<PeliculaConCatalogo[]> {
+  async listar(soloDestacadas = false): Promise<PeliculaConCatalogo[]> {
     let consulta = this.sup.from('peliculas').select(SELECCION).order('titulo');
+    if (soloDestacadas)
+      consulta = consulta.eq('destacada', true).eq('activo', true).neq('estado', 'archivada');
     const { data, error } = await consulta;
     if (error) throw error;
     return data as PeliculaConCatalogo[];
@@ -67,6 +69,17 @@ export class PeliculasService {
     });
     if (error) throw error;
     return data;
+  }
+
+  async destacar(pelicula: PeliculaConCatalogo): Promise<void> {
+    const { error } = await this.sup
+      .from('peliculas')
+      .update({ destacada: !pelicula.destacada })
+      .eq('id', pelicula.id)
+      .eq('actualizado_en', pelicula.actualizado_en)
+      .select('id')
+      .single();
+    if (error) throw error;
   }
 
   async finalizar(pelicula: PeliculaConCatalogo): Promise<void> {

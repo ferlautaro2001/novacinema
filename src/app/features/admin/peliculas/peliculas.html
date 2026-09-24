@@ -6,7 +6,7 @@
     </div>
     <a class="nc-btn nc-btn--primary" routerLink="nueva">Cargá una película</a>
   </header>
-  <p class="body descripcion">Consultá los datos principales de las películas del cine.</p>
+  <p class="body descripcion">Administrá los títulos y elegí hasta seis destacadas para Inicio.</p>
   @if (aviso()) {
     <p class="aviso body" role="status">{{ aviso() }}</p>
   }
@@ -58,6 +58,15 @@
     <td class="caption">{{ nombreEstado(p) }}</td>
     <td>
       <div class="acciones">
+        <button
+          type="button"
+          class="nc-btn nc-btn--secondary nc-btn--sm"
+          [attr.aria-pressed]="p.destacada"
+          [disabled]="trabajando() || !p.activo"
+          (click)="accion('destacar', p)"
+        >
+          {{ p.destacada ? 'Quitar de Inicio' : 'Destacar en Inicio' }}
+        </button>
         <a class="nc-btn nc-btn--ghost nc-btn--sm" [routerLink]="[p.id]">Editar</a>
         @if (p.activo) {
           <button
