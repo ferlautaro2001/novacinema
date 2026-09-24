@@ -1,0 +1,40 @@
+<div class="selector" role="group" aria-label="Elegí una fecha">
+  <div class="cabecera">
+    <p class="caption meses" aria-live="polite">{{ meses() }}</p>
+    <div class="semanas">
+      <button
+        type="button"
+        class="nc-btn nc-btn--ghost nc-btn--sm"
+        [disabled]="esPrimeraSemana()"
+        (click)="semanaAnterior()"
+      >
+        Semana anterior
+      </button>
+      <button type="button" class="nc-btn nc-btn--ghost nc-btn--sm" (click)="semanaSiguiente()">
+        Semana siguiente
+      </button>
+    </div>
+  </div>
+
+  <ul class="opciones">
+    @for (dia of dias(); track dia.fecha.getTime()) {
+      <li>
+        <button
+          type="button"
+          class="opcion body-strong"
+          [class.elegida]="estaElegida(dia)"
+          [attr.aria-pressed]="estaElegida(dia)"
+          (click)="elegir(dia)"
+        >
+          @if (estaElegida(dia)) {
+            <svg class="tilde" viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M5 10.5l3.2 3L15 6.5" />
+            </svg>
+          }
+          <span class="etiqueta">{{ dia.etiqueta }}</span>
+          <span class="solo-lector">, {{ dia.descripcion }}</span>
+        </button>
+      </li>
+    }
+  </ul>
+</div>

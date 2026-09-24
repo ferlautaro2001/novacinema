@@ -1,0 +1,22 @@
+<ul class="opciones" role="group" aria-label="Elegí un horario">
+  @for (hora of horarios(); track hora) {
+    <li>
+      <button
+        type="button"
+        class="opcion body-strong"
+        [class.elegida]="elegida() === hora"
+        [attr.aria-pressed]="elegida() === hora"
+        (click)="elegir(hora)"
+      >
+        @if (elegida() === hora) {
+          <svg class="tilde" viewBox="0 0 20 20" aria-hidden="true">
+            <path d="M5 10.5l3.2 3L15 6.5" />
+          </svg>
+        }
+        {{ hora }}
+      </button>
+    </li>
+  } @empty {
+    <li class="vacio body">No hay horarios para este día.</li>
+  }
+</ul>
