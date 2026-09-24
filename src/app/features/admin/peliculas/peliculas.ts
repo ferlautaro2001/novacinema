@@ -5,9 +5,11 @@ import { PeliculasService, errorPelicula } from '../../../core/data/peliculas-se
 import { StorageService } from '../../../core/data/storage-service';
 import { nombreGenero, PeliculaConCatalogo } from '../../../core/models/pelicula';
 import { Cargando, EstadoConsulta } from '../../../shared/directivas/cargando';
+import { FocoInicial } from '../../../shared/directivas/foco-inicial';
 import { DuracionPipe } from '../../../shared/pipes/duracion-pipe';
 import { TextoLargoPipe } from '../../../shared/pipes/texto-largo-pipe';
 import { Clasificacion } from '../../../shared/ui/clasificacion/clasificacion';
+import { Modal } from '../../../shared/ui/modal/modal';
 import { TablaDatos } from '../../../shared/ui/tabla-datos/tabla-datos';
 
 @Component({
@@ -16,9 +18,11 @@ import { TablaDatos } from '../../../shared/ui/tabla-datos/tabla-datos';
     RouterLink,
     DatePipe,
     Cargando,
+    FocoInicial,
     DuracionPipe,
     TextoLargoPipe,
     Clasificacion,
+    Modal,
     TablaDatos,
   ],
   templateUrl: './peliculas.html',
@@ -28,6 +32,8 @@ export class Peliculas implements OnInit {
   private readonly servicio = inject(PeliculasService);
   protected readonly storage = inject(StorageService);
   protected readonly estado = signal<EstadoConsulta<PeliculaConCatalogo>>({ tipo: 'cargando' });
+  protected readonly confirmacion = signal<PeliculaConCatalogo | null>(null);
+  protected readonly trabajando = signal(false);
   protected readonly error = signal('');
   protected readonly aviso = signal(history.state?.peliculaGuardada ?? '');
   protected readonly estados = {
@@ -52,5 +58,31 @@ export class Peliculas implements OnInit {
   }
   protected nombreEstado(p: PeliculaConCatalogo): string {
     return this.estados[p.estado];
+  }
+  protected async accion(
+    tipo: 'finalizar' | 'eliminar',
+    p: PeliculaConCatalogo,
+  ): Promise<void> {
+    if (this.trabajando()) return;
+    this.trabajando.set(true);
+    this.error.set('');
+    this.aviso.set('');
+    try {
+      await this.servicio[tipo](p);
+      this.confirmacion.set(null);
+      this.aviso.set(
+        tipo === 'eliminar'
+          ? 'Película eliminada'
+          : tipo === 'finalizar'
+            ? 'Película finalizada'
+            : 'Destacadas actualizadas',
+      );
+      await this.cargar();
+    } catch (e) {
+      this.confirmacion.set(null);
+      this.error.set(errorPelicula(e));
+    } finally {
+      this.trabajando.set(false);
+    }
   }
 }
