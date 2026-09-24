@@ -1,0 +1,32 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1) var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.enlace {
+  display: inline-block;
+  padding-block: var(--space-2);
+  color: var(--ink-200);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+
+.enlace:hover {
+  color: var(--ink-100);
+}
+
+/* La sección actual no se marca solo con color: lleva la barra inferior y
+   aria-current="page". */
+.enlace.activo {
+  color: var(--ink-100);
+  border-bottom-color: var(--brand-400);
+}

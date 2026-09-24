@@ -1,0 +1,386 @@
+/* NovaCinema — estilos del bundle. Se carga después de tokens.css. */
+
+/* ------------------------------------------------------------------ Button */
+.nc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  font-family: var(--font-text);
+  font-size: 15px;
+  line-height: 22px;
+  font-weight: 600;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  padding: var(--space-2) var(--space-4);
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
+}
+.nc-btn:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+.nc-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.nc-btn--sm { padding: var(--space-1) var(--space-3); font-size: 13px; line-height: 18px; }
+.nc-btn--lg { padding: var(--space-3) var(--space-5); font-size: 16px; line-height: 24px; }
+.nc-btn--block { display: flex; width: 100%; }
+
+.nc-btn--primary { background: var(--brand-500); color: var(--on-brand); }
+.nc-btn--primary:hover:not(:disabled) { background: var(--brand-600); }
+
+.nc-btn--secondary { background: transparent; color: var(--ink-100); border-color: var(--border-200); }
+.nc-btn--secondary:hover:not(:disabled) { background: var(--surface-300); }
+
+.nc-btn--ghost { background: transparent; color: var(--ink-200); }
+.nc-btn--ghost:hover:not(:disabled) { background: var(--surface-300); color: var(--ink-100); }
+
+.nc-btn--danger { background: transparent; color: var(--danger); border-color: var(--danger); }
+.nc-btn--danger:hover:not(:disabled) { background: var(--danger-tint); }
+
+.nc-btn__icon { display: inline-flex; font-size: 15px; }
+
+/* ------------------------------------------------------------------- Badge */
+.nc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-family: var(--font-text);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-md);
+  color: var(--ink-100);
+}
+.nc-badge__glyph { letter-spacing: 0; }
+.nc-badge--neutral { background: var(--surface-300); }
+.nc-badge--brand { background: var(--brand-tint); }
+.nc-badge--gold { background: var(--gold-500); color: var(--on-gold); }
+.nc-badge--success { background: var(--success-tint); }
+.nc-badge--warning { background: var(--warning-tint); }
+.nc-badge--danger { background: var(--danger-tint); }
+.nc-badge--info { background: var(--info-tint); }
+
+/* ---------------------------------------------------------------- StatTile */
+.nc-stat {
+  background: var(--surface-200);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  font-family: var(--font-text);
+  min-width: 180px;
+}
+.nc-stat--highlight { border-color: var(--gold-600); box-shadow: var(--glow-marquee); }
+.nc-stat__label {
+  font-size: 11px; line-height: 14px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-300);
+}
+.nc-stat__value {
+  font-family: var(--font-display);
+  font-size: 40px; line-height: 40px; letter-spacing: 0.01em;
+  color: var(--ink-100);
+  margin-top: var(--space-2);
+}
+.nc-stat__foot {
+  display: flex; gap: var(--space-2); align-items: baseline;
+  margin-top: var(--space-2);
+  font-size: 13px; line-height: 18px; font-weight: 500;
+}
+.nc-stat__trend--up { color: var(--success); }
+.nc-stat__trend--down { color: var(--danger); }
+.nc-stat__trend--flat { color: var(--ink-300); }
+.nc-stat__hint { color: var(--ink-300); }
+
+/* --------------------------------------------------------------- MovieCard */
+.nc-movie {
+  display: flex;
+  gap: var(--space-4);
+  background: var(--surface-200);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  font-family: var(--font-text);
+  box-shadow: var(--shadow-sm);
+  max-width: 560px;
+}
+.nc-movie__poster {
+  position: relative;
+  flex: 0 0 104px;
+  width: 104px; height: 152px;
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--surface-300);
+  display: flex; align-items: center; justify-content: center;
+}
+.nc-movie__poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.nc-movie__poster-fallback {
+  font-family: var(--font-display); font-size: 28px; color: var(--ink-300);
+}
+.nc-movie__badge { position: absolute; left: var(--space-2); top: var(--space-2); }
+.nc-movie__body { min-width: 0; }
+.nc-movie__kicker {
+  font-size: 11px; line-height: 14px; font-weight: 700;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-600);
+}
+.nc-movie__title {
+  font-size: 22px; line-height: 28px; font-weight: 700;
+  color: var(--ink-100); margin: var(--space-1) 0 0;
+}
+.nc-movie__meta { margin: var(--space-1) 0 0; font-size: 13px; line-height: 18px; color: var(--ink-300); }
+.nc-movie__meta-item + .nc-movie__meta-item::before { content: ' · '; }
+.nc-movie__synopsis {
+  margin: var(--space-2) 0 0; font-size: 15px; line-height: 22px; color: var(--ink-200);
+}
+.nc-movie__times { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-top: var(--space-4); }
+
+.nc-time {
+  display: flex; flex-direction: column; align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-200);
+  background: transparent;
+  color: var(--ink-100);
+  font-family: var(--font-text);
+  cursor: pointer;
+}
+.nc-time:hover:not(:disabled) { background: var(--surface-300); }
+.nc-time:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.nc-time__hour { font-family: var(--font-mono); font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0.04em; }
+.nc-time__room { font-size: 11px; line-height: 14px; color: var(--ink-300); }
+.nc-time--live { border-color: var(--gold-600); box-shadow: var(--glow-marquee); }
+.nc-time--full { opacity: 0.55; cursor: not-allowed; }
+.nc-time--full .nc-time__room { color: var(--danger); }
+
+/* -------------------------------------------------------------- PushButton */
+.nc-push {
+  display: inline-block;
+  box-sizing: border-box;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  overflow: visible;
+  background: var(--brand-700);
+  border-radius: var(--radius-md);
+  font-family: var(--font-text);
+  font-size: 17px;
+  font-weight: 700;
+}
+.nc-push__face {
+  display: block;
+  box-sizing: border-box;
+  border: 2px solid var(--brand-700);
+  border-radius: var(--radius-md);
+  padding: 0.75em 1.5em;
+  background: var(--brand-500);
+  color: var(--on-brand);
+  transform: translateY(-0.2em);
+  transition: transform 100ms ease, background-color 100ms ease;
+}
+.nc-push:hover:not(:disabled) .nc-push__face { transform: translateY(-0.33em); }
+.nc-push:active:not(:disabled) .nc-push__face { transform: translateY(0); }
+.nc-push:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 4px; }
+.nc-push:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.nc-push--gold { background: var(--gold-600); }
+.nc-push--gold .nc-push__face {
+  border-color: var(--gold-600);
+  background: var(--gold-500);
+  color: var(--on-gold);
+}
+.nc-push--neutral { background: var(--border-200); }
+.nc-push--neutral .nc-push__face {
+  border-color: var(--border-200);
+  background: var(--surface-200);
+  color: var(--ink-100);
+}
+
+/* ---------------------------------------------------------------- FlipCard */
+.nc-flip {
+  position: relative;
+  width: 300px;
+  height: 200px;
+  background: var(--surface-200);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  perspective: 1000px;
+  box-shadow: var(--shadow-md);
+  transition: transform 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 600ms ease;
+  font-family: var(--font-text);
+}
+.nc-flip:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.nc-flip__icon { display: flex; }
+.nc-flip__icon svg {
+  width: 48px;
+  fill: var(--gold-500);
+  transition: scale 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.nc-flip:hover, .nc-flip:focus-visible, .nc-flip:focus-within {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-lg);
+}
+.nc-flip:hover .nc-flip__icon svg,
+.nc-flip:focus-visible .nc-flip__icon svg,
+.nc-flip:focus-within .nc-flip__icon svg { scale: 0; }
+.nc-flip__content {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  padding: var(--space-5);
+  box-sizing: border-box;
+  background: var(--surface-200);
+  transform: rotateX(-90deg);
+  transform-origin: bottom;
+  transition: transform 600ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.nc-flip:hover .nc-flip__content,
+.nc-flip:focus-visible .nc-flip__content,
+.nc-flip:focus-within .nc-flip__content { transform: rotateX(0deg); }
+.nc-flip__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px; line-height: 30px; letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--ink-100);
+}
+.nc-flip__description {
+  margin: var(--space-3) 0 0;
+  font-size: 15px; line-height: 22px;
+  color: var(--ink-200);
+}
+
+/* ---------------------------------------------------------------- AuthCard */
+.nc-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+  width: min(100%, 300px);
+  font-family: var(--font-text);
+}
+.nc-auth__switch { display: flex; align-items: center; gap: var(--space-3); }
+.nc-auth__side {
+  font-size: 13px; line-height: 18px; font-weight: 600;
+  color: var(--ink-300);
+}
+.nc-auth__side.is-active { color: var(--ink-100); text-decoration: underline; }
+.nc-auth__toggle { position: relative; display: inline-block; width: 50px; height: 24px; }
+.nc-auth__toggle input {
+  position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer;
+}
+.nc-auth__slider {
+  position: absolute; inset: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--border-200);
+  border-radius: var(--radius-sm);
+  background: var(--surface-300);
+  box-shadow: 4px 4px var(--brand-700);
+  transition: background-color 300ms ease;
+  pointer-events: none;
+}
+.nc-auth__slider::before {
+  content: '';
+  position: absolute;
+  left: -2px; top: -2px;
+  height: 24px; width: 24px;
+  box-sizing: border-box;
+  border: 2px solid var(--border-200);
+  border-radius: var(--radius-sm);
+  background: var(--surface-100);
+  transition: transform 300ms ease;
+}
+.nc-auth__toggle input:checked + .nc-auth__slider { background: var(--brand-500); }
+.nc-auth__toggle input:checked + .nc-auth__slider::before { transform: translateX(28px); }
+.nc-auth__toggle input:focus-visible + .nc-auth__slider { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+
+.nc-auth__inner {
+  position: relative;
+  width: 100%;
+  height: 350px;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  transition: transform 800ms ease;
+}
+.nc-auth__inner.is-flipped { transform: rotateY(180deg); }
+.nc-auth__face {
+  position: absolute;
+  box-sizing: border-box;
+  width: 100%; height: 100%;
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-5);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: var(--surface-200);
+  border: 2px solid var(--border-200);
+  border-radius: var(--radius-sm);
+  box-shadow: 4px 4px var(--brand-500);
+}
+.nc-auth__face--back { transform: rotateY(180deg); }
+.nc-auth__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 28px; line-height: 30px; letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--ink-100);
+}
+.nc-auth__form { display: flex; flex-direction: column; align-items: center; gap: var(--space-4); }
+.nc-auth__input {
+  box-sizing: border-box;
+  width: 100%;
+  height: 40px;
+  padding: var(--space-1) var(--space-3);
+  border: 2px solid var(--border-200);
+  border-radius: var(--radius-sm);
+  background: var(--surface-300);
+  box-shadow: 4px 4px var(--brand-700);
+  font-family: var(--font-text);
+  font-size: 15px; font-weight: 600;
+  color: var(--ink-100);
+  outline: none;
+}
+.nc-auth__input::placeholder { color: var(--ink-300); }
+.nc-auth__input:focus-visible { border-color: var(--focus-ring); outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.nc-auth__btn {
+  margin-top: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  /* El label puede ser largo ("Entrar a la boletería"): la altura es mínima,
+     no fija, y el texto se centra en una o dos líneas sin desbordar. */
+  min-height: 40px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1.2;
+  text-wrap: balance;
+  border: 2px solid var(--brand-700);
+  border-radius: var(--radius-sm);
+  background: var(--brand-500);
+  color: var(--on-brand);
+  box-shadow: 4px 4px var(--brand-700);
+  font-family: var(--font-text);
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+}
+.nc-auth__btn:hover { background: var(--brand-600); }
+.nc-auth__btn:active { box-shadow: 0 0 var(--brand-700); transform: translate(3px, 3px); }
+.nc-auth__btn:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 3px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-push__face,
+  .nc-flip, .nc-flip__content, .nc-flip__icon svg,
+  .nc-auth__inner, .nc-auth__slider, .nc-auth__slider::before { transition: none; }
+  .nc-flip:hover, .nc-flip:focus-within { transform: none; }
+}
