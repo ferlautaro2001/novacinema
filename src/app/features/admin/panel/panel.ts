@@ -11,6 +11,7 @@ import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 })
 export class Panel {
   protected readonly secciones = [
+    { ruta: 'peliculas', texto: 'Películas' },
     { ruta: 'facturacion', texto: 'Facturación' },
     { ruta: 'empleados', texto: 'Empleados' },
   ];

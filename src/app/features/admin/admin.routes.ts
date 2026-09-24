@@ -10,6 +10,11 @@ export const adminRoutes: Routes = [
     loadComponent: () => import('./panel/panel').then((m) => m.Panel),
     canActivateChild: [adminHijosGuard],
     children: [
+      {
+        path: 'peliculas',
+        title: 'Panel · Películas · NovaCinema',
+        loadComponent: () => import('./peliculas/peliculas').then((m) => m.Peliculas),
+      },
       { path: '', redirectTo: 'facturacion', pathMatch: 'full' },
       {
         path: 'facturacion',
