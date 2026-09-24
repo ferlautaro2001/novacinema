@@ -26,6 +26,10 @@ export const routes: Routes = [
     loadComponent: () => import('./features/candy/menu/menu').then((m) => m.Menu),
   },
   {
+    path: 'cuenta',
+    loadChildren: () => import('./features/cuenta/cuenta.routes').then((m) => m.cuentaRoutes),
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.authRoutes),
   },
