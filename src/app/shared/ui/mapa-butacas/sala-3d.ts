@@ -23,7 +23,7 @@ import {
   FILAS,
   FILAS_VIP,
   PASILLOS,
-} from '../../../core/reglas/butacas';
+} from './distribucion';
 import { soportaWebgl } from '../../directivas/si-webgl';
 
 // Directiva de atributo appSala3d sobre <canvas> (US-04.02).

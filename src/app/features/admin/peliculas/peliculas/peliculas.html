@@ -52,7 +52,12 @@
         </div>
       </div>
     </td>
-    <td><nc-clasificacion [codigo]="p.clasificacion.codigo" /></td>
+    <td>
+      <nc-clasificacion
+        [codigo]="p.clasificacion.codigo"
+        [edadMinima]="p.clasificacion.edad_minima"
+      />
+    </td>
     <td class="code">{{ p.duracion_min | duracion }}</td>
     <td class="caption">{{ p.fecha_estreno | date: 'dd/MM/yyyy' }}</td>
     <td class="caption">{{ nombreEstado(p) }}</td>

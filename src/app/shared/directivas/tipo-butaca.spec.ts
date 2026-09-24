@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TipoButacaDirective } from './tipo-butaca';
-import type { TipoButaca } from '../../core/reglas/butacas';
+import type { TipoButaca } from '../ui/mapa-butacas/distribucion';
 
 @Component({
   standalone: true,
