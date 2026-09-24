@@ -13,3 +13,8 @@
   margin-inline: auto;
   padding: var(--space-6) var(--space-4);
 }
+
+/* La pantalla de carga ocupa las tres filas del layout. */
+.carga {
+  grid-row: 1 / -1;
+}

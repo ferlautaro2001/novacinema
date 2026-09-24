@@ -1,5 +1,11 @@
-<nc-encabezado />
-<main class="principal">
-  <router-outlet />
-</main>
-<nc-pie />
+<!-- Hasta saber si hay sesión no muestro ninguna sección: podría ser una que al
+     final no le corresponde a quien entró. -->
+@if (auth.cargando()) {
+  <nc-pantalla-carga class="carga" />
+} @else {
+  <nc-encabezado />
+  <main class="principal">
+    <router-outlet />
+  </main>
+  <nc-pie />
+}
