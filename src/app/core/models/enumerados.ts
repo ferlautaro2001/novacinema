@@ -65,4 +65,5 @@ export type AccionAuditoriaCodigo =
   | 'producto_creado'
   | 'producto_editado'
   | 'qr_validado'
+  | 'candy_entregado'
   | 'cambio_rol';
