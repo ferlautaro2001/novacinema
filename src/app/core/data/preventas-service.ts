@@ -18,10 +18,9 @@ export class PreventasService {
 
   // Hay una sola preventa por película: si ya existe la actualizo, si no la creo.
   async guardar(preventa: PreventaPorCrear): Promise<void> {
-    const { error } = await this.supS.Sup.from('preventas').upsert(
-      { ...preventa, actualizado_en: new Date().toISOString() },
-      { onConflict: 'pelicula_id' },
-    );
+    const { error } = await this.supS.Sup.from('preventas').upsert(preventa, {
+      onConflict: 'pelicula_id',
+    });
     if (error) throw error;
   }
 }
