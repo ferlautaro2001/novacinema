@@ -82,6 +82,21 @@ export class PeliculasService {
     return pelicula;
   }
 
+  // Para el enlace público cartelera/:id: null si no existe, sin error de red en consola.
+  async buscarSiExiste(id: string): Promise<PeliculaConCatalogo | null> {
+    const { data, error } = await this.supS.Sup.from('peliculas')
+      .select(SELECCION)
+      .eq('id', id)
+      .maybeSingle();
+    if (error !== null) {
+      throw error;
+    }
+
+    const pelicula = data as PeliculaConCatalogo | null;
+
+    return pelicula;
+  }
+
   async tieneFuncionesFuturas(id: string): Promise<boolean> {
     const ahora = new Date().toISOString();
     const { count, error } = await this.supS.Sup.from('funciones')
