@@ -1,1 +1,95 @@
-<h1 class="marquee-lg">Nuevo cupón</h1>
+<section class="editor">
+  <a routerLink="/admin/cupones" class="volver caption">Volver a Cupones</a>
+  <h1 class="marquee-lg">Nuevo cupón</h1>
+  <p class="body nota">
+    Este cupón solo lo pueden usar los clientes mayores de 50 años, es decir, con 51 años cumplidos
+    o más el día de la compra.
+  </p>
+
+  @if (error()) {
+    <p class="error body" role="alert">{{ error() }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="guardar()">
+    <fieldset class="datos" [disabled]="guardando()">
+      <legend class="solo-lector">Datos del cupón</legend>
+      <div class="dos-columnas">
+        <nc-campo-texto id="codigo" etiqueta="Código" [control]="form.controls.codigo">
+          <nc-error-campo [control]="form.controls.codigo" error="required"
+            >Ingresá el código del cupón.</nc-error-campo
+          >
+          <nc-error-campo [control]="form.controls.codigo" error="pattern"
+            >Usá de 4 a 12 letras o números, sin espacios ni acentos. Se guarda en
+            mayúsculas.</nc-error-campo
+          >
+          <nc-error-campo [control]="form.controls.codigo" error="repetido"
+            >Ese código ya existe. Elegí otro.</nc-error-campo
+          >
+        </nc-campo-texto>
+        <nc-campo-texto
+          id="porcentaje"
+          etiqueta="Descuento (%)"
+          tipo="number"
+          [control]="form.controls.porcentaje"
+        >
+          <nc-error-campo [control]="form.controls.porcentaje" error="required"
+            >Ingresá el porcentaje de descuento.</nc-error-campo
+          >
+          <nc-error-campo [control]="form.controls.porcentaje" error="min"
+            >El porcentaje debe estar entre 1 y 100.</nc-error-campo
+          >
+          <nc-error-campo [control]="form.controls.porcentaje" error="max"
+            >El porcentaje debe estar entre 1 y 100.</nc-error-campo
+          >
+          <nc-error-campo [control]="form.controls.porcentaje" error="pattern"
+            >Usá un porcentaje entero, sin decimales.</nc-error-campo
+          >
+        </nc-campo-texto>
+      </div>
+
+      <div class="campo">
+        <span class="body-strong">Vigente desde</span>
+        @if (form.controls.vigente_desde.value) {
+          <p class="caption" role="status">
+            Elegida: {{ form.controls.vigente_desde.value | date: 'dd/MM/yyyy' }}
+          </p>
+        }
+        <nc-selector-fecha
+          [fechaInicial]="form.controls.vigente_desde.value"
+          (fechaElegida)="elegirDesde($event)"
+        />
+        @if (form.controls.vigente_desde.touched && form.controls.vigente_desde.invalid) {
+          <p class="error-texto caption" role="alert">Elegí desde qué día vale el cupón.</p>
+        }
+      </div>
+
+      <div class="campo">
+        <span class="body-strong">Vigente hasta</span>
+        @if (form.controls.vigente_hasta.value) {
+          <p class="caption" role="status">
+            Elegida: {{ form.controls.vigente_hasta.value | date: 'dd/MM/yyyy' }}
+          </p>
+        }
+        <nc-selector-fecha
+          [fechaInicial]="form.controls.vigente_hasta.value"
+          (fechaElegida)="elegirHasta($event)"
+        />
+        @if (form.controls.vigente_hasta.touched && form.controls.vigente_hasta.invalid) {
+          <p class="error-texto caption" role="alert">Elegí hasta qué día vale el cupón.</p>
+        }
+        @if (form.touched && form.hasError('finAnterior')) {
+          <p class="error-texto caption" role="alert">
+            La fecha de fin no puede ser anterior a la de inicio.
+          </p>
+        }
+      </div>
+    </fieldset>
+
+    <div class="acciones">
+      <a class="nc-btn nc-btn--secondary" routerLink="/admin/cupones">Cancelar</a
+      ><button class="nc-btn nc-btn--primary" type="submit" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Creá el cupón' }}
+      </button>
+    </div>
+  </form>
+</section>

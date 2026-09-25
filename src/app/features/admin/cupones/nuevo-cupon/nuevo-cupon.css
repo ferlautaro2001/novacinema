@@ -1,0 +1,48 @@
+.editor,
+.datos,
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.editor {
+  max-width: 760px;
+}
+.volver,
+.nota {
+  color: var(--ink-200);
+}
+.datos {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--space-6);
+  min-width: 0;
+}
+.campo {
+  gap: var(--space-2);
+}
+.dos-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.error {
+  background: var(--danger-tint);
+  border-left: 3px solid var(--danger);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+}
+.error-texto {
+  color: var(--danger);
+}
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+@media (max-width: 480px) {
+  .dos-columnas {
+    grid-template-columns: 1fr;
+  }
+}
