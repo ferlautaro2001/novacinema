@@ -1,0 +1,26 @@
+:host {
+  display: inline-flex;
+}
+.estrellas,
+.iconos {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.estrella {
+  fill: none;
+  stroke: var(--ink-300);
+  stroke-width: 1.5;
+}
+.estrella.llena {
+  fill: var(--gold-500);
+  stroke: var(--gold-500);
+}
+.solo-lectores {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

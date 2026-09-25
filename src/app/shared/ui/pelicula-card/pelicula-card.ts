@@ -1,6 +1,8 @@
 import { Component, input, output } from '@angular/core';
 import { Clasificacion } from '../clasificacion/clasificacion';
 import { DuracionPipe } from '../../pipes/duracion-pipe';
+import { PuntajePipe } from '../../pipes/puntaje-pipe';
+import { Estrellas } from '../estrellas/estrellas';
 
 // Solo los campos que muestra la tarjeta. Quien la usa le pasa su película y la URL
 // de la portada ya armada, así este componente no depende de core ni de Storage.
@@ -16,7 +18,7 @@ export interface PeliculaTarjeta {
 // <nc-pelicula-card ...><button acciones>Avisarme</button></nc-pelicula-card>
 @Component({
   selector: 'nc-pelicula-card',
-  imports: [Clasificacion, DuracionPipe],
+  imports: [Clasificacion, DuracionPipe, PuntajePipe, Estrellas],
   templateUrl: './pelicula-card.html',
   styleUrl: './pelicula-card.css',
 })
