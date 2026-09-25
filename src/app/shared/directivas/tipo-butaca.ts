@@ -1,8 +1,8 @@
 import { Directive, input } from '@angular/core';
 import type { TipoButaca } from '../ui/mapa-butacas/distribucion';
 
-// Directiva de atributo que aplica clases de estilo al elemento según el tipo de butaca (AC-04.02.03).
-// Puede recibir 'comun', 'vip' o 'accesible' (o alias de seatmap 'std', 'wc').
+// Pone la clase según el tipo de butaca. También acepta 'std' y 'wc', los nombres
+// que usaba seatmap.html, por eso cada tipo tiene dos clases.
 @Directive({
   selector: '[appTipoButaca]',
   host: {
@@ -11,28 +11,28 @@ import type { TipoButaca } from '../ui/mapa-butacas/distribucion';
     '[class.t-vip]': 'esVip()',
     '[class.t-accesible]': 'esAccesible()',
     '[class.t-wc]': 'esAccesible()',
-    '[attr.data-tipo]': 'tipoNormalizado()',
+    '[attr.data-tipo]': 'tipo()',
   },
 })
 export class TipoButacaDirective {
   appTipoButaca = input<TipoButaca | 'std' | 'wc'>('comun');
 
-  tipoNormalizado(): TipoButaca {
-    const val = this.appTipoButaca();
-    if (val === 'wc' || val === 'accesible') return 'accesible';
-    if (val === 'vip') return 'vip';
+  tipo(): TipoButaca {
+    const valor = this.appTipoButaca();
+    if (valor === 'wc' || valor === 'accesible') return 'accesible';
+    if (valor === 'vip') return 'vip';
     return 'comun';
   }
 
   esComun(): boolean {
-    return this.tipoNormalizado() === 'comun';
+    return this.tipo() === 'comun';
   }
 
   esVip(): boolean {
-    return this.tipoNormalizado() === 'vip';
+    return this.tipo() === 'vip';
   }
 
   esAccesible(): boolean {
-    return this.tipoNormalizado() === 'accesible';
+    return this.tipo() === 'accesible';
   }
 }

@@ -4,14 +4,13 @@ import { Subscription } from 'rxjs';
 
 export type TipoCampo = 'text' | 'email' | 'password' | 'number' | 'tel';
 
-// Campo de formulario con su etiqueta y el lugar para los mensajes de error, que
-// llegan proyectados (<nc-error-campo>). Los errores se muestran recién cuando el
+// Los errores llegan proyectados (<nc-error-campo>) y los muestro recién cuando el
 // usuario pasó por el campo, así el formulario no arranca lleno de rojo.
 @Component({
   selector: 'nc-campo-texto',
   imports: [ReactiveFormsModule],
-  // El id es para el <input>: si también quedara en <nc-campo-texto> habría dos
-  // elementos con el mismo id y la etiqueta podría apuntar al equivocado.
+  // El id es para el <input>: si quedara también en el host habría dos elementos con
+  // el mismo id y la etiqueta podría apuntar al equivocado.
   host: { '[attr.id]': 'null' },
   templateUrl: './campo-texto.html',
   styleUrl: './campo-texto.css',
@@ -21,14 +20,13 @@ export class CampoTexto implements OnInit, OnDestroy {
   etiqueta = input.required<string>();
   tipo = input<TipoCampo>('text');
   control = input.required<FormControl>();
-  // Valor de autocomplete del navegador: 'email', 'new-password', 'given-name'…
+  // Valor de autocomplete del navegador: 'email', 'new-password', 'given-name'...
   autocompletar = input('off');
 
   mostrarErrores = signal(false);
 
-  // Los componentes son OnPush por defecto: si el template leyera control.touched
-  // directamente no se enteraría de los cambios. Escucho los eventos del control y
-  // guardo el resultado en un Signal.
+  // El componente es OnPush: si el template leyera control.touched no se enteraría
+  // de los cambios, así que escucho los eventos del control y lo guardo en un signal.
   private suscripcion?: Subscription;
 
   ngOnInit(): void {

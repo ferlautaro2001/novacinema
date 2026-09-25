@@ -5,9 +5,9 @@ export const ANIO_MINIMO = 1909;
 
 export interface OpcionesFechaPorPartes {
   anioMinimo?: number;
-  // Por defecto, el año en curso.
+  // Si no viene, uso el año en curso.
   anioMaximo?: number;
-  // Para la fecha de nacimiento: solo se aceptan días anteriores a hoy.
+  // Para la fecha de nacimiento: solo días anteriores a hoy.
   soloAnteriorAHoy?: boolean;
 }
 
@@ -17,13 +17,8 @@ interface PartesFecha {
   anio: string;
 }
 
-// Validador de grupo para una fecha cargada en tres partes (día, mes, año).
-// Devuelve un solo error, el primero que encuentra, para mostrar un mensaje claro:
-//   { fechaIncompleta }   falta alguna de las tres partes
-//   { diaInvalido }       el día no es un número del 1 al 31
-//   { anioFueraDeRango }  el año no tiene 4 cifras o está fuera del rango
-//   { fechaInvalida }     la combinación no existe (31 de febrero)
-//   { fechaNoAnterior }   es hoy o una fecha futura (con soloAnteriorAHoy)
+// Validador de grupo para la fecha en tres partes (nc-campo-fecha). Devuelvo solo el
+// primer error que encuentro, así el mensaje es uno y claro.
 export function fechaPorPartes(opciones: OpcionesFechaPorPartes = {}): ValidatorFn {
   const anioMinimo = opciones.anioMinimo ?? ANIO_MINIMO;
   return (grupo: AbstractControl): ValidationErrors | null => {
@@ -50,8 +45,7 @@ export function fechaPorPartes(opciones: OpcionesFechaPorPartes = {}): Validator
   };
 }
 
-// La fecha del grupo en ISO ("1990-02-14"), lista para guardar. Supone que el
-// grupo ya pasó por fechaPorPartes.
+// La fecha en ISO ("1990-02-14") para guardarla. Supone que el grupo ya es válido.
 export function isoDePartes({ dia, mes, anio }: PartesFecha): string {
   return `${anio}-${mes}-${dia.padStart(2, '0')}`;
 }

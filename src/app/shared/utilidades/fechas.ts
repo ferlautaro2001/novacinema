@@ -1,4 +1,3 @@
-// Funciones puras de fechas que usan el selector rápido y el validador DD/MM/AAAA.
 // Todo trabaja en hora local y a medianoche: acá importa el día, no la hora.
 
 const DIAS = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
@@ -18,7 +17,7 @@ const MESES = [
   'diciembre',
 ];
 
-// Opciones del desplegable de mes: el valor ya viaja como número de dos dígitos.
+// Opciones del desplegable de mes, con el valor ya en dos dígitos ("01").
 export const MESES_DEL_ANIO: { valor: string; nombre: string }[] = MESES.map((mes, i) => ({
   valor: String(i + 1).padStart(2, '0'),
   nombre: mes[0].toUpperCase() + mes.slice(1),
@@ -42,7 +41,11 @@ export function mismoDia(a: Date, b: Date): boolean {
 
 export function diasConsecutivos(desde: Date, cantidad: number): Date[] {
   const inicio = inicioDelDia(desde);
-  return Array.from({ length: cantidad }, (_, i) => sumarDias(inicio, i));
+  const dias: Date[] = [];
+  for (let i = 0; i < cantidad; i++) {
+    dias.push(sumarDias(inicio, i));
+  }
+  return dias;
 }
 
 // "Hoy", "Mañana" o el día corto con su número: "Mié 7".
@@ -61,30 +64,39 @@ export function fechaLarga(dia: Date): string {
 export function mesesDe(dias: Date[]): string {
   const primero = dias[0];
   const ultimo = dias[dias.length - 1];
+  const mesPrimero = MESES[primero.getMonth()];
+  const mesUltimo = MESES[ultimo.getMonth()];
+
   if (primero.getMonth() === ultimo.getMonth()) {
-    return `${MESES[primero.getMonth()]} de ${primero.getFullYear()}`;
+    return `${mesPrimero} de ${primero.getFullYear()}`;
   }
   if (primero.getFullYear() === ultimo.getFullYear()) {
-    return `${MESES[primero.getMonth()]} y ${MESES[ultimo.getMonth()]} de ${ultimo.getFullYear()}`;
+    return `${mesPrimero} y ${mesUltimo} de ${ultimo.getFullYear()}`;
   }
-  return `${MESES[primero.getMonth()]} de ${primero.getFullYear()} y ${MESES[ultimo.getMonth()]} de ${ultimo.getFullYear()}`;
+  return `${mesPrimero} de ${primero.getFullYear()} y ${mesUltimo} de ${ultimo.getFullYear()}`;
 }
 
-// Devuelve la fecha si el texto es DD/MM/AAAA y existe en el calendario; si no,
-// null. "31/02/2000" da null porque new Date lo pasaría al 2 de marzo.
+// Devuelve la fecha si el texto es DD/MM/AAAA y el día existe; si no, null.
+// Chequeo que no haya "dado la vuelta": new Date pasa el 31/02 al 2 de marzo.
 export function leerDDMMAAAA(texto: string): Date | null {
   const partes = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(texto.trim());
   if (!partes) return null;
-  const [dia, mes, anio] = [Number(partes[1]), Number(partes[2]), Number(partes[3])];
+
+  const dia = Number(partes[1]);
+  const mes = Number(partes[2]);
+  const anio = Number(partes[3]);
   const fecha = new Date(anio, mes - 1, dia);
-  const existe =
-    fecha.getFullYear() === anio && fecha.getMonth() === mes - 1 && fecha.getDate() === dia;
-  return existe ? fecha : null;
+
+  if (fecha.getFullYear() !== anio || fecha.getMonth() !== mes - 1 || fecha.getDate() !== dia) {
+    return null;
+  }
+  return fecha;
 }
 
-// Fecha local a texto ISO ("1990-02-14"), el formato que entiende Postgres para
-// una columna date sin depender de la configuración regional del servidor.
+// Fecha local a ISO ("1990-02-14"), que es lo que Postgres entiende para una columna
+// date sin depender de la configuración regional.
 export function aISO(fecha: Date): string {
-  const dos = (n: number) => String(n).padStart(2, '0');
-  return `${fecha.getFullYear()}-${dos(fecha.getMonth() + 1)}-${dos(fecha.getDate())}`;
+  const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+  const dia = String(fecha.getDate()).padStart(2, '0');
+  return `${fecha.getFullYear()}-${mes}-${dia}`;
 }
