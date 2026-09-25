@@ -2,7 +2,8 @@
   <header>
     <h2>Salas</h2>
     <p class="descripcion">
-      Gestioná la disponibilidad de las salas del cine. Las salas inactivas no reciben funciones nuevas en la asignación automática.
+      Gestioná la disponibilidad de las salas del cine. Las salas inactivas no reciben funciones
+      nuevas en la asignación automática.
     </p>
   </header>
 
@@ -47,10 +48,7 @@
               </td>
               <td class="accion">
                 <div class="botones-accion">
-                  <a
-                    [routerLink]="['/admin/salas', sala.id]"
-                    class="btn-secundario"
-                  >
+                  <a [routerLink]="['/admin/salas', sala.id]" class="btn-secundario">
                     Ver distribución
                   </a>
                   <button
@@ -60,7 +58,13 @@
                     [disabled]="cambiando() === sala.id"
                     (click)="cambiarEstado(sala)"
                   >
-                    {{ cambiando() === sala.id ? 'Guardando…' : sala.activa ? 'Desactivar' : 'Activar' }}
+                    @if (cambiando() === sala.id) {
+                      Guardando…
+                    } @else if (sala.activa) {
+                      Desactivar
+                    } @else {
+                      Activar
+                    }
                   </button>
                 </div>
               </td>

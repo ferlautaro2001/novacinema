@@ -1,29 +1,25 @@
 <section class="sala-detalle">
   <div class="navegacion-superior">
-    <a routerLink="/admin/salas" class="btn-volver">
-      ← Volver a salas
-    </a>
+    <a routerLink="/admin/salas" class="btn-volver"> ← Volver a salas </a>
   </div>
 
   @if (cargando()) {
     <p class="estado">Cargando sala…</p>
   } @else if (error()) {
     <p class="error" role="alert">{{ error() }}</p>
-  } @else if (sala()) {
+  } @else if (sala(); as sala) {
     <header class="sala-header">
       <div class="sala-info">
-        <h2>{{ sala()!.nombre }}</h2>
+        <h2>{{ sala.nombre }}</h2>
         <span
           class="badge-estado"
-          [class.badge-activa]="sala()!.activa"
-          [class.badge-inactiva]="!sala()!.activa"
+          [class.badge-activa]="sala.activa"
+          [class.badge-inactiva]="!sala.activa"
         >
-          {{ sala()!.activa ? 'Activa' : 'Inactiva' }}
+          {{ sala.activa ? 'Activa' : 'Inactiva' }}
         </span>
       </div>
-      <p class="capacidad-descripcion">
-        518 butacas (420 comunes · 84 VIP · 14 accesibles)
-      </p>
+      <p class="capacidad-descripcion">518 butacas (420 comunes · 84 VIP · 14 accesibles)</p>
     </header>
 
     <div class="mapa-contenedor">

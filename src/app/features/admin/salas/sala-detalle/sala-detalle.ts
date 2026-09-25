@@ -6,7 +6,6 @@ import { MapaButacasComponent } from '../../../../shared/ui/mapa-butacas/mapa-bu
 
 @Component({
   selector: 'nc-sala-detalle',
-  standalone: true,
   imports: [RouterLink, MapaButacasComponent],
   templateUrl: './sala-detalle.html',
   styleUrl: './sala-detalle.css',
@@ -16,8 +15,8 @@ export class SalaDetalle implements OnInit {
   private salasService = inject(SalasService);
 
   sala = signal<Sala | null>(null);
-  cargando = signal<boolean>(true);
-  error = signal<string>('');
+  cargando = signal(true);
+  error = signal('');
 
   async ngOnInit(): Promise<void> {
     const id = this.ruta.snapshot.paramMap.get('id');
@@ -28,11 +27,11 @@ export class SalaDetalle implements OnInit {
     }
 
     try {
-      const data = await this.salasService.buscar(id);
-      if (!data) {
-        this.error.set('No se encontró la sala');
+      const sala = await this.salasService.buscar(id);
+      if (sala) {
+        this.sala.set(sala);
       } else {
-        this.sala.set(data);
+        this.error.set('No se encontró la sala');
       }
     } catch (e: any) {
       this.error.set(e?.message || 'Error al cargar la sala');
