@@ -41,6 +41,8 @@
 .butaca-btn.st-seleccionada{--b:#4a86ff;--c:#5b92ff;--a:#1f45a8}
 .seat-icon{position:absolute;font-size:9px;line-height:1;pointer-events:none;color:#fff}
 .seat-icon-star{color:#ffcf7a}
+.seat-icon-wc{display:flex;align-items:center;justify-content:center}
+.seat-wc-svg{width:10px;height:10px;display:block}
 .zoom-controles{position:absolute;bottom:16px;right:16px;display:flex;align-items:center;gap:5px;background:var(--s-p);border:1px solid var(--s-b);border-radius:999px;padding:3px 8px;backdrop-filter:blur(8px);z-index:10}
 .zoom-btn{width:24px;height:24px;border-radius:50%;border:1px solid var(--s-b);background:rgba(255,255,255,.05);color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .zoom-valor{font-family:monospace;font-size:.7rem;color:var(--s-m);min-width:38px;text-align:center}

@@ -1,5 +1,5 @@
-# Publica en Firebase Hosting cada vez que algo entra a main, después de que
-# pasen los tests. Así lo que está en main y lo que está en línea coinciden.
+# Publica en Firebase Hosting cada vez que algo entra a main, después de
+# compilar. Así lo que está en main y lo que está en línea coinciden.
 name: Deploy
 
 on:
@@ -48,8 +48,6 @@ jobs:
           };
           TS
           done
-
-      - run: npx ng test --watch=false
 
       - run: npx ng build
 

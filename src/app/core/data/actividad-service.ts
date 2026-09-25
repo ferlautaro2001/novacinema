@@ -1,4 +1,5 @@
 import { inject, Service } from '@angular/core';
+import type { Json } from '../supabase/database.types';
 import type { AccionAuditoriaCodigo } from '../models/enumerados';
 import type { RegistroActividad } from '../models/actividad';
 import {
@@ -156,4 +157,4 @@ export class ActividadService {
   }
 }
 
-type RegistroDetalle = Parameters<typeof filaAuditada>[0];
+type RegistroDetalle = Json | null;

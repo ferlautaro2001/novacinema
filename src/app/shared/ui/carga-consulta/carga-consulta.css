@@ -1,0 +1,4 @@
+.body {
+  color: var(--color-texto-secundario, #999);
+  font-size: 0.95rem;
+}
