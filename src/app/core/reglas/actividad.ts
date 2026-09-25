@@ -94,6 +94,18 @@ function dinero(valor: Json | undefined): string {
   return `$ ${formatoNumero.format(Number(valor))}`;
 }
 
+// "$ 8.000 → $ 9.000", o solo el valor nuevo si es la primera vez que se carga.
+function cambioDinero(antes: Json | undefined, despues: Json | undefined): string {
+  if (antes === null || antes === undefined) return dinero(despues);
+  return `${dinero(antes)} → ${dinero(despues)}`;
+}
+
+// "Común" queda "Tarifa común", pero "VIP" es una sigla y va en mayúsculas.
+function etiquetaTarifa(nombre: string): string {
+  if (nombre === 'VIP') return 'Tarifa VIP';
+  return `Tarifa ${nombre.toLowerCase()}`.trim();
+}
+
 function puntos(valor: Json | undefined): string {
   return `${formatoNumero.format(Number(valor))} Nova Points`;
 }
@@ -117,11 +129,14 @@ export function detalleActividad(
         f['comienza_en'] ? fechaHora(texto(f['comienza_en'])) : '',
       );
     case 'precios_butaca':
-      return unir(nombres.tiposButaca.get(Number(f['tipo_butaca_id'])) ?? '', dinero(f['precio']));
+      return unir(
+        etiquetaTarifa(nombres.tiposButaca.get(Number(f['tipo_butaca_id'])) ?? ''),
+        cambioDinero(filaAnterior(detalle)['precio'], f['precio']),
+      );
     case 'adicionales_formato':
       return unir(
         `Adicional ${nombres.formatos.get(Number(f['formato_id'])) ?? ''}`.trim(),
-        dinero(f['adicional']),
+        cambioDinero(filaAnterior(detalle)['adicional'], f['adicional']),
       );
     case 'precios_producto':
       return unir(nombres.productos.get(texto(f['producto_id'])) ?? '', dinero(f['precio']));

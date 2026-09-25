@@ -13,6 +13,8 @@ export class Panel {
     { ruta: 'peliculas', texto: 'Películas' },
     { ruta: 'salas', texto: 'Salas' },
     { ruta: 'funciones', texto: 'Funciones' },
+    { ruta: 'precios', texto: 'Precios' },
+    { ruta: 'cupones', texto: 'Cupones' },
     { ruta: 'facturacion', texto: 'Facturación' },
     { ruta: 'empleados', texto: 'Empleados' },
   ];

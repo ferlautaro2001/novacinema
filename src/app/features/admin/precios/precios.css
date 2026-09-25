@@ -1,0 +1,63 @@
+.precios,
+form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 760px;
+}
+
+.descripcion,
+.nota {
+  color: var(--ink-200);
+}
+
+.nota {
+  margin-top: var(--space-1);
+}
+
+.grupo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  background: var(--surface-200);
+  min-width: 0;
+}
+
+.campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+}
+
+.aviso,
+.error,
+.pendiente {
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-md);
+  background: var(--success-tint);
+  color: var(--ink-100);
+}
+
+.error {
+  border-left-color: var(--danger);
+  background: var(--danger-tint);
+}
+
+.pendiente {
+  border-left-color: var(--info);
+  background: var(--info-tint);
+}
+
+.error-texto {
+  margin-top: var(--space-1);
+  color: var(--danger);
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+}

@@ -1,0 +1,118 @@
+<section class="precios">
+  <h1 class="marquee-lg">Precios</h1>
+  <p class="body descripcion">
+    Cada entrada cuesta la tarifa de su butaca más el adicional del formato de la función.
+  </p>
+
+  @if (aviso()) {
+    <p class="aviso body" role="status">{{ aviso() }}</p>
+  }
+  @if (error()) {
+    <p class="error body" role="alert">{{ error() }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="body nota" role="status">Cargando tarifas…</p>
+  } @else {
+    @if (sinTarifas()) {
+      <p class="pendiente body" role="status">
+        Todavía no hay tarifas cargadas. Hasta que las guardes no se pueden vender entradas.
+      </p>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="guardar()">
+      <fieldset class="grupo" [disabled]="guardando()">
+        <legend class="body-strong">Tarifa por butaca</legend>
+        <div class="campos">
+          <div>
+            <nc-campo-texto
+              id="tarifa-comun"
+              etiqueta="Tarifa común ($)"
+              tipo="number"
+              [control]="form.controls.comun"
+            >
+              <nc-error-campo [control]="form.controls.comun" error="required"
+                >Ingresá la tarifa común.</nc-error-campo
+              >
+              <nc-error-campo [control]="form.controls.comun" error="min"
+                >La tarifa no puede ser negativa.</nc-error-campo
+              >
+            </nc-campo-texto>
+            <p class="caption nota">
+              Vigente:
+              @if (comunVigente() !== null) {
+                {{ comunVigente() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+              } @else {
+                sin cargar
+              }
+            </p>
+          </div>
+          <div>
+            <nc-campo-texto
+              id="tarifa-vip"
+              etiqueta="Tarifa VIP ($)"
+              tipo="number"
+              [control]="form.controls.vip"
+            >
+              <nc-error-campo [control]="form.controls.vip" error="required"
+                >Ingresá la tarifa VIP.</nc-error-campo
+              >
+              <nc-error-campo [control]="form.controls.vip" error="min"
+                >La tarifa no puede ser negativa.</nc-error-campo
+              >
+            </nc-campo-texto>
+            @if (vipInvalida()) {
+              <p class="error-texto caption" role="alert">{{ mensajeVip }}</p>
+            }
+            <p class="caption nota">
+              Vigente:
+              @if (vipVigente() !== null) {
+                {{ vipVigente() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+              } @else {
+                sin cargar
+              }
+            </p>
+          </div>
+        </div>
+        <p class="caption nota">Las butacas accesibles pagan la tarifa común.</p>
+      </fieldset>
+
+      <fieldset class="grupo" [disabled]="guardando()">
+        <legend class="body-strong">Adicional por formato</legend>
+        <div class="campos">
+          @for (formato of formatos(); track formato.id; let i = $index) {
+            <div>
+              <nc-campo-texto
+                [id]="'adicional-' + formato.id"
+                [etiqueta]="'Adicional ' + formato.nombre + ' ($)'"
+                tipo="number"
+                [control]="form.controls.adicionales.at(i)"
+              >
+                <nc-error-campo [control]="form.controls.adicionales.at(i)" error="required"
+                  >Ingresá el adicional; si no tiene, poné 0.</nc-error-campo
+                >
+                <nc-error-campo [control]="form.controls.adicionales.at(i)" error="min"
+                  >El adicional no puede ser negativo.</nc-error-campo
+                >
+              </nc-campo-texto>
+              <p class="caption nota">
+                Vigente:
+                @if (adicionalVigente(formato.id) !== null) {
+                  {{ adicionalVigente(formato.id) | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+                } @else {
+                  sin cargar
+                }
+              </p>
+            </div>
+          }
+        </div>
+      </fieldset>
+
+      <div class="acciones">
+        <button class="nc-btn nc-btn--primary" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardá las tarifas' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>
