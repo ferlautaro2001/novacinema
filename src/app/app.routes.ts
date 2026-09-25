@@ -16,6 +16,11 @@ export const routes: Routes = [
     loadComponent: () => import('./features/cartelera/listado/listado').then((m) => m.Listado),
   },
   {
+    path: 'cartelera/:id',
+    title: 'Película · NovaCinema',
+    loadComponent: () => import('./features/cartelera/detalle/detalle').then((m) => m.Detalle),
+  },
+  {
     path: 'proximamente',
     title: 'Próximamente · NovaCinema',
     loadComponent: () =>

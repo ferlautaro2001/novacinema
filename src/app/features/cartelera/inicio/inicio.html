@@ -1,4 +1,5 @@
 <h1 class="marquee-lg">Inicio</h1>
+<nc-mas-vendidas (verDetalle)="detalleId.set($event)" />
 <section class="destacadas" aria-labelledby="destacadas-titulo">
   <h2 id="destacadas-titulo" class="marquee-md">Películas destacadas</h2>
   @if (cargando()) {
@@ -12,7 +13,8 @@
         <nc-pelicula-card
           [pelicula]="p"
           [imagenUrl]="storage.urlPublica(p.imagen_path)"
-          (verDetalle)="detalle.set(p)"
+          leyenda="Destacada"
+          (verDetalle)="detalleId.set(p.id)"
         />
       } @empty {
         <p class="body">Pronto vas a encontrar nuestras películas destacadas acá.</p>
@@ -20,19 +22,6 @@
     </div>
   }
 </section>
-@if (detalle(); as p) {
-  <nc-modal (cierre)="detalle.set(null)">
-    <h2 titulo class="body-strong">{{ p.titulo }}</h2>
-    <div class="metadatos">
-      <nc-clasificacion
-        [codigo]="p.clasificacion.codigo"
-        [edadMinima]="p.clasificacion.edad_minima"
-      /><span>{{ p.duracion_min | duracion }}</span
-      ><span>Estreno: {{ p.fecha_estreno | date: 'dd/MM/yyyy' }}</span>
-    </div>
-    <p class="sinopsis">{{ p.sinopsis }}</p>
-    <button acciones appFocoInicial class="nc-btn nc-btn--secondary" (click)="detalle.set(null)">
-      Cerrar
-    </button>
-  </nc-modal>
+@if (detalleId(); as id) {
+  <nc-detalle-pelicula [peliculaId]="id" (cierre)="detalleId.set(null)" />
 }

@@ -1,18 +1,15 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
 import { PeliculasService } from '../../../core/data/peliculas-service';
 import { StorageService } from '../../../core/data/storage-service';
 import { PeliculaConCatalogo } from '../../../core/models/pelicula';
 import { PeliculaCard } from '../../../shared/ui/pelicula-card/pelicula-card';
-import { Modal } from '../../../shared/ui/modal/modal';
-import { Clasificacion } from '../../../shared/ui/clasificacion/clasificacion';
-import { DuracionPipe } from '../../../shared/pipes/duracion-pipe';
-import { FocoInicial } from '../../../shared/directivas/foco-inicial';
+import { DetallePelicula } from '../detalle-pelicula/detalle-pelicula';
+import { MasVendidas } from './mas-vendidas/mas-vendidas';
 
-// Por ahora Inicio muestra solo las películas destacadas.
+// Inicio: las más vendidas (US-06.01) y las destacadas (US-06.02).
 @Component({
   selector: 'nc-inicio',
-  imports: [PeliculaCard, Modal, Clasificacion, DatePipe, DuracionPipe, FocoInicial],
+  imports: [PeliculaCard, DetallePelicula, MasVendidas],
   templateUrl: './inicio.html',
   styleUrl: './inicio.css',
 })
@@ -21,7 +18,7 @@ export class Inicio implements OnInit {
   storage = inject(StorageService);
 
   destacadas = signal<PeliculaConCatalogo[]>([]);
-  detalle = signal<PeliculaConCatalogo | null>(null);
+  detalleId = signal<string | null>(null);
   cargando = signal(true);
   error = signal(false);
 

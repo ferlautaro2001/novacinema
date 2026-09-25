@@ -27,6 +27,19 @@ export function aperturaDeVenta(fechaEstreno: string, preventa: Ventana | null):
   return apertura;
 }
 
+// La venta está abierta desde la apertura (preventa o estreno) en adelante.
+export function ventaAbierta(fechaEstreno: string, preventa: Ventana | null, fecha: Date): boolean {
+  let abierta = false;
+
+  const apertura = aperturaDeVenta(fechaEstreno, preventa);
+
+  if (fecha >= apertura) {
+    abierta = true;
+  }
+
+  return abierta;
+}
+
 // Está en preventa desde la apertura hasta el día anterior al estreno inclusive.
 export function estaEnPreventa(
   fechaEstreno: string,
