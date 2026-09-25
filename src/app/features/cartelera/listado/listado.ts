@@ -3,6 +3,7 @@ import { CarteleraService } from '../../../core/data/cartelera-service';
 import { StorageService } from '../../../core/data/storage-service';
 import { PeliculaEnCartelera } from '../../../core/models/pelicula';
 import { PeliculaCard } from '../../../shared/ui/pelicula-card/pelicula-card';
+import { Cargando, EstadoConsulta } from '../../../shared/directivas/cargando';
 import { FiltroPeliculasPipe } from '../../../shared/pipes/filtro-peliculas-pipe';
 import { DetallePelicula } from '../detalle-pelicula/detalle-pelicula';
 import { BuscadorPeliculas } from './buscador-peliculas/buscador-peliculas';
@@ -11,7 +12,14 @@ import { FiltroGeneros } from './filtro-generos/filtro-generos';
 // Cartelera pública: cards (US-06.03), buscador (US-06.04) y filtro por género (US-06.05).
 @Component({
   selector: 'nc-listado',
-  imports: [PeliculaCard, FiltroPeliculasPipe, DetallePelicula, BuscadorPeliculas, FiltroGeneros],
+  imports: [
+    Cargando,
+    PeliculaCard,
+    FiltroPeliculasPipe,
+    DetallePelicula,
+    BuscadorPeliculas,
+    FiltroGeneros,
+  ],
   templateUrl: './listado.html',
   styleUrl: './listado.css',
 })
@@ -20,6 +28,7 @@ export class Listado implements OnInit {
   storage = inject(StorageService);
 
   peliculas = signal<PeliculaEnCartelera[]>([]);
+  estado = signal<EstadoConsulta<PeliculaEnCartelera>>({ tipo: 'cargando' });
   texto = signal('');
   genero = signal('');
   detalleId = signal<string | null>(null);
@@ -30,9 +39,19 @@ export class Listado implements OnInit {
   }
 
   async cargar(): Promise<void> {
-    const peliculas = await this.cartelera.listarEnCartelera();
+    this.estado.set({ tipo: 'cargando' });
 
-    this.peliculas.set(peliculas);
+    try {
+      const peliculas = await this.cartelera.listarEnCartelera();
+
+      this.peliculas.set(peliculas);
+      this.estado.set({ tipo: 'datos', datos: peliculas });
+    } catch {
+      this.estado.set({
+        tipo: 'error',
+        mensaje: 'No se pudo cargar la cartelera. Probá de nuevo.',
+      });
+    }
   }
 
   // Los géneros de las películas en cartelera, sin repetir y en orden alfabético.
