@@ -1,0 +1,32 @@
+.alerta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.icono {
+  width: 1em;
+  height: 1em;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.estado:empty {
+  display: none;
+}
+
+.estado a {
+  color: var(--gold-500);
+}
+
+.estado a:focus-visible {
+  outline: 2px solid var(--gold-500);
+  outline-offset: 2px;
+}
+
+.error {
+  color: var(--danger);
+}

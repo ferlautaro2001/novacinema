@@ -22,6 +22,7 @@
         <a class="nc-btn nc-btn--secondary nc-btn--sm" routerLink="/auth/registro">Crear cuenta</a>
       }
     </div>
+    <nc-campana-notificaciones />
     @if (error(); as mensaje) {
       <p class="error caption" role="alert">{{ mensaje }}</p>
     }

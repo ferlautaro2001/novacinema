@@ -1,0 +1,34 @@
+<div class="alerta">
+  <button
+    type="button"
+    class="nc-btn nc-btn--sm"
+    [class.nc-btn--primary]="activa()"
+    [class.nc-btn--secondary]="!activa()"
+    [attr.aria-pressed]="activa()"
+    [attr.aria-label]="
+      (activa() ? 'Alerta activada para ' : 'Avisarme cuando salga a la venta ') + titulo()
+    "
+    [disabled]="guardando()"
+    (click)="alternar()"
+  >
+    @if (activa()) {
+      <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 12l5 5L20 7" />
+      </svg>
+      Alerta activada
+    } @else {
+      <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0" />
+      </svg>
+      Avisarme
+    }
+  </button>
+
+  <p class="estado caption" aria-live="polite">
+    @if (pidioIngresar()) {
+      <a routerLink="/auth/login">Ingresá para activar alertas</a>
+    } @else if (error() !== '') {
+      <span class="error">{{ error() }}</span>
+    }
+  </p>
+</div>

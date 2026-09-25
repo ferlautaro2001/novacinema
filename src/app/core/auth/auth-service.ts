@@ -1,6 +1,7 @@
 import { inject, Service, signal } from '@angular/core';
 import type { AuthError, Session, User } from '@supabase/supabase-js';
 import type { Rol } from '../models/enumerados';
+import { NotificacionesService } from '../data/notificaciones-service';
 import { Supabase } from '../supabase/supabase-client';
 
 export interface DatosRegistro {
@@ -54,6 +55,7 @@ const CREDENCIALES_INCORRECTAS = 'Email o contraseña incorrectos';
 @Service()
 export class AuthService {
   private supS = inject(Supabase);
+  private notificaciones = inject(NotificacionesService);
 
   cargando = signal(true);
   usuario = signal<User | null>(null);
@@ -61,6 +63,8 @@ export class AuthService {
 
   // Los guards esperan esta promesa: si alguien abre /admin directo, el guard corre
   // antes de que Supabase haya leído la sesión guardada.
+  private usuarioConAvisos: string | null = null;
+
   private terminarCarga!: () => void;
   private cargaTerminada = new Promise<void>((resolver) => this.guardarResolver(resolver));
 
@@ -198,14 +202,30 @@ export class AuthService {
       // Supabase advierte que consultar adentro de este callback puede trabarse,
       // por eso cargo el perfil en el turno siguiente.
       setTimeout(() => this.cargarPerfilYMarcarListo(id));
+      setTimeout(() => this.iniciarAvisos(id));
     } else {
       this.perfil.set(null);
       this.marcarListo();
+      this.detenerAvisos();
     }
   }
 
   private cargarPerfilYMarcarListo(id: string): void {
     this.cargarPerfil(id).finally(() => this.marcarListo());
+  }
+
+  // Avisos de US-06.08: el evento se repite al refrescar el token, así que solo
+  // arranco cuando cambia el usuario.
+  private iniciarAvisos(id: string): void {
+    if (this.usuarioConAvisos !== id) {
+      this.usuarioConAvisos = id;
+      this.notificaciones.iniciar(id).catch(ignorar);
+    }
+  }
+
+  private detenerAvisos(): void {
+    this.usuarioConAvisos = null;
+    this.notificaciones.detener().catch(ignorar);
   }
 
   private marcarListo(): void {
@@ -253,3 +273,8 @@ export class AuthService {
     return mensaje;
   }
 }
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+// Un aviso que no se pudo cargar no tiene que romper la sesión.
+function ignorar(): void {}

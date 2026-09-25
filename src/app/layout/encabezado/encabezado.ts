@@ -1,11 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/auth/auth-service';
+import { CampanaNotificaciones } from '../campana-notificaciones/campana-notificaciones';
 import { Navegacion } from '../navegacion/navegacion';
 
 @Component({
   selector: 'nc-encabezado',
-  imports: [RouterLink, Navegacion],
+  imports: [RouterLink, Navegacion, CampanaNotificaciones],
   templateUrl: './encabezado.html',
   styleUrl: './encabezado.css',
 })
