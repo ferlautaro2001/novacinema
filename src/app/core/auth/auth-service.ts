@@ -12,19 +12,16 @@ export interface DatosRegistro {
   fechaNacimiento: string;
 }
 
-// Qué pasó después del alta: si Supabase pide confirmar el email, la sesión
-// recién existe cuando la persona toca el link que le llega.
+// Si Supabase pide confirmar el email, la sesión recién existe cuando se toca el link.
 export type ResultadoRegistro = 'sesion_iniciada' | 'confirmar_email';
 
-// Lo que la app necesita saber de quien está logueado: cómo nombrarlo y qué rol
-// tiene. Sale de la tabla usuarios, no de los metadatos de Auth.
+// Sale de la tabla usuarios, no de los metadatos de Auth.
 export interface PerfilSesion {
   nombre: string;
   apellido: string;
   rol: Rol;
 }
 
-// La sección donde arranca cada rol después de ingresar.
 export function inicioSegunRol(rol: Rol): string {
   switch (rol) {
     case 'administrador':
@@ -46,15 +43,9 @@ const MENSAJES_ERROR: Record<string, string> = {
   signup_disabled: 'El registro está deshabilitado por el momento.',
 };
 
-// Mismo mensaje para email inexistente y contraseña equivocada: no se revela cuál
-// de los dos falló.
+// Mismo mensaje para email inexistente y contraseña equivocada, así no se revela cuál falló.
 const CREDENCIALES_INCORRECTAS = 'Email o contraseña incorrectos';
 
-// Estado de la sesión para toda la app. Me suscribo a onAuthStateChange apenas se
-// crea el servicio: el primer evento (INITIAL_SESSION) llega cuando Supabase
-// terminó de leer la sesión guardada, y recién ahí sé si hay alguien logueado.
-// Mientras tanto `cargando` queda en true y el componente raíz muestra la
-// pantalla de carga en vez de una sección que quizás no corresponde.
 @Service()
 export class AuthService {
   private supS = inject(Supabase);
@@ -63,15 +54,14 @@ export class AuthService {
   usuario = signal<User | null>(null);
   perfil = signal<PerfilSesion | null>(null);
 
-  // Se resuelve una sola vez, cuando se terminó de recuperar la sesión y el perfil.
-  // Los guards la esperan: si alguien abre /admin directo, el guard corre antes de
-  // que Supabase haya leído la sesión guardada.
+  // Los guards esperan esta promesa: si alguien abre /admin directo, el guard corre
+  // antes de que Supabase haya leído la sesión guardada.
   private terminarCarga!: () => void;
-  private cargaTerminada = new Promise<void>(
-    (resolver) => (this.terminarCarga = resolver),
-  );
+  private cargaTerminada = new Promise<void>((resolver) => (this.terminarCarga = resolver));
 
   constructor() {
+    // El primer evento (INITIAL_SESSION) llega cuando Supabase terminó de leer la
+    // sesión guardada; hasta ahí `cargando` queda en true.
     this.supS.Sup.auth.onAuthStateChange((_evento, sesion) => {
       const usuario = sesion?.user ?? null;
       this.usuario.set(usuario);
@@ -80,14 +70,13 @@ export class AuthService {
         this.marcarListo();
         return;
       }
-      // Supabase advierte que llamarlo de nuevo desde adentro de este callback
-      // puede trabarse: la consulta del perfil sale en el turno siguiente.
+      // Supabase advierte que consultar adentro de este callback puede trabarse,
+      // por eso cargo el perfil en el turno siguiente.
       setTimeout(() => this.cargarPerfil(usuario.id).finally(() => this.marcarListo()));
     });
   }
 
-  // El perfil (rol cliente, 0 puntos) lo crea el trigger crear_perfil con los
-  // datos que viajan en options.data; acá no se inserta nada en usuarios.
+  // El perfil lo crea el trigger crear_perfil con lo que viaja en options.data.
   async registrarse(datos: DatosRegistro): Promise<ResultadoRegistro> {
     const { data, error } = await this.supS.Sup.auth.signUp({
       email: datos.email.trim(),
@@ -102,16 +91,14 @@ export class AuthService {
     });
     if (error) throw new Error(this.mensajeDeError(error));
 
-    // Con la confirmación de email activa, Supabase no avisa que el email ya
-    // existe (para no revelar quién tiene cuenta): devuelve un usuario sin
-    // identidades. Es la única forma de detectarlo.
+    // Con la confirmación de email activa, Supabase no avisa que el email ya existe:
+    // devuelve un usuario sin identidades, y es la única forma de detectarlo.
     if (data.user && data.user.identities?.length === 0) {
       throw new Error(MENSAJES_ERROR['user_already_exists']);
     }
     return data.session ? 'sesion_iniciada' : 'confirmar_email';
   }
 
-  // Devuelve el rol para que la pantalla de ingreso sepa a dónde llevar a cada uno.
   async iniciarSesion(email: string, clave: string): Promise<Rol> {
     const { data, error } = await this.supS.Sup.auth.signInWithPassword({
       email: email.trim(),
@@ -132,9 +119,8 @@ export class AuthService {
     return this.cargaTerminada;
   }
 
-  // Vuelve a leer la sesión en lugar de confiar en la que quedó en memoria: si se
-  // cerró en otra pestaña, acá se entera. Supabase la lee del almacenamiento del
-  // navegador, que las pestañas comparten.
+  // Leo la sesión de nuevo en vez de confiar en la de memoria: si se cerró en otra
+  // pestaña, acá me entero.
   async sesionVigente(): Promise<boolean> {
     const { data } = await this.supS.Sup.auth.getSession();
     if (!data.session) {
@@ -145,8 +131,7 @@ export class AuthService {
     return true;
   }
 
-  // Cierra la sesión en Supabase y en este navegador. El evento SIGNED_OUT limpia
-  // usuario y perfil; lo hago también acá para que la pantalla cambie en el acto.
+  // SIGNED_OUT también limpia todo, pero lo hago acá para que la pantalla cambie en el acto.
   async cerrarSesion(): Promise<void> {
     const { error } = await this.supS.Sup.auth.signOut();
     if (error) throw new Error('No se pudo cerrar la sesión. Probá de nuevo.');
@@ -183,7 +168,7 @@ export class AuthService {
     error: AuthError,
     general = 'No se pudo crear la cuenta. Probá de nuevo en unos minutos.',
   ): string {
-    const conocido = error.code ? MENSAJES_ERROR[error.code] : undefined;
-    return conocido ?? general;
+    if (error.code && MENSAJES_ERROR[error.code]) return MENSAJES_ERROR[error.code];
+    return general;
   }
 }

@@ -4,6 +4,6 @@ export type Resena = Tables<'resenas'>;
 export type ResenaPorCrear = TablesInsert<'resenas'>;
 export type ResenaPorModificar = TablesUpdate<'resenas'>;
 
-/** Esta vista ya me devuelve el promedio en escala 0 a 10, que es como lo pide
-    la consigna, aunque yo guarde estrellas del 1 al 5. */
+// La vista devuelve el promedio de 0 a 10, como pide la consigna, aunque guardo
+// estrellas del 1 al 5.
 export type PeliculaRating = Tables<'v_pelicula_rating'>;

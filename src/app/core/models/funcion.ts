@@ -5,7 +5,6 @@ export type Funcion = Omit<Tables<'funciones'>, 'estado'> & { estado: EstadoFunc
 export type FuncionPorCrear = TablesInsert<'funciones'>;
 export type FuncionPorModificar = TablesUpdate<'funciones'>;
 
-/** Ojo con esta: butacas_libres y total_butacas vienen como nullable porque
-    Postgres no le garantiza a Supabase que una vista no devuelva nulos. Hay que
-    angostarlo a mano donde se use. */
+// Ojo: en las vistas todas las columnas vienen como nullable, hay que chequearlas
+// donde se usen.
 export type FuncionDisponibilidad = Tables<'v_funcion_disponibilidad'>;

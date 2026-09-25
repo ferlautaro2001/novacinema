@@ -18,12 +18,11 @@ export type PagoPorCrear = TablesInsert<'pagos'>;
 export type CompraCupon = Tables<'compra_cupones'>;
 export type CompraCuponPorCrear = TablesInsert<'compra_cupones'>;
 
-/** Para el que compra sin registrarse: le pido los datos igual porque los
-    necesito para validar la edad. */
+// Al que compra sin registrarse le pido los datos igual para validar la edad.
 export type CompradorInvitado = Tables<'compradores_invitados'>;
 export type CompradorInvitadoPorCrear = TablesInsert<'compradores_invitados'>;
 
-/** Adulto que se hace cargo de un menor en una función con restricción de edad. */
+// Adulto que se hace cargo de un menor en una función con restricción de edad.
 export type AdultoResponsable = Tables<'compras_adulto_responsable'>;
 export type AdultoResponsablePorCrear = TablesInsert<'compras_adulto_responsable'>;
 

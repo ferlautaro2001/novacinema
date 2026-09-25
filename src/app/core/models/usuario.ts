@@ -4,6 +4,5 @@ export type Usuario = Tables<'usuarios'>;
 export type UsuarioPorCrear = TablesInsert<'usuarios'>;
 export type UsuarioPorModificar = TablesUpdate<'usuarios'>;
 
-/** Uso esta vista cuando muestro el autor de una reseña: es lo único que dejo
-    ver de un perfil ajeno. */
+// Lo único que se puede ver de un perfil ajeno, por ejemplo el autor de una reseña.
 export type PerfilPublico = Tables<'v_perfiles_publicos'>;
