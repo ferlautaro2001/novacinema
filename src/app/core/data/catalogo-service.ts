@@ -17,13 +17,19 @@ export class CatalogoService {
 
   async findAllGeneros(): Promise<Genero[]> {
     const { data, error } = await this.supS.Sup.from('generos').select('*').order('nombre');
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
   async findGeneroById(id: number): Promise<Genero> {
     const { data, error } = await this.supS.Sup.from('generos').select('*').eq('id', id).single();
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
@@ -31,31 +37,46 @@ export class CatalogoService {
     const { data, error } = await this.supS.Sup.from('clasificaciones')
       .select('*')
       .order('edad_minima');
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
   async findAllFormatos(): Promise<Formato[]> {
     const { data, error } = await this.supS.Sup.from('formatos').select('*').order('id');
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
   async findAllVersionesIdioma(): Promise<VersionIdioma[]> {
     const { data, error } = await this.supS.Sup.from('versiones_idioma').select('*').order('id');
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
   async findAllTiposButaca(): Promise<TipoButaca[]> {
     const { data, error } = await this.supS.Sup.from('tipos_butaca').select('*').order('id');
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
   async findAllMediosPago(): Promise<MedioPago[]> {
     const { data, error } = await this.supS.Sup.from('medios_pago').select('*').order('id');
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
@@ -63,7 +84,10 @@ export class CatalogoService {
     const { data, error } = await this.supS.Sup.from('categorias_producto')
       .select('*')
       .order('orden');
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 }

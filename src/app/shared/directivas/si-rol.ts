@@ -17,12 +17,24 @@ export class SiRol implements OnChanges {
     this.contenedor.clear();
 
     const actual = this.appSiRolActual();
-    if (actual && this.appSiRol().includes(actual)) {
-      this.contenedor.createEmbeddedView(this.template);
-      return;
+    const permitidos = this.appSiRol();
+
+    let tieneRol = false;
+
+    if (actual !== null && actual !== undefined && actual !== '') {
+      if (permitidos.includes(actual)) {
+        tieneRol = true;
+      }
     }
 
-    const sino = this.appSiRolSino();
-    if (sino) this.contenedor.createEmbeddedView(sino);
+    if (tieneRol) {
+      this.contenedor.createEmbeddedView(this.template);
+    } else {
+      const sino = this.appSiRolSino();
+
+      if (sino !== null && sino !== undefined) {
+        this.contenedor.createEmbeddedView(sino);
+      }
+    }
   }
 }

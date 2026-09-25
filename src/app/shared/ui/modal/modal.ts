@@ -24,19 +24,30 @@ export class Modal implements AfterViewInit, OnDestroy {
   private anterior: HTMLElement | null = null;
 
   ngAfterViewInit(): void {
-    this.anterior = this.host.nativeElement.ownerDocument.activeElement as HTMLElement;
+    const documento = this.host.nativeElement.ownerDocument;
+    const enfocado = documento.activeElement as HTMLElement;
+    this.anterior = enfocado;
+
     this.dialogo().nativeElement.showModal();
   }
 
   // Con Escape el navegador cierra el <dialog> solo: lo freno y aviso, así lo cierra
   // quien abrió el modal (y no se cierra mientras está ocupado).
   cerrar(evento?: Event): void {
-    evento?.preventDefault();
-    if (!this.ocupado()) this.cierre.emit();
+    if (evento !== undefined) {
+      evento.preventDefault();
+    }
+
+    if (this.ocupado() === false) {
+      this.cierre.emit();
+    }
   }
 
   ngOnDestroy(): void {
     this.dialogo().nativeElement.close();
-    this.anterior?.focus();
+
+    if (this.anterior !== null && this.anterior !== undefined) {
+      this.anterior.focus();
+    }
   }
 }

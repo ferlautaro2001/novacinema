@@ -52,7 +52,8 @@ export class Precios implements OnInit, FormularioConCambios {
   async ngOnInit(): Promise<void> {
     try {
       const formatos = await this.catalogo.findAllFormatos();
-      this.formatos.set(formatos.filter((f) => f.activo));
+      const activos = formatos.filter(estaActivo);
+      this.formatos.set(activos);
       await this.cargarVigentes();
     } catch {
       this.error.set(
@@ -64,7 +65,9 @@ export class Precios implements OnInit, FormularioConCambios {
   }
 
   noGuardado(): boolean {
-    return this.form.dirty;
+    const bandera = this.form.dirty;
+
+    return bandera;
   }
 
   // Lleno el formulario con lo vigente; si todavía no hay nada, los campos quedan vacíos.
@@ -74,58 +77,87 @@ export class Precios implements OnInit, FormularioConCambios {
     this.tarifas.set(tarifas);
     this.adicionales.set(adicionales);
 
-    this.form.controls.comun.setValue(tarifas.get(COMUN) ?? null);
-    this.form.controls.vip.setValue(tarifas.get(VIP) ?? null);
+    const comun = buscarValor(tarifas, COMUN);
+    const vip = buscarValor(tarifas, VIP);
+    this.form.controls.comun.setValue(comun);
+    this.form.controls.vip.setValue(vip);
     this.form.controls.adicionales.clear();
     for (const formato of this.formatos()) {
-      this.form.controls.adicionales.push(
-        this.fb.control<number | null>(adicionales.get(formato.id) ?? null, [
-          Validators.required,
-          Validators.min(0),
-        ]),
-      );
+      const adicional = buscarValor(adicionales, formato.id);
+      const control = this.fb.control<number | null>(adicional, [
+        Validators.required,
+        Validators.min(0),
+      ]);
+      this.form.controls.adicionales.push(control);
     }
     this.form.markAsPristine();
     this.form.markAsUntouched();
   }
 
   sinTarifas(): boolean {
-    return this.tarifas().size === 0;
+    let bandera = false;
+
+    if (this.tarifas().size === 0) {
+      bandera = true;
+    }
+
+    return bandera;
   }
 
   comunVigente(): number | null {
-    return this.tarifas().get(COMUN) ?? null;
+    const tarifa = buscarValor(this.tarifas(), COMUN);
+
+    return tarifa;
   }
 
   vipVigente(): number | null {
-    return this.tarifas().get(VIP) ?? null;
+    const tarifa = buscarValor(this.tarifas(), VIP);
+
+    return tarifa;
   }
 
   adicionalVigente(formatoId: number): number | null {
-    return this.adicionales().get(formatoId) ?? null;
+    const adicional = buscarValor(this.adicionales(), formatoId);
+
+    return adicional;
   }
 
   // El error del grupo lo muestro recién cuando la persona tocó la tarifa VIP.
   vipInvalida(): boolean {
-    return this.form.hasError('vipMayorQueComun') && this.form.controls.vip.touched;
+    let bandera = false;
+
+    if (this.form.hasError('vipMayorQueComun') && this.form.controls.vip.touched) {
+      bandera = true;
+    }
+
+    return bandera;
   }
 
   async guardar(): Promise<void> {
-    if (this.guardando()) return;
-    this.form.markAllAsTouched();
-    this.aviso.set('');
-    this.error.set('');
-    if (this.form.invalid) return;
+    if (this.guardando() === false) {
+      this.form.markAllAsTouched();
+      this.aviso.set('');
+      this.error.set('');
 
+      if (this.form.invalid === false) {
+        await this.guardarTarifas();
+      }
+    }
+  }
+
+  private async guardarTarifas(): Promise<void> {
     const valores = this.form.getRawValue();
     const tarifas = new Map<number, number>();
     tarifas.set(COMUN, Number(valores.comun));
     tarifas.set(VIP, Number(valores.vip));
 
     const adicionales = new Map<number, number>();
-    this.formatos().forEach((formato, i) => {
-      adicionales.set(formato.id, Number(valores.adicionales[i]));
-    });
+    let indice = 0;
+
+    for (const formato of this.formatos()) {
+      adicionales.set(formato.id, Number(valores.adicionales[indice]));
+      indice++;
+    }
 
     this.guardando.set(true);
     try {
@@ -142,4 +174,23 @@ export class Precios implements OnInit, FormularioConCambios {
       this.guardando.set(false);
     }
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function estaActivo(formato: Formato): boolean {
+  const activo = formato.activo;
+
+  return activo;
+}
+
+function buscarValor(mapa: Map<number, number>, clave: number): number | null {
+  let valor: number | null = null;
+  const encontrado = mapa.get(clave);
+
+  if (encontrado !== undefined) {
+    valor = encontrado;
+  }
+
+  return valor;
 }

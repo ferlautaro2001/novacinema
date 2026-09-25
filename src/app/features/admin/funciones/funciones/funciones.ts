@@ -75,14 +75,24 @@ export class Funciones implements OnInit {
         this.programacionService.obtenerVersionesIdioma(),
       ]);
 
-      this.salas = salas.sort((a, b) => a.numero - b.numero);
-      for (const p of peliculas) this.peliculas.set(p.id, p);
-      for (const f of formatos) this.formatos.set(f.id, f.codigo);
-      for (const i of idiomas) this.idiomas.set(i.id, i.nombre);
+      this.salas = salas.sort(porNumeroDeSala);
 
-      await this.cargarFunciones(this.fechaSeleccionada());
+      for (const pelicula of peliculas) {
+        this.peliculas.set(pelicula.id, pelicula);
+      }
+
+      for (const formato of formatos) {
+        this.formatos.set(formato.id, formato.codigo);
+      }
+
+      for (const idioma of idiomas) {
+        this.idiomas.set(idioma.id, idioma.nombre);
+      }
+
+      const fecha = this.fechaSeleccionada();
+      await this.cargarFunciones(fecha);
     } catch (e: any) {
-      const mensaje = e?.message || 'Error al cargar datos';
+      const mensaje = mensajeDeError(e, 'Error al cargar datos');
       this.error.set(mensaje);
       this.estado.set({ tipo: 'error', mensaje });
     }
@@ -101,12 +111,20 @@ export class Funciones implements OnInit {
     try {
       const datos = await this.programacionService.consultarFuncionesDelDia(fechaStr);
 
-      const filas = datos.map((f) => this.armarFila(f));
-      filas.sort((a, b) => new Date(a.comienzaEn).getTime() - new Date(b.comienzaEn).getTime());
+      const filas: FuncionFila[] = [];
+
+      for (const funcion of datos) {
+        const fila = this.armarFila(funcion);
+        filas.push(fila);
+      }
+
+      filas.sort(porComienzo);
 
       const grupos: SalaGrupo[] = [];
+
       for (const sala of this.salas) {
-        const funciones = filas.filter((f) => f.salaId === sala.id);
+        const funciones = funcionesDeSala(filas, sala.id);
+
         if (funciones.length > 0) {
           grupos.push({ id: sala.id, sala, funciones });
         }
@@ -114,7 +132,7 @@ export class Funciones implements OnInit {
 
       this.estado.set({ tipo: 'datos', datos: grupos });
     } catch (e: any) {
-      const mensaje = e?.message || 'Error al consultar las funciones del día';
+      const mensaje = mensajeDeError(e, 'Error al consultar las funciones del día');
       this.error.set(mensaje);
       this.estado.set({ tipo: 'error', mensaje });
     }
@@ -125,13 +143,15 @@ export class Funciones implements OnInit {
     this.aviso.set('');
     try {
       const ventas = await this.programacionService.contarEntradasVendidas(funcion.id);
+
       if (ventas > 0) {
         this.error.set('No se puede eliminar una función con entradas vendidas');
-        return;
+      } else {
+        this.confirmacion.set(funcion);
       }
-      this.confirmacion.set(funcion);
     } catch (e: any) {
-      this.error.set(e?.message || 'Error al verificar las entradas vendidas');
+      const mensaje = mensajeDeError(e, 'Error al verificar las entradas vendidas');
+      this.error.set(mensaje);
     }
   }
 
@@ -143,9 +163,12 @@ export class Funciones implements OnInit {
       await this.programacionService.eliminarFuncion(funcion.id);
       this.confirmacion.set(null);
       this.aviso.set('Función eliminada correctamente.');
-      await this.cargarFunciones(this.fechaSeleccionada());
+
+      const fecha = this.fechaSeleccionada();
+      await this.cargarFunciones(fecha);
     } catch (e: any) {
-      this.error.set(e?.message || 'Error al eliminar la función');
+      const mensaje = mensajeDeError(e, 'Error al eliminar la función');
+      this.error.set(mensaje);
       this.confirmacion.set(null);
     } finally {
       this.eliminando.set(null);
@@ -159,7 +182,8 @@ export class Funciones implements OnInit {
       const detalle = await this.programacionService.obtenerDetalleCancelacion(funcion.id);
       this.confirmacionCancelar.set({ funcion, detalle });
     } catch (e: any) {
-      this.error.set(e?.message || 'Error al consultar las compras de la función');
+      const mensaje = mensajeDeError(e, 'Error al consultar las compras de la función');
+      this.error.set(mensaje);
     }
   }
 
@@ -175,48 +199,138 @@ export class Funciones implements OnInit {
       );
       this.confirmacionCancelar.set(null);
       this.aviso.set('Función cancelada correctamente.');
-      await this.cargarFunciones(this.fechaSeleccionada());
+
+      const fecha = this.fechaSeleccionada();
+      await this.cargarFunciones(fecha);
     } catch (e: any) {
-      this.error.set(e?.message || 'Error al cancelar la función');
+      const mensaje = mensajeDeError(e, 'Error al cancelar la función');
+      this.error.set(mensaje);
       this.confirmacionCancelar.set(null);
     } finally {
       this.cancelando.set(null);
     }
   }
 
-  private armarFila(f: Funcion): FuncionFila {
-    const titulo = this.peliculas.get(f.pelicula_id)?.titulo || 'Película';
-    const formato = this.formatos.get(f.formato_id) || '2D';
-    const idioma = this.idiomas.get(f.version_idioma_id) || 'Castellano';
-    const inicio = this.horaMinuto(f.comienza_en);
-    const fin = this.horaMinuto(f.termina_en);
+  private armarFila(funcion: Funcion): FuncionFila {
+    const pelicula = this.peliculas.get(funcion.pelicula_id);
+    const formatoEncontrado = this.formatos.get(funcion.formato_id);
+    const idiomaEncontrado = this.idiomas.get(funcion.version_idioma_id);
+    const inicio = this.horaMinuto(funcion.comienza_en);
+    const fin = this.horaMinuto(funcion.termina_en);
+    const salaNombre = nombreDeSala(this.salas, funcion.sala_id);
 
-    return {
-      id: f.id,
-      peliculaId: f.pelicula_id,
+    let titulo = 'Película';
+
+    if (pelicula !== undefined && pelicula.titulo !== '') {
+      titulo = pelicula.titulo;
+    }
+
+    const formato = textoOPorDefecto(formatoEncontrado, '2D');
+    const idioma = textoOPorDefecto(idiomaEncontrado, 'Castellano');
+
+    const fila: FuncionFila = {
+      id: funcion.id,
+      peliculaId: funcion.pelicula_id,
       peliculaTitulo: titulo,
-      salaId: f.sala_id,
-      salaNombre: this.salas.find((s) => s.id === f.sala_id)?.nombre || 'Sala',
-      comienzaEn: f.comienza_en,
-      terminaEn: f.termina_en,
+      salaId: funcion.sala_id,
+      salaNombre: salaNombre,
+      comienzaEn: funcion.comienza_en,
+      terminaEn: funcion.termina_en,
       formatoCodigo: formato,
       versionIdiomaNombre: idioma,
-      estado: f.estado,
+      estado: funcion.estado,
       textoResumen: `${titulo} · ${inicio}–${fin} · ${formato} · ${idioma}`,
     };
+
+    return fila;
   }
 
   private horaMinuto(iso: string): string {
-    const d = new Date(iso);
-    const h = String(d.getHours()).padStart(2, '0');
-    const m = String(d.getMinutes()).padStart(2, '0');
-    return `${h}:${m}`;
+    const fecha = new Date(iso);
+    const horas = String(fecha.getHours()).padStart(2, '0');
+    const minutos = String(fecha.getMinutes()).padStart(2, '0');
+
+    const hora = `${horas}:${minutos}`;
+
+    return hora;
   }
 
   private aIso(fecha: Date): string {
-    const y = fecha.getFullYear();
-    const m = String(fecha.getMonth() + 1).padStart(2, '0');
-    const d = String(fecha.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+
+    const iso = `${anio}-${mes}-${dia}`;
+
+    return iso;
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function porNumeroDeSala(salaA: Sala, salaB: Sala): number {
+  const diferencia = salaA.numero - salaB.numero;
+
+  return diferencia;
+}
+
+function porComienzo(filaA: FuncionFila, filaB: FuncionFila): number {
+  const comienzoA = new Date(filaA.comienzaEn).getTime();
+  const comienzoB = new Date(filaB.comienzaEn).getTime();
+  const diferencia = comienzoA - comienzoB;
+
+  return diferencia;
+}
+
+function funcionesDeSala(filas: FuncionFila[], salaId: string): FuncionFila[] {
+  const funciones: FuncionFila[] = [];
+
+  for (const fila of filas) {
+    if (fila.salaId === salaId) {
+      funciones.push(fila);
+    }
+  }
+
+  return funciones;
+}
+
+function nombreDeSala(salas: Sala[], salaId: string): string {
+  let nombre = 'Sala';
+  let encontrada = false;
+
+  for (const sala of salas) {
+    if (encontrada === false && sala.id === salaId) {
+      encontrada = true;
+
+      if (sala.nombre !== '') {
+        nombre = sala.nombre;
+      }
+    }
+  }
+
+  return nombre;
+}
+
+function textoOPorDefecto(valor: string | undefined, porDefecto: string): string {
+  let texto = porDefecto;
+
+  if (valor !== undefined && valor !== '') {
+    texto = valor;
+  }
+
+  return texto;
+}
+
+function mensajeDeError(error: any, porDefecto: string): string {
+  let mensaje = porDefecto;
+
+  if (error !== null && error !== undefined) {
+    const mensajeOriginal = error.message;
+
+    if (mensajeOriginal !== undefined && mensajeOriginal !== null && mensajeOriginal !== '') {
+      mensaje = mensajeOriginal;
+    }
+  }
+
+  return mensaje;
 }

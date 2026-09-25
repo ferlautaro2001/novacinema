@@ -62,15 +62,33 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
   });
 
   get horariosArray() {
-    return this.form.controls.horarios;
+    const horarios = this.form.controls.horarios;
+
+    return horarios;
   }
 
   funcionesAsignadasCount(): number {
-    return this.resumen().filter((i) => i.asignada && i.sala !== null).length;
+    let cantidad = 0;
+
+    for (const item of this.resumen()) {
+      if (item.asignada && item.sala !== null) {
+        cantidad = cantidad + 1;
+      }
+    }
+
+    return cantidad;
   }
 
   funcionesRechazadas(): ItemResumenProgramacion[] {
-    return this.resumen().filter((i) => !i.asignada || i.sala === null);
+    const rechazadas: ItemResumenProgramacion[] = [];
+
+    for (const item of this.resumen()) {
+      if (item.asignada === false || item.sala === null) {
+        rechazadas.push(item);
+      }
+    }
+
+    return rechazadas;
   }
 
   async ngOnInit(): Promise<void> {
@@ -81,48 +99,77 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
         this.programacionService.obtenerVersionesIdioma(),
       ]);
 
-      const activas = peliculas.filter((p) => p.activo && p.estado !== 'archivada');
+      const activas = peliculas.filter(estaActiva);
       this.peliculas.set(activas);
       this.formatos.set(formatos);
       this.versionesIdioma.set(idiomas);
 
       // Dejo elegida la primera opción de cada lista para que se pueda calcular de una.
       if (activas.length > 0) {
-        this.form.controls.pelicula_id.setValue(activas[0].id);
-        this.form.controls.duracion_min.setValue(activas[0].duracion_min || 120);
+        const primera = activas[0];
+        const duracion = duracionOPorDefecto(primera.duracion_min);
+        this.form.controls.pelicula_id.setValue(primera.id);
+        this.form.controls.duracion_min.setValue(duracion);
       }
+
       if (formatos.length > 0) {
         this.formatoSeleccionado.set(formatos[0].id);
       }
+
       if (idiomas.length > 0) {
         this.versionIdiomaSeleccionada.set(idiomas[0].id);
       }
     } catch (e: any) {
-      this.error.set(e?.message || 'Error al cargar datos iniciales');
+      const mensaje = mensajeDeError(e, 'Error al cargar datos iniciales');
+      this.error.set(mensaje);
     }
   }
 
   noGuardado(): boolean {
-    if (this.guardadoExitoso) return false;
-    return this.form.dirty || this.resumen().length > 0;
+    let bandera = false;
+
+    if (this.guardadoExitoso) {
+      bandera = false;
+    } else if (this.form.dirty) {
+      bandera = true;
+    } else if (this.resumen().length > 0) {
+      bandera = true;
+    }
+
+    return bandera;
   }
 
   onPeliculaChange(event: Event): void {
-    const id = (event.target as HTMLSelectElement).value;
-    const pelicula = this.peliculas().find((p) => p.id === id);
-    if (pelicula) {
-      this.form.controls.duracion_min.setValue(pelicula.duracion_min || 120);
+    const selector = event.target as HTMLSelectElement;
+    const id = selector.value;
+    const pelicula = buscarPelicula(this.peliculas(), id);
+
+    if (pelicula !== undefined) {
+      const duracion = duracionOPorDefecto(pelicula.duracion_min);
+      this.form.controls.duracion_min.setValue(duracion);
       this.resumen.set([]);
     }
   }
 
   toggleDia(dia: number): void {
     const actuales = this.diasSeleccionados();
+
     if (actuales.includes(dia)) {
-      this.diasSeleccionados.set(actuales.filter((d) => d !== dia));
+      const restantes: number[] = [];
+
+      for (const actual of actuales) {
+        if (actual !== dia) {
+          restantes.push(actual);
+        }
+      }
+
+      this.diasSeleccionados.set(restantes);
     } else {
-      this.diasSeleccionados.set([...actuales, dia].sort((a, b) => a - b));
+      const nuevos = [...actuales, dia];
+      nuevos.sort(ascendente);
+      this.diasSeleccionados.set(nuevos);
     }
+
     this.resumen.set([]);
   }
 
@@ -142,13 +189,17 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
   }
 
   onFechaElegida(fecha: Date): void {
-    this.fechaInicio.set(this.aIso(fecha));
+    const iso = this.aIso(fecha);
+    this.fechaInicio.set(iso);
     this.resumen.set([]);
   }
 
   agregarHorario(hora = '18:00'): void {
-    if (!this.horariosArray.value.includes(hora)) {
-      this.horariosArray.push(this.fb.control(hora, Validators.required));
+    const yaEsta = this.horariosArray.value.includes(hora);
+
+    if (yaEsta === false) {
+      const control = this.fb.control(hora, Validators.required);
+      this.horariosArray.push(control);
       this.resumen.set([]);
     }
   }
@@ -165,80 +216,112 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
     this.aviso.set('');
 
     const peliculaId = this.form.controls.pelicula_id.value;
-    if (!peliculaId) {
+    const formatoId = this.formatoSeleccionado();
+    const versionIdiomaId = this.versionIdiomaSeleccionada();
+    const horarios = horariosCargados(this.horariosArray.value);
+
+    if (peliculaId === '') {
       this.error.set('Elegí una película');
-      return;
-    }
-
-    if (!this.formatoSeleccionado()) {
+    } else if (formatoId === null || formatoId === 0) {
       this.error.set('Elegí un formato');
-      return;
-    }
-
-    if (!this.versionIdiomaSeleccionada()) {
+    } else if (versionIdiomaId === null || versionIdiomaId === 0) {
       this.error.set('Elegí un idioma');
-      return;
-    }
-
-    if (this.diasSeleccionados().length === 0) {
+    } else if (this.diasSeleccionados().length === 0) {
       this.error.set('Elegí al menos un día de la semana');
-      return;
-    }
-
-    const horarios = this.horariosArray.value.map((h) => h.trim()).filter((h) => h !== '');
-
-    if (horarios.length === 0) {
+    } else if (horarios.length === 0) {
       this.error.set('Agregá al menos un horario');
-      return;
+    } else {
+      await this.calcularConDatos(peliculaId, formatoId, versionIdiomaId, horarios);
+    }
+  }
+
+  async programar(): Promise<void> {
+    const formatoId = this.formatoSeleccionado();
+
+    if (formatoId === null || formatoId === 0) {
+      this.error.set('Elegí un formato');
+    } else {
+      if (this.resumen().length === 0) {
+        await this.calcular();
+      }
+
+      if (this.funcionesAsignadasCount() === 0) {
+        this.error.set('No hay funciones con sala disponible para crear');
+      } else {
+        await this.guardarProgramacion();
+      }
+    }
+  }
+
+  nombreFormato(): string {
+    let codigo = '';
+
+    for (const formato of this.formatos()) {
+      if (codigo === '' && formato.id === this.formatoSeleccionado()) {
+        codigo = formato.codigo;
+      }
     }
 
+    return codigo;
+  }
+
+  nombreIdioma(): string {
+    let nombre = '';
+
+    for (const idioma of this.versionesIdioma()) {
+      if (nombre === '' && idioma.id === this.versionIdiomaSeleccionada()) {
+        nombre = idioma.nombre;
+      }
+    }
+
+    return nombre;
+  }
+
+  private async calcularConDatos(
+    peliculaId: string,
+    formatoId: number,
+    versionIdiomaId: number,
+    horarios: string[],
+  ): Promise<void> {
     this.calculando.set(true);
     try {
+      const duracionMin = duracionOPorDefecto(this.form.controls.duracion_min.value);
+
       const resultado = await this.programacionService.calcularProgramacion({
         peliculaId,
-        duracionMin: this.form.controls.duracion_min.value || 120,
+        duracionMin: duracionMin,
         fechaInicio: this.fechaInicio(),
         semanas: this.semanasSeleccionadas(),
         diasSemana: this.diasSeleccionados(),
         horarios,
-        formatoId: this.formatoSeleccionado()!,
-        versionIdiomaId: this.versionIdiomaSeleccionada()!,
+        formatoId: formatoId,
+        versionIdiomaId: versionIdiomaId,
       });
 
       this.resumen.set(resultado);
     } catch (e: any) {
-      this.error.set(e?.message || 'Error al calcular la programación');
+      const mensaje = mensajeDeError(e, 'Error al calcular la programación');
+      this.error.set(mensaje);
     } finally {
       this.calculando.set(false);
     }
   }
 
-  async programar(): Promise<void> {
-    if (!this.formatoSeleccionado()) {
-      this.error.set('Elegí un formato');
-      return;
-    }
-
-    if (this.resumen().length === 0) {
-      await this.calcular();
-    }
-
-    if (this.funcionesAsignadasCount() === 0) {
-      this.error.set('No hay funciones con sala disponible para crear');
-      return;
-    }
-
+  private async guardarProgramacion(): Promise<void> {
     this.guardando.set(true);
     try {
+      const duracionMin = duracionOPorDefecto(this.form.controls.duracion_min.value);
+
       const res = await this.programacionService.crearFunciones(
         this.resumen(),
         this.form.controls.pelicula_id.value,
-        this.form.controls.duracion_min.value || 120,
+        duracionMin,
         this.formatoSeleccionado()!,
         this.versionIdiomaSeleccionada()!,
       );
 
       this.guardadoExitoso = true;
+
       if (res.fallidas > 0) {
         this.error.set(
           `Se crearon ${res.creadas} funciones, pero fallaron ${res.fallidas}: ${res.errores.join(', ')}`,
@@ -246,29 +329,98 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
       } else {
         this.aviso.set(`Se crearon ${res.creadas} funciones exitosamente.`);
         // Espero un poco antes de volver al listado para que se llegue a leer el aviso.
-        setTimeout(() => this.router.navigate(['/admin/funciones']), 1200);
+        setTimeout(() => this.volverAlListado(), 1200);
       }
     } catch (e: any) {
-      this.error.set(e?.message || 'Error al guardar la programación');
+      const mensaje = mensajeDeError(e, 'Error al guardar la programación');
+      this.error.set(mensaje);
     } finally {
       this.guardando.set(false);
     }
   }
 
-  nombreFormato(): string {
-    const formato = this.formatos().find((f) => f.id === this.formatoSeleccionado());
-    return formato?.codigo ?? '';
-  }
-
-  nombreIdioma(): string {
-    const idioma = this.versionesIdioma().find((i) => i.id === this.versionIdiomaSeleccionada());
-    return idioma?.nombre ?? '';
+  private volverAlListado(): void {
+    this.router.navigate(['/admin/funciones']);
   }
 
   private aIso(fecha: Date): string {
-    const y = fecha.getFullYear();
-    const m = String(fecha.getMonth() + 1).padStart(2, '0');
-    const d = String(fecha.getDate()).padStart(2, '0');
-    return `${y}-${m}-${d}`;
+    const anio = fecha.getFullYear();
+    const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+    const dia = String(fecha.getDate()).padStart(2, '0');
+
+    const iso = `${anio}-${mes}-${dia}`;
+
+    return iso;
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function estaActiva(pelicula: PeliculaConCatalogo): boolean {
+  let bandera = false;
+
+  if (pelicula.activo && pelicula.estado !== 'archivada') {
+    bandera = true;
+  }
+
+  return bandera;
+}
+
+function buscarPelicula(
+  peliculas: PeliculaConCatalogo[],
+  id: string,
+): PeliculaConCatalogo | undefined {
+  let encontrada: PeliculaConCatalogo | undefined = undefined;
+
+  for (const pelicula of peliculas) {
+    if (encontrada === undefined && pelicula.id === id) {
+      encontrada = pelicula;
+    }
+  }
+
+  return encontrada;
+}
+
+function horariosCargados(valores: string[]): string[] {
+  const horarios: string[] = [];
+
+  for (const valor of valores) {
+    const horario = valor.trim();
+
+    if (horario !== '') {
+      horarios.push(horario);
+    }
+  }
+
+  return horarios;
+}
+
+function ascendente(numeroA: number, numeroB: number): number {
+  const diferencia = numeroA - numeroB;
+
+  return diferencia;
+}
+
+function duracionOPorDefecto(duracion: number | null): number {
+  let minutos = 120;
+
+  if (duracion !== null && duracion !== 0 && Number.isNaN(duracion) === false) {
+    minutos = duracion;
+  }
+
+  return minutos;
+}
+
+function mensajeDeError(error: any, porDefecto: string): string {
+  let mensaje = porDefecto;
+
+  if (error !== null && error !== undefined) {
+    const mensajeOriginal = error.message;
+
+    if (mensajeOriginal !== undefined && mensajeOriginal !== null && mensajeOriginal !== '') {
+      mensaje = mensajeOriginal;
+    }
+  }
+
+  return mensaje;
 }

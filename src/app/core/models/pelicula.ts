@@ -26,10 +26,23 @@ export const GENEROS_PELICULA = [
 
 // El catálogo importado de TMDB trae algunos géneros con otro nombre.
 export function nombreGenero(nombre: string): string {
-  if (nombre === 'Familia') return 'Familiar';
-  if (nombre === 'Música') return 'Musical';
-  if (nombre === 'Suspense') return 'Suspenso';
-  return nombre;
+  let bandera = nombre;
+
+  switch (nombre) {
+    case 'Familia':
+      bandera = 'Familiar';
+      break;
+
+    case 'Música':
+      bandera = 'Musical';
+      break;
+
+    case 'Suspense':
+      bandera = 'Suspenso';
+      break;
+  }
+
+  return bandera;
 }
 
 export interface PeliculaConCatalogo extends Pelicula {

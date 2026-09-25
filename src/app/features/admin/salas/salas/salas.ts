@@ -25,7 +25,8 @@ export class Salas implements OnInit {
   async cargar(): Promise<void> {
     this.cargando.set(true);
     try {
-      this.salas.set(await this.salasService.listar());
+      const lista = await this.salasService.listar();
+      this.salas.set(lista);
     } catch {
       this.error.set('No se pudo cargar el listado de salas. Probá de nuevo.');
     } finally {
@@ -34,24 +35,45 @@ export class Salas implements OnInit {
   }
 
   async cambiarEstado(sala: Sala): Promise<void> {
-    const nuevoEstado = !sala.activa;
+    let nuevoEstado = false;
+
+    if (sala.activa === false) {
+      nuevoEstado = true;
+    }
+
     this.cambiando.set(sala.id);
     this.aviso.set(null);
     this.error.set(null);
     try {
       await this.salasService.activarSala(sala.id, nuevoEstado);
-      this.salas.update((lista) =>
-        lista.map((s) => (s.id === sala.id ? { ...s, activa: nuevoEstado } : s)),
-      );
-      this.aviso.set(
-        nuevoEstado
-          ? `${sala.nombre} activada. Ahora puede recibir funciones.`
-          : `${sala.nombre} desactivada.`,
-      );
+      const lista = salasConEstado(this.salas(), sala.id, nuevoEstado);
+      this.salas.set(lista);
+      if (nuevoEstado) {
+        this.aviso.set(`${sala.nombre} activada. Ahora puede recibir funciones.`);
+      } else {
+        this.aviso.set(`${sala.nombre} desactivada.`);
+      }
     } catch (e) {
-      this.error.set((e as Error).message);
+      const error = e as Error;
+      this.error.set(error.message);
     } finally {
       this.cambiando.set(null);
     }
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function salasConEstado(lista: Sala[], id: string, activa: boolean): Sala[] {
+  const salas: Sala[] = [];
+
+  for (const sala of lista) {
+    if (sala.id === id) {
+      salas.push({ ...sala, activa: activa });
+    } else {
+      salas.push(sala);
+    }
+  }
+
+  return salas;
 }

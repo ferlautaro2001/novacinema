@@ -9,8 +9,24 @@ export const rolGuard: CanMatchFn = async (route) => {
   // inject() solo funciona antes del primer await.
   const auth = inject(AuthService);
   await auth.listo();
-  const permitidos: Rol[] = route.data?.['roles'] ?? [];
-  const rol = auth.perfil()?.rol;
-  if (!rol) return false;
-  return permitidos.includes(rol);
+
+  let permitidos: Rol[] = [];
+
+  if (route.data !== undefined && route.data !== null) {
+    const rolesDeRuta = route.data['roles'];
+
+    if (rolesDeRuta !== null && rolesDeRuta !== undefined) {
+      permitidos = rolesDeRuta;
+    }
+  }
+
+  const perfil = auth.perfil();
+
+  let puedeEntrar = false;
+
+  if (perfil !== null && perfil.rol !== undefined) {
+    puedeEntrar = permitidos.includes(perfil.rol);
+  }
+
+  return puedeEntrar;
 };

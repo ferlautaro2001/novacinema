@@ -23,21 +23,35 @@ export class ActividadService {
         'id, creado_en, entidad, detalle, accion:acciones_auditoria(codigo), autor:usuarios!actividad_usuario_id_fkey(nombre, apellido)',
       )
       .order('creado_en', { ascending: false });
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
 
     const nombres = await this.cargarNombres(data);
-    return data.map((fila) => {
-      const codigo = fila.accion?.codigo as AccionAuditoriaCodigo;
-      return {
+
+    const registros: RegistroActividad[] = [];
+
+    for (const fila of data) {
+      const codigo = codigoAccion(fila.accion);
+      const fecha = new Date(fila.creado_en);
+      const autor = nombreAutor(fila.autor);
+      const accion = etiquetaAccion(codigo);
+      const detalle = detalleActividad(fila.entidad, fila.detalle, nombres);
+
+      const registro: RegistroActividad = {
         id: fila.id,
-        fecha: new Date(fila.creado_en),
-        autor: fila.autor ? `${fila.autor.nombre} ${fila.autor.apellido}`.trim() : '',
-        codigo,
-        accion: etiquetaAccion(codigo),
+        fecha: fecha,
+        autor: autor,
+        codigo: codigo,
+        accion: accion,
         entidad: fila.entidad,
-        detalle: detalleActividad(fila.entidad, fila.detalle, nombres),
+        detalle: detalle,
       };
-    });
+
+      registros.push(registro);
+    }
+
+    return registros;
   }
 
   // El trigger guarda ids: junto los que hacen falta y busco los nombres con una
@@ -53,75 +67,165 @@ export class ActividadService {
     let formatos = false;
     let roles = false;
 
-    for (const { entidad, detalle } of filas) {
-      const f = filaAuditada(detalle);
-      if (entidad === 'funciones') {
-        agregar(peliculas, f['pelicula_id']);
-        agregar(salas, f['sala_id']);
+    for (const registro of filas) {
+      const fila = filaAuditada(registro.detalle);
+
+      switch (registro.entidad) {
+        case 'funciones':
+          agregar(peliculas, fila['pelicula_id']);
+          agregar(salas, fila['sala_id']);
+          break;
+
+        case 'preventas':
+          agregar(peliculas, fila['pelicula_id']);
+          break;
+
+        case 'entradas':
+        case 'pedidos_candy':
+          agregar(compras, fila['compra_id']);
+          break;
+
+        case 'precios_producto':
+          agregar(productos, fila['producto_id']);
+          break;
+
+        case 'precios_butaca':
+          tiposButaca = true;
+          break;
+
+        case 'adicionales_formato':
+          formatos = true;
+          break;
+
+        case 'usuarios':
+          roles = true;
+          break;
       }
-      if (entidad === 'preventas') agregar(peliculas, f['pelicula_id']);
-      if (entidad === 'entradas' || entidad === 'pedidos_candy') agregar(compras, f['compra_id']);
-      if (entidad === 'precios_producto') agregar(productos, f['producto_id']);
-      if (entidad === 'precios_butaca') tiposButaca = true;
-      if (entidad === 'adicionales_formato') formatos = true;
-      if (entidad === 'usuarios') roles = true;
     }
 
     const nombres = nombresVacios();
-    const sup = this.supS.Sup;
+    const cliente = this.supS.Sup;
 
-    if (peliculas.size) {
-      const { data, error } = await sup
+    if (peliculas.size !== 0) {
+      const idsPeliculas = [...peliculas];
+      const { data, error } = await cliente
         .from('peliculas')
         .select('id, titulo')
-        .in('id', [...peliculas]);
-      if (error) throw error;
-      for (const p of data) nombres.peliculas.set(p.id, p.titulo);
+        .in('id', idsPeliculas);
+      if (error !== null) {
+        throw error;
+      }
+
+      for (const pelicula of data) {
+        nombres.peliculas.set(pelicula.id, pelicula.titulo);
+      }
     }
-    if (salas.size) {
-      const { data, error } = await sup
-        .from('salas')
-        .select('id, nombre')
-        .in('id', [...salas]);
-      if (error) throw error;
-      for (const s of data) nombres.salas.set(s.id, s.nombre);
+
+    if (salas.size !== 0) {
+      const idsSalas = [...salas];
+      const { data, error } = await cliente.from('salas').select('id, nombre').in('id', idsSalas);
+      if (error !== null) {
+        throw error;
+      }
+
+      for (const sala of data) {
+        nombres.salas.set(sala.id, sala.nombre);
+      }
     }
-    if (compras.size) {
-      const { data, error } = await sup
+
+    if (compras.size !== 0) {
+      const idsCompras = [...compras];
+      const { data, error } = await cliente
         .from('compras')
         .select('id, codigo')
-        .in('id', [...compras]);
-      if (error) throw error;
-      for (const c of data) nombres.compras.set(c.id, c.codigo);
+        .in('id', idsCompras);
+      if (error !== null) {
+        throw error;
+      }
+
+      for (const compra of data) {
+        nombres.compras.set(compra.id, compra.codigo);
+      }
     }
-    if (productos.size) {
-      const { data, error } = await sup
+
+    if (productos.size !== 0) {
+      const idsProductos = [...productos];
+      const { data, error } = await cliente
         .from('productos')
         .select('id, nombre')
-        .in('id', [...productos]);
-      if (error) throw error;
-      for (const p of data) nombres.productos.set(p.id, p.nombre);
+        .in('id', idsProductos);
+      if (error !== null) {
+        throw error;
+      }
+
+      for (const producto of data) {
+        nombres.productos.set(producto.id, producto.nombre);
+      }
     }
+
     if (tiposButaca) {
-      const { data, error } = await sup.from('tipos_butaca').select('id, nombre');
-      if (error) throw error;
-      for (const t of data) nombres.tiposButaca.set(t.id, t.nombre);
+      const { data, error } = await cliente.from('tipos_butaca').select('id, nombre');
+      if (error !== null) {
+        throw error;
+      }
+
+      for (const tipoButaca of data) {
+        nombres.tiposButaca.set(tipoButaca.id, tipoButaca.nombre);
+      }
     }
+
     if (formatos) {
-      const { data, error } = await sup.from('formatos').select('id, codigo');
-      if (error) throw error;
-      for (const f of data) nombres.formatos.set(f.id, f.codigo);
+      const { data, error } = await cliente.from('formatos').select('id, codigo');
+      if (error !== null) {
+        throw error;
+      }
+
+      for (const formato of data) {
+        nombres.formatos.set(formato.id, formato.codigo);
+      }
     }
+
     if (roles) {
-      const { data, error } = await sup.from('roles').select('id, nombre');
-      if (error) throw error;
-      for (const r of data) nombres.roles.set(r.id, r.nombre);
+      const { data, error } = await cliente.from('roles').select('id, nombre');
+      if (error !== null) {
+        throw error;
+      }
+
+      for (const rol of data) {
+        nombres.roles.set(rol.id, rol.nombre);
+      }
     }
 
     return nombres;
   }
 }
 
-function agregar(conjunto: Set<string>, valor: unknown) {
-  if (typeof valor === 'string') conjunto.add(valor);
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function codigoAccion(accion: { codigo: string } | null): AccionAuditoriaCodigo {
+  let codigo: string | undefined = undefined;
+
+  if (accion !== null && accion !== undefined) {
+    codigo = accion.codigo;
+  }
+
+  const codigoTipado = codigo as AccionAuditoriaCodigo;
+
+  return codigoTipado;
+}
+
+function nombreAutor(autor: { nombre: string; apellido: string } | null): string {
+  let nombreCompleto = '';
+
+  if (autor !== null && autor !== undefined) {
+    nombreCompleto = `${autor.nombre} ${autor.apellido}`.trim();
+  }
+
+  return nombreCompleto;
+}
+
+function agregar(conjunto: Set<string>, valor: Json | undefined): void {
+  if (typeof valor === 'string') {
+    conjunto.add(valor);
+  }
 }

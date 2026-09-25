@@ -19,11 +19,13 @@ export class Encabezado {
   async cerrarSesion(): Promise<void> {
     this.cerrando.set(true);
     this.error.set(null);
+
     try {
       await this.auth.cerrarSesion();
       await this.router.navigateByUrl('/inicio');
-    } catch (e) {
-      this.error.set((e as Error).message);
+    } catch (excepcion) {
+      const falla = excepcion as Error;
+      this.error.set(falla.message);
     } finally {
       this.cerrando.set(false);
     }

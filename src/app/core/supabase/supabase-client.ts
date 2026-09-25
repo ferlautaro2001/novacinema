@@ -14,6 +14,8 @@ export class Supabase {
   }
 
   get Sup() {
-    return this.sup;
+    const cliente = this.sup;
+
+    return cliente;
   }
 }

@@ -46,34 +46,49 @@ export class Registro implements FormularioConCambios {
   private cuentaCreada = false;
 
   noGuardado(): boolean {
-    return this.form.dirty && !this.cuentaCreada;
+    let bandera = false;
+
+    if (this.form.dirty && this.cuentaCreada === false) {
+      bandera = true;
+    }
+
+    return bandera;
   }
 
   async crearCuenta(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      return;
+    } else {
+      await this.enviar();
     }
+  }
+
+  private async enviar(): Promise<void> {
     const datos = this.form.getRawValue();
+
     this.enviando.set(true);
     this.error.set(null);
+
     try {
+      // fechaPorPartes ya garantizó que la fecha existe.
+      const fechaNacimiento = isoDePartes(datos.nacimiento);
       const resultado = await this.auth.registrarse({
         email: datos.email,
         clave: datos.clave,
         nombre: datos.nombre,
         apellido: datos.apellido,
-        // fechaPorPartes ya garantizó que la fecha existe.
-        fechaNacimiento: isoDePartes(datos.nacimiento),
+        fechaNacimiento: fechaNacimiento,
       });
       this.cuentaCreada = true;
+
       if (resultado === 'sesion_iniciada') {
         await this.router.navigateByUrl('/inicio');
       } else {
         this.revisarEmail.set(true);
       }
-    } catch (e) {
-      this.error.set((e as Error).message);
+    } catch (excepcion) {
+      const falla = excepcion as Error;
+      this.error.set(falla.message);
     } finally {
       this.enviando.set(false);
     }

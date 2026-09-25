@@ -35,11 +35,20 @@ export class CampoTexto implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.suscripcion?.unsubscribe();
+    if (this.suscripcion !== undefined) {
+      this.suscripcion.unsubscribe();
+    }
   }
 
   private actualizar(): void {
     const control = this.control();
-    this.mostrarErrores.set(control.touched && control.invalid);
+
+    let hayQueMostrar = false;
+
+    if (control.touched && control.invalid) {
+      hayQueMostrar = true;
+    }
+
+    this.mostrarErrores.set(hayQueMostrar);
   }
 }

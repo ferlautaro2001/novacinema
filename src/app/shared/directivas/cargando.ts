@@ -22,17 +22,22 @@ export class Cargando<T> implements OnChanges {
     if (estado.tipo === 'cargando') {
       // Si no me pasan un template de carga, uso el mensaje por defecto.
       const carga = this.appCargandoCarga();
-      if (carga) {
+
+      if (carga !== undefined) {
         this.contenedor.createEmbeddedView(carga);
       } else {
         this.contenedor.createComponent(CargaConsulta);
       }
     } else if (estado.tipo === 'error') {
-      this.contenedor.createEmbeddedView(this.appCargandoError(), { $implicit: estado.mensaje });
+      const templateError = this.appCargandoError();
+      const contextoError = { $implicit: estado.mensaje };
+      this.contenedor.createEmbeddedView(templateError, contextoError);
     } else if (estado.datos.length === 0) {
-      this.contenedor.createEmbeddedView(this.appCargandoVacio());
+      const templateVacio = this.appCargandoVacio();
+      this.contenedor.createEmbeddedView(templateVacio);
     } else {
-      this.contenedor.createEmbeddedView(this.template, { $implicit: estado.datos });
+      const contextoDatos = { $implicit: estado.datos };
+      this.contenedor.createEmbeddedView(this.template, contextoDatos);
     }
   }
 }

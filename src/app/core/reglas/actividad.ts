@@ -17,7 +17,9 @@ const ETIQUETAS: Record<AccionAuditoriaCodigo, string> = {
 };
 
 export function etiquetaAccion(codigo: AccionAuditoriaCodigo): string {
-  return ETIQUETAS[codigo];
+  const etiqueta = ETIQUETAS[codigo];
+
+  return etiqueta;
 }
 
 // Los nombres que no están en la fila auditada.
@@ -32,7 +34,7 @@ export interface NombresActividad {
 }
 
 export function nombresVacios(): NombresActividad {
-  return {
+  const nombres: NombresActividad = {
     peliculas: new Map(),
     salas: new Map(),
     compras: new Map(),
@@ -41,33 +43,33 @@ export function nombresVacios(): NombresActividad {
     formatos: new Map(),
     roles: new Map(),
   };
+
+  return nombres;
 }
 
 type Fila = Record<string, Json | undefined>;
 
-function esObjeto(valor: Json | undefined): boolean {
-  return !!valor && typeof valor === 'object' && !Array.isArray(valor);
-}
-
 // La fila después del cambio o, si fue un borrado, la de antes.
 export function filaAuditada(detalle: Json | null): Fila {
-  if (!esObjeto(detalle)) return {};
-  const { antes, despues } = detalle as { antes?: Json; despues?: Json };
-  const fila = despues ?? antes;
-  if (!esObjeto(fila)) return {};
-  return fila as Fila;
-}
+  let bandera: Fila = {};
 
-function filaAnterior(detalle: Json | null): Fila {
-  if (!esObjeto(detalle)) return {};
-  const antes = (detalle as { antes?: Json }).antes;
-  if (!esObjeto(antes)) return {};
-  return antes as Fila;
-}
+  if (esObjeto(detalle)) {
+    const datos = detalle as { antes?: Json; despues?: Json };
 
-function texto(valor: Json | undefined): string {
-  if (valor === null || valor === undefined) return '';
-  return String(valor);
+    let fila: Json | undefined;
+
+    if (datos.despues !== null && datos.despues !== undefined) {
+      fila = datos.despues;
+    } else {
+      fila = datos.antes;
+    }
+
+    if (esObjeto(fila)) {
+      bandera = fila as Fila;
+    }
+  }
+
+  return bandera;
 }
 
 // Fechas en hora de Argentina, sin importar la zona de quien mira el panel.
@@ -82,37 +84,16 @@ const formatoFecha = new Intl.DateTimeFormat('es-AR', {
 });
 
 export function fechaHora(iso: string): string {
-  const partes = Object.fromEntries(
-    formatoFecha.formatToParts(new Date(iso)).map((p) => [p.type, p.value]),
-  );
-  return `${partes['day']}/${partes['month']}/${partes['year']} ${partes['hour']}:${partes['minute']}`;
-}
+  const partes = formatoFecha.formatToParts(new Date(iso));
+  const valores: Record<string, string> = {};
 
-const formatoNumero = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+  for (const parte of partes) {
+    valores[parte.type] = parte.value;
+  }
 
-function dinero(valor: Json | undefined): string {
-  return `$ ${formatoNumero.format(Number(valor))}`;
-}
+  const fechaFormateada = `${valores['day']}/${valores['month']}/${valores['year']} ${valores['hour']}:${valores['minute']}`;
 
-// "$ 8.000 → $ 9.000", o solo el valor nuevo si es la primera vez que se carga.
-function cambioDinero(antes: Json | undefined, despues: Json | undefined): string {
-  if (antes === null || antes === undefined) return dinero(despues);
-  return `${dinero(antes)} → ${dinero(despues)}`;
-}
-
-// "Común" queda "Tarifa común", pero "VIP" es una sigla y va en mayúsculas.
-function etiquetaTarifa(nombre: string): string {
-  if (nombre === 'VIP') return 'Tarifa VIP';
-  return `Tarifa ${nombre.toLowerCase()}`.trim();
-}
-
-function puntos(valor: Json | undefined): string {
-  return `${formatoNumero.format(Number(valor))} Nova Points`;
-}
-
-// Junta las partes no vacías con " · ".
-function unir(...partes: string[]): string {
-  return partes.filter((p) => p !== '').join(' · ');
+  return fechaFormateada;
 }
 
 export function detalleActividad(
@@ -120,57 +101,303 @@ export function detalleActividad(
   detalle: Json | null,
   nombres: NombresActividad,
 ): string {
-  const f = filaAuditada(detalle);
+  const fila = filaAuditada(detalle);
+  const filaAntes = filaAnterior(detalle);
+
+  let resultado = '';
+
   switch (entidad) {
     case 'funciones':
-      return unir(
-        nombres.peliculas.get(texto(f['pelicula_id'])) ?? '',
-        nombres.salas.get(texto(f['sala_id'])) ?? '',
-        f['comienza_en'] ? fechaHora(texto(f['comienza_en'])) : '',
-      );
+      resultado = detalleFuncion(fila, nombres);
+      break;
+
     case 'precios_butaca':
-      return unir(
-        etiquetaTarifa(nombres.tiposButaca.get(Number(f['tipo_butaca_id'])) ?? ''),
-        cambioDinero(filaAnterior(detalle)['precio'], f['precio']),
-      );
+      resultado = detallePrecioButaca(fila, filaAntes, nombres);
+      break;
+
     case 'adicionales_formato':
-      return unir(
-        `Adicional ${nombres.formatos.get(Number(f['formato_id'])) ?? ''}`.trim(),
-        cambioDinero(filaAnterior(detalle)['adicional'], f['adicional']),
-      );
+      resultado = detalleAdicionalFormato(fila, filaAntes, nombres);
+      break;
+
     case 'precios_producto':
-      return unir(nombres.productos.get(texto(f['producto_id'])) ?? '', dinero(f['precio']));
+      resultado = detallePrecioProducto(fila, nombres);
+      break;
+
     case 'preventas':
-      return unir(
-        `Preventa ${nombres.peliculas.get(texto(f['pelicula_id'])) ?? ''}`.trim(),
-        `${texto(f['porcentaje'])} %`,
-        f['habilitada'] === false ? 'deshabilitada' : '',
-      );
+      resultado = detallePreventa(fila, nombres);
+      break;
+
     case 'cupones':
-      return unir(
-        `Cupón ${texto(f['codigo'])}`,
-        `${texto(f['porcentaje'])} %`,
-        f['activo'] === false ? 'desactivado' : '',
-      );
+      resultado = detalleCupon(fila);
+      break;
+
     case 'recompensas':
-      return unir(texto(f['nombre']), puntos(f['costo_puntos']));
+      resultado = detalleRecompensa(fila);
+      break;
+
     case 'productos':
-      return texto(f['nombre']);
+      resultado = detalleProducto(fila);
+      break;
+
     case 'entradas':
     case 'pedidos_candy':
-      return nombres.compras.get(texto(f['compra_id'])) ?? '';
+      resultado = detalleCompraRelacionada(fila, nombres);
+      break;
+
     case 'compras':
-      return texto(f['codigo']);
-    case 'usuarios': {
-      const antes = filaAnterior(detalle);
-      const rolAntes = nombres.roles.get(Number(antes['rol_id'])) ?? '';
-      const rolDespues = nombres.roles.get(Number(f['rol_id'])) ?? '';
-      return unir(
-        `${texto(f['nombre'])} ${texto(f['apellido'])}`.trim(),
-        rolAntes && rolDespues ? `${rolAntes} → ${rolDespues}` : '',
-      );
-    }
-    default:
-      return '';
+      resultado = detalleCompra(fila);
+      break;
+
+    case 'usuarios':
+      resultado = detalleUsuario(fila, filaAntes, nombres);
+      break;
   }
+
+  return resultado;
+}
+
+// ─── Detalles por entidad ───────────────────────────────────────────
+
+function detalleFuncion(fila: Fila, nombres: NombresActividad): string {
+  const pelicula = buscarNombre(nombres.peliculas, texto(fila['pelicula_id']));
+  const sala = buscarNombre(nombres.salas, texto(fila['sala_id']));
+  const comienzaEn = texto(fila['comienza_en']);
+
+  let fecha = '';
+
+  if (comienzaEn !== '') {
+    fecha = fechaHora(comienzaEn);
+  }
+
+  const detalle = unir(pelicula, sala, fecha);
+
+  return detalle;
+}
+
+function detallePrecioButaca(fila: Fila, filaAntes: Fila, nombres: NombresActividad): string {
+  const tipoButaca = buscarNombre(nombres.tiposButaca, Number(fila['tipo_butaca_id']));
+  const tarifa = etiquetaTarifa(tipoButaca);
+  const cambio = cambioDinero(filaAntes['precio'], fila['precio']);
+
+  const detalle = unir(tarifa, cambio);
+
+  return detalle;
+}
+
+function detalleAdicionalFormato(fila: Fila, filaAntes: Fila, nombres: NombresActividad): string {
+  const formato = buscarNombre(nombres.formatos, Number(fila['formato_id']));
+  const cambio = cambioDinero(filaAntes['adicional'], fila['adicional']);
+
+  const detalle = unir(`Adicional ${formato}`.trim(), cambio);
+
+  return detalle;
+}
+
+function detallePrecioProducto(fila: Fila, nombres: NombresActividad): string {
+  const producto = buscarNombre(nombres.productos, texto(fila['producto_id']));
+  const precio = dinero(fila['precio']);
+
+  const detalle = unir(producto, precio);
+
+  return detalle;
+}
+
+function detallePreventa(fila: Fila, nombres: NombresActividad): string {
+  const pelicula = buscarNombre(nombres.peliculas, texto(fila['pelicula_id']));
+  const porcentaje = `${texto(fila['porcentaje'])} %`;
+
+  let estaDeshabilitada = false;
+
+  if (fila['habilitada'] === false) {
+    estaDeshabilitada = true;
+  }
+
+  const estado = estaDeshabilitada ? 'deshabilitada' : '';
+
+  const detalle = unir(`Preventa ${pelicula}`.trim(), porcentaje, estado);
+
+  return detalle;
+}
+
+function detalleCupon(fila: Fila): string {
+  const codigo = texto(fila['codigo']);
+  const porcentaje = `${texto(fila['porcentaje'])} %`;
+
+  let estaDesactivado = false;
+
+  if (fila['activo'] === false) {
+    estaDesactivado = true;
+  }
+
+  const estado = estaDesactivado ? 'desactivado' : '';
+
+  const detalle = unir(`Cupón ${codigo}`, porcentaje, estado);
+
+  return detalle;
+}
+
+function detalleRecompensa(fila: Fila): string {
+  const nombre = texto(fila['nombre']);
+  const costo = puntos(fila['costo_puntos']);
+
+  const detalle = unir(nombre, costo);
+
+  return detalle;
+}
+
+function detalleProducto(fila: Fila): string {
+  const nombre = texto(fila['nombre']);
+
+  return nombre;
+}
+
+function detalleCompraRelacionada(fila: Fila, nombres: NombresActividad): string {
+  const compra = buscarNombre(nombres.compras, texto(fila['compra_id']));
+
+  return compra;
+}
+
+function detalleCompra(fila: Fila): string {
+  const codigo = texto(fila['codigo']);
+
+  return codigo;
+}
+
+function detalleUsuario(fila: Fila, filaAntes: Fila, nombres: NombresActividad): string {
+  const nombreCompleto = `${texto(fila['nombre'])} ${texto(fila['apellido'])}`.trim();
+
+  const rolAnterior = buscarNombre(nombres.roles, Number(filaAntes['rol_id']));
+  const rolActual = buscarNombre(nombres.roles, Number(fila['rol_id']));
+
+  let tieneRolAnterior = false;
+  let tieneRolActual = false;
+
+  if (rolAnterior !== '') {
+    tieneRolAnterior = true;
+  }
+
+  if (rolActual !== '') {
+    tieneRolActual = true;
+  }
+
+  let cambioRol = '';
+
+  if (tieneRolAnterior && tieneRolActual) {
+    cambioRol = `${rolAnterior} → ${rolActual}`;
+  }
+
+  const detalle = unir(nombreCompleto, cambioRol);
+
+  return detalle;
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function filaAnterior(detalle: Json | null): Fila {
+  let bandera: Fila = {};
+
+  if (esObjeto(detalle)) {
+    const datos = detalle as { antes?: Json };
+    const antes = datos.antes;
+
+    if (esObjeto(antes)) {
+      bandera = antes as Fila;
+    }
+  }
+
+  return bandera;
+}
+
+function esObjeto(valor: Json | undefined): boolean {
+  let bandera = true;
+
+  if (valor === undefined || valor === null) {
+    bandera = false;
+  } else if (Array.isArray(valor)) {
+    bandera = false;
+  } else if (typeof valor !== 'object') {
+    bandera = false;
+  }
+
+  return bandera;
+}
+
+// Busca un nombre por id; si no está cargado, devuelve texto vacío.
+function buscarNombre<Clave>(mapa: Map<Clave, string>, clave: Clave): string {
+  let nombre = '';
+
+  const encontrado = mapa.get(clave);
+
+  if (encontrado !== undefined) {
+    nombre = encontrado;
+  }
+
+  return nombre;
+}
+
+function texto(valor: Json | undefined): string {
+  let bandera = '';
+
+  if (valor !== null && valor !== undefined) {
+    bandera = String(valor);
+  }
+
+  return bandera;
+}
+
+const formatoNumero = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
+
+function dinero(valor: Json | undefined): string {
+  const monto = `$ ${formatoNumero.format(Number(valor))}`;
+
+  return monto;
+}
+
+// "$ 8.000 → $ 9.000", o solo el valor nuevo si es la primera vez que se carga.
+function cambioDinero(antes: Json | undefined, despues: Json | undefined): string {
+  let resultado: string;
+
+  if (antes === null || antes === undefined) {
+    resultado = dinero(despues);
+  } else {
+    resultado = `${dinero(antes)} → ${dinero(despues)}`;
+  }
+
+  return resultado;
+}
+
+// "Común" queda "Tarifa común", pero "VIP" es una sigla y va en mayúsculas.
+function etiquetaTarifa(nombre: string): string {
+  let etiqueta: string;
+
+  if (nombre === 'VIP') {
+    etiqueta = 'Tarifa VIP';
+  } else {
+    etiqueta = `Tarifa ${nombre.toLowerCase()}`.trim();
+  }
+
+  return etiqueta;
+}
+
+function puntos(valor: Json | undefined): string {
+  const cantidad = `${formatoNumero.format(Number(valor))} Nova Points`;
+
+  return cantidad;
+}
+
+function noEstaVacia(parte: string): boolean {
+  let tieneTexto = false;
+
+  if (parte !== '') {
+    tieneTexto = true;
+  }
+
+  return tieneTexto;
+}
+
+// Junta las partes no vacías con " · ".
+function unir(...partes: string[]): string {
+  const resultado = partes.filter(noEstaVacia).join(' · ');
+
+  return resultado;
 }
