@@ -1,1 +1,24 @@
 <h1 class="marquee-lg">Cartelera</h1>
+<nc-buscador-peliculas [(texto)]="texto" />
+<nc-filtro-generos [generos]="generosDisponibles()" [(genero)]="genero" />
+<div class="grilla">
+  @for (p of peliculas() | filtroPeliculas: texto() : genero(); track p.id) {
+    <nc-pelicula-card
+      [pelicula]="p"
+      [imagenUrl]="storage.urlPublica(p.imagen_path)"
+      [generos]="p.generos"
+      [puntuacion]="p.puntuacion"
+      [enPreventa]="p.enPreventa"
+      (verDetalle)="detalleId.set(p.id)"
+    />
+  } @empty {
+    @if (texto() !== '') {
+      <p class="body">No encontramos películas para “{{ texto() }}”</p>
+    } @else {
+      <p class="body">No hay películas en cartelera para mostrar.</p>
+    }
+  }
+</div>
+@if (detalleId(); as id) {
+  <nc-detalle-pelicula [peliculaId]="id" (cierre)="detalleId.set(null)" />
+}

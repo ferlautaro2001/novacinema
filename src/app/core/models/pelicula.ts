@@ -50,6 +50,14 @@ export interface PeliculaConCatalogo extends Pelicula {
   pelicula_generos: { genero: { id: number; nombre: string } }[];
 }
 
+// Una película lista para mostrar en la cartelera pública (US-06.03).
+export interface PeliculaEnCartelera extends PeliculaConCatalogo {
+  generos: string[];
+  // De 0 a 10 con un decimal; null si todavía no tiene reseñas.
+  puntuacion: number | null;
+  enPreventa: boolean;
+}
+
 export interface DatosPelicula {
   titulo: string;
   sinopsis: string;

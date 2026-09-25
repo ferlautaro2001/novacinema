@@ -7,9 +7,9 @@
     height="360"
   />
   <div class="contenido">
-    <p class="overline">
-      {{ pelicula().estado === 'proximamente' ? 'Próximo estreno' : 'Destacada' }}
-    </p>
+    @if (leyenda() !== '') {
+      <p class="overline">{{ leyenda() }}</p>
+    }
     <h3 class="body-strong">{{ pelicula().titulo }}</h3>
     <div class="metadatos">
       <nc-clasificacion
@@ -25,5 +25,6 @@
     >
       Ver detalle
     </button>
+    <ng-content select="[acciones]" />
   </div>
 </article>
