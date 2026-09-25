@@ -1,1 +1,40 @@
-<h1 class="marquee-lg">Cupón de primera compra</h1>
+<section class="primera-compra">
+  <a routerLink="/admin/cupones" class="volver caption">Volver a cupones</a>
+  <h1 class="marquee-lg">Cupón de primera compra</h1>
+
+  @if (cargando()) {
+    <p class="body nota" role="status">Cargando cupón…</p>
+  }
+
+  @if (cupon(); as c) {
+    <p class="body">
+      Código <span class="codigo code">{{ c.codigo }}</span> · descuento actual
+      <strong>{{ c.porcentaje }} %</strong>
+    </p>
+    <p class="body nota">
+      El cambio rige para las compras que se hagan después de guardarlo. Las que ya se hicieron
+      mantienen su descuento.
+    </p>
+
+    <form class="formulario" [formGroup]="formulario" (ngSubmit)="guardar()">
+      <nc-campo-texto
+        id="porcentaje"
+        etiqueta="Porcentaje de descuento"
+        tipo="number"
+        [control]="formulario.controls.porcentaje"
+      >
+        <p class="error-texto caption">El porcentaje debe estar entre 1 y 50</p>
+      </nc-campo-texto>
+      <button type="submit" class="nc-btn nc-btn--primary" [disabled]="guardando()">
+        {{ guardando() ? 'Guardando…' : 'Guardar' }}
+      </button>
+    </form>
+  }
+
+  @if (aviso()) {
+    <p class="aviso body" role="status">{{ aviso() }}</p>
+  }
+  @if (error()) {
+    <p class="error body" role="alert">{{ error() }}</p>
+  }
+</section>
