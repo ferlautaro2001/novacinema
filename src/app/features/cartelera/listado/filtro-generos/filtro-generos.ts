@@ -9,4 +9,8 @@ import { Component, input, model } from '@angular/core';
 export class FiltroGeneros {
   generos = input<string[]>([]);
   genero = model('');
+
+  elegir(genero: string): void {
+    this.genero.set(genero);
+  }
 }
