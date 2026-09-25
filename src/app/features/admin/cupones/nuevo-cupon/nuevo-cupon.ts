@@ -90,7 +90,7 @@ export class NuevoCupon implements OnInit, OnDestroy, FormularioConCambios {
         edad_minima: 51,
         porcentaje: Number(porcentaje),
         vigente_desde: new Date(vigente_desde + 'T00:00:00').toISOString(),
-        vigente_hasta: new Date(vigente_hasta + 'T23:59:59').toISOString(),
+        vigente_hasta: new Date(vigente_hasta + 'T23:59:59.999').toISOString(),
       });
       this.guardado = true;
       await this.router.navigateByUrl('/admin/cupones');
