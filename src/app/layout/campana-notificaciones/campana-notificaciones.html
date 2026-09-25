@@ -1,0 +1,28 @@
+@if (notificaciones.avisos().length > 0) {
+  <section class="avisos" aria-label="Avisos" aria-live="polite">
+    @for (aviso of notificaciones.avisos(); track aviso.id) {
+      <div class="aviso" role="status">
+        <svg class="icono" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4zM10 20a2 2 0 0 0 4 0" />
+        </svg>
+        <div class="texto">
+          <span class="overline">{{ aviso.titulo }}</span>
+          <p class="body-strong">{{ aviso.mensaje }}</p>
+          @if (aviso.pelicula_id !== null) {
+            <a class="enlace caption" [routerLink]="['/cartelera', aviso.pelicula_id]"
+              >Ver funciones</a
+            >
+          }
+        </div>
+        <button
+          type="button"
+          class="nc-btn nc-btn--ghost nc-btn--sm"
+          [attr.aria-label]="'Cerrar aviso: ' + aviso.mensaje"
+          (click)="descartar(aviso.id)"
+        >
+          Cerrar
+        </button>
+      </div>
+    }
+  </section>
+}
