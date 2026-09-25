@@ -1,1 +1,30 @@
 <h1 class="marquee-lg">Próximamente</h1>
+<p class="body intro">
+  Los estrenos de las próximas 4 semanas. Pedí que te avisemos cuando abra la venta.
+</p>
+<ng-template #vacio>
+  <div class="vacio">
+    <h2 class="body-strong">No hay estrenos en las próximas 4 semanas</h2>
+    <p class="body">Mirá la cartelera para ver lo que ya está a la venta.</p>
+  </div>
+</ng-template>
+<ng-template #fallo let-mensaje>
+  <p class="error body" role="alert">{{ mensaje }}</p>
+  <button class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button>
+</ng-template>
+<div class="grilla" *appCargando="estado(); vacio: vacio; error: fallo; let peliculas">
+  @for (pelicula of peliculas; track pelicula.id) {
+    <nc-pelicula-card
+      [pelicula]="pelicula"
+      [imagenUrl]="storage.urlPublica(pelicula.imagen_path)"
+      [generos]="generos(pelicula)"
+      [leyenda]="leyenda(pelicula)"
+      (verDetalle)="detalleId.set(pelicula.id)"
+    >
+      <nc-boton-alerta acciones [peliculaId]="pelicula.id" [titulo]="pelicula.titulo" />
+    </nc-pelicula-card>
+  }
+</div>
+@if (detalleId(); as id) {
+  <nc-detalle-pelicula [peliculaId]="id" (cierre)="detalleId.set(null)" />
+}
