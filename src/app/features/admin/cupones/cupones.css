@@ -1,0 +1,82 @@
+.cupones {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.links {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.descripcion,
+.estado {
+  color: var(--ink-200);
+}
+
+.vacio {
+  padding: var(--space-6);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  background: var(--surface-200);
+}
+
+.aviso,
+.error {
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-md);
+  background: var(--success-tint);
+  color: var(--ink-100);
+}
+
+.error {
+  border-left-color: var(--danger);
+  background: var(--danger-tint);
+}
+
+.tabla-contenedor {
+  position: relative;
+  overflow-x: auto;
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+  background: var(--surface-200);
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th,
+.tabla td {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border-100);
+}
+
+.tabla th {
+  color: var(--ink-300);
+}
+
+.tabla tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.codigo {
+  font-family: var(--font-mono);
+}
+
+.accion {
+  text-align: right;
+}
