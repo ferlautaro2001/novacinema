@@ -1,0 +1,21 @@
+<section class="comentarios" aria-labelledby="titulo-comentarios">
+  <h3 id="titulo-comentarios" class="overline">Comentarios</h3>
+  <ul class="lista">
+    @for (resena of resenas(); track resena.id) {
+      <li class="comentario">
+        <div class="cabecera">
+          <span class="body-strong">{{ resena.autor }}</span>
+          <span class="estrellas">
+            <nc-estrellas [cantidad]="resena.estrellas" />
+          </span>
+          <time class="caption fecha" [attr.datetime]="resena.creadaEn.toISOString()">
+            {{ resena.creadaEn | date: 'dd/MM/yyyy' }}
+          </time>
+        </div>
+        <p class="body">{{ resena.comentario }}</p>
+      </li>
+    } @empty {
+      <li class="body vacio">Todavía nadie comentó esta película</li>
+    }
+  </ul>
+</section>

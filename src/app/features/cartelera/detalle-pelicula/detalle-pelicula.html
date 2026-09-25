@@ -1,6 +1,101 @@
 <nc-modal (cierre)="cierre.emit()">
-  <h2 titulo class="body-strong">Detalle de la película</h2>
-  <button acciones appFocoInicial class="nc-btn nc-btn--secondary" (click)="cierre.emit()">
+  <h2 titulo class="body-strong">
+    @if (pelicula(); as datos) {
+      {{ datos.titulo }}
+    } @else {
+      Detalle de la película
+    }
+  </h2>
+
+  @switch (estado()) {
+    @case ('cargando') {
+      <p class="body estado" role="status">Cargando película…</p>
+    }
+    @case ('no-existe') {
+      <p class="aviso body" role="alert">{{ mensajeNoExiste }}</p>
+    }
+    @case ('error') {
+      <p class="aviso error body" role="alert">{{ mensajeError }}</p>
+    }
+    @case ('listo') {
+      @if (pelicula(); as datos) {
+        <div class="detalle">
+          <div class="informacion">
+            <img class="portada" [src]="portadaUrl()" [alt]="'Portada de ' + datos.titulo" />
+            <div class="datos">
+              <dl class="ficha">
+                <div>
+                  <dt class="caption">Clasificación</dt>
+                  <dd>
+                    <nc-clasificacion
+                      [codigo]="datos.clasificacion.codigo"
+                      [edadMinima]="datos.clasificacion.edad_minima"
+                    />
+                  </dd>
+                </div>
+                <div>
+                  <dt class="caption">Duración</dt>
+                  <dd class="body">{{ datos.duracion_min | duracion }}</dd>
+                </div>
+                <div>
+                  <dt class="caption">Puntuación</dt>
+                  <dd class="body-strong">
+                    {{ puntuacion() | puntaje }}
+                    @if (puntuacion() !== null) {
+                      <span class="caption">de 10</span>
+                    }
+                  </dd>
+                </div>
+                <div>
+                  <dt class="caption">Géneros</dt>
+                  <dd class="body">
+                    @for (genero of generos(); track genero; let ultimo = $last) {
+                      {{ genero }}
+                      @if (ultimo === false) {
+                        ·
+                      }
+                    } @empty {
+                      Sin género
+                    }
+                  </dd>
+                </div>
+              </dl>
+              <p class="body sinopsis">{{ datos.sinopsis }}</p>
+            </div>
+          </div>
+
+          <section class="funciones" aria-labelledby="titulo-funciones">
+            <h3 id="titulo-funciones" class="overline">Funciones</h3>
+            @for (dia of dias(); track dia.dia.getTime()) {
+              <div class="dia">
+                <h4 class="body-strong">{{ dia.dia | date: "EEEE d 'de' MMMM" }}</h4>
+                <ul class="horarios">
+                  @for (funcion of dia.funciones; track funcion.id) {
+                    <li class="horario">
+                      <span class="body-strong">{{ funcion.comienzaEn | date: 'HH:mm' }}</span>
+                      <span class="caption">{{ funcion.formato }} · {{ funcion.idioma }}</span>
+                    </li>
+                  }
+                </ul>
+              </div>
+            } @empty {
+              <p class="body estado">Por ahora no hay funciones a la venta.</p>
+            }
+          </section>
+
+          <nc-resenas-pelicula [resenas]="comentarios()" />
+        </div>
+      }
+    }
+  }
+
+  <button
+    acciones
+    appFocoInicial
+    type="button"
+    class="nc-btn nc-btn--secondary"
+    (click)="cierre.emit()"
+  >
     Cerrar
   </button>
 </nc-modal>
