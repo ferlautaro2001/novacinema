@@ -1,8 +1,7 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
 import { CuponesService } from '../../../../core/data/cupones-service';
 import { FormularioConCambios } from '../../../../core/guards/cambios-pendientes-guard';
 import { CampoTexto } from '../../../../shared/ui/campo-texto/campo-texto';
@@ -17,14 +16,14 @@ import { finNoAnterior } from './vigencia';
   templateUrl: './nuevo-cupon.html',
   styleUrl: './nuevo-cupon.css',
 })
-export class NuevoCupon implements OnInit, OnDestroy, FormularioConCambios {
+export class NuevoCupon implements FormularioConCambios {
   private fb = inject(FormBuilder).nonNullable;
   private cupones = inject(CuponesService);
   private router = inject(Router);
 
   form = this.fb.group(
     {
-      codigo: ['', [Validators.required, Validators.pattern(/^[A-Z0-9]{4,12}$/)]],
+      codigo: ['', [Validators.required, Validators.pattern(/^[A-Za-z0-9]{4,12}$/)]],
       porcentaje: this.fb.control<number | null>(null, [
         Validators.required,
         Validators.min(1),
@@ -41,23 +40,6 @@ export class NuevoCupon implements OnInit, OnDestroy, FormularioConCambios {
   error = signal('');
 
   private guardado = false;
-  private suscripcion?: Subscription;
-
-  ngOnInit(): void {
-    // El código se guarda en mayúsculas: lo paso a mayúsculas mientras el admin escribe.
-    // No uso emitEvent: false porque el campo tiene que enterarse para actualizar sus errores.
-    const codigo = this.form.controls.codigo;
-    this.suscripcion = codigo.valueChanges.subscribe((valor) => {
-      const mayusculas = valor.toUpperCase();
-      if (mayusculas !== valor) {
-        codigo.setValue(mayusculas);
-      }
-    });
-  }
-
-  ngOnDestroy(): void {
-    this.suscripcion?.unsubscribe();
-  }
 
   noGuardado(): boolean {
     return this.form.dirty && !this.guardado;
@@ -84,8 +66,9 @@ export class NuevoCupon implements OnInit, OnDestroy, FormularioConCambios {
     try {
       // En la base la vigencia es un momento: va desde el primer minuto del día de
       // inicio hasta el último del día de fin.
+      // Los códigos se guardan siempre en mayúsculas.
       await this.cupones.crear({
-        codigo,
+        codigo: codigo.toUpperCase(),
         tipo: 'edad_minima',
         edad_minima: 51,
         porcentaje: Number(porcentaje),
