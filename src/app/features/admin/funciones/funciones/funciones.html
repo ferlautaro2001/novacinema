@@ -3,11 +3,13 @@
     <div class="titulo-acciones">
       <div>
         <h2>Funciones</h2>
-        <p class="descripcion">
-          Consultá y gestioná las funciones programadas por día y por sala.
-        </p>
+        <p class="descripcion">Consultá y gestioná las funciones programadas por día y por sala.</p>
       </div>
-      <a routerLink="/admin/funciones/programar" class="nc-btn nc-btn--primary" id="btn-nueva-programacion">
+      <a
+        routerLink="/admin/funciones/programar"
+        class="nc-btn nc-btn--primary"
+        id="btn-nueva-programacion"
+      >
         + Programar funciones
       </a>
     </div>
@@ -62,8 +64,8 @@
 
   <ng-template #filaFuncion let-f>
     <td>
-      <strong>{{ f.comienzaEn | date:'HH:mm' }}</strong>
-      <span class="hora-fin"> a {{ f.terminaEn | date:'HH:mm' }}</span>
+      <strong>{{ f.comienzaEn | date: 'HH:mm' }}</strong>
+      <span class="hora-fin"> a {{ f.terminaEn | date: 'HH:mm' }}</span>
     </td>
     <td>
       <span class="resumen-texto">{{ f.textoResumen }}</span>
@@ -96,7 +98,11 @@
   @if (confirmacion(); as f) {
     <nc-modal [ocupado]="eliminando() === f.id" (cierre)="confirmacion.set(null)">
       <h2 titulo class="marquee-md">Eliminar función</h2>
-      <p>¿Querés eliminar la función de “{{ f.peliculaTitulo }}” en {{ f.salaNombre }} ({{ f.comienzaEn | date:'HH:mm' }})? Esta acción no se puede deshacer.</p>
+      <p>
+        ¿Querés eliminar la función de “{{ f.peliculaTitulo }}” en {{ f.salaNombre }} ({{
+          f.comienzaEn | date: 'HH:mm'
+        }})? Esta acción no se puede deshacer.
+      </p>
       <button
         acciones
         type="button"
@@ -125,7 +131,7 @@
       <div class="cuerpo-cancelacion">
         <p>
           ¿Querés cancelar la función de “{{ c.funcion.peliculaTitulo }}” en
-          {{ c.funcion.salaNombre }} ({{ c.funcion.comienzaEn | date:'HH:mm' }})?
+          {{ c.funcion.salaNombre }} ({{ c.funcion.comienzaEn | date: 'HH:mm' }})?
         </p>
 
         @if (c.detalle.totalEntradas > 0) {
@@ -134,11 +140,17 @@
               <strong>{{ c.detalle.comprasRegistradas }} compras con crédito automático</strong>
             </p>
             <div class="resumen-afectado-item">
-              <strong>{{ c.detalle.comprasAnonimas.length }} compras anónimas a resolver en boletería</strong>
+              <strong
+                >{{ c.detalle.comprasAnonimas.length }} compras anónimas a resolver en
+                boletería</strong
+              >
               @if (c.detalle.comprasAnonimas.length > 0) {
                 <ul class="lista-codigos-anonimos">
                   @for (anon of c.detalle.comprasAnonimas; track anon.codigo) {
-                    <li>Código: <code>{{ anon.codigo }}</code> ({{ anon.cantidadEntradas }} {{ anon.cantidadEntradas === 1 ? 'entrada' : 'entradas' }})</li>
+                    <li>
+                      Código: <code>{{ anon.codigo }}</code> ({{ anon.cantidadEntradas }}
+                      {{ anon.cantidadEntradas === 1 ? 'entrada' : 'entradas' }})
+                    </li>
                   }
                 </ul>
               }
@@ -149,7 +161,8 @@
         }
 
         <p class="nota-cancelacion">
-          Al confirmar, las entradas quedarán anuladas, se devolverá el dinero a los compradores registrados y la sala quedará libre en este horario.
+          Al confirmar, las entradas quedarán anuladas, se devolverá el dinero a los compradores
+          registrados y la sala quedará libre en este horario.
         </p>
       </div>
 

@@ -9,31 +9,21 @@ import {
 } from '@angular/core';
 
 export function soportaWebgl(): boolean {
-  if (typeof window === 'undefined' || typeof document === 'undefined') {
-    return false;
-  }
+  if (typeof window === 'undefined' || typeof document === 'undefined') return false;
+
   try {
+    if (!window.WebGLRenderingContext) return false;
     const canvas = document.createElement('canvas');
-    return !!(
-      window.WebGLRenderingContext &&
-      (canvas.getContext('webgl2') ||
-        canvas.getContext('webgl') ||
-        (canvas.getContext as (id: string) => unknown)('experimental-webgl'))
-    );
+    if (canvas.getContext('webgl2') || canvas.getContext('webgl')) return true;
+    // experimental-webgl no está en los tipos de getContext, por eso el cast.
+    return !!(canvas.getContext as (id: string) => unknown)('experimental-webgl');
   } catch {
     return false;
   }
 }
 
-// Directiva estructural que valida la disponibilidad de WebGL en el navegador (AC-04.02.04).
-// Si hay soporte de WebGL, renderiza la vista 3D o el botón 3D activo.
-// Si no hay soporte, renderiza la plantilla alternativa `sino:`.
-//
-// Uso:
-//   <button *appSiWebgl="; sino: tplSinWebgl" ...>Vista 3D</button>
-//   <ng-template #tplSinWebgl>
-//     <button disabled title="3D no disponible en este navegador">3D no disponible en este navegador</button>
-//   </ng-template>
+// Uso: <button *appSiWebgl="; sino: tplSinWebgl">Vista 3D</button>
+// Si recibe un boolean lo uso tal cual; si no, pruebo el navegador.
 @Directive({ selector: '[appSiWebgl]' })
 export class SiWebgl implements OnInit, OnChanges {
   appSiWebgl = input<boolean | string | null | undefined>(undefined);
@@ -42,6 +32,7 @@ export class SiWebgl implements OnInit, OnChanges {
   private template = inject(TemplateRef);
   private contenedor = inject(ViewContainerRef);
 
+  // También en ngOnInit porque si no se enlaza ningún input, ngOnChanges no corre.
   ngOnInit(): void {
     this.actualizar();
   }
@@ -52,19 +43,21 @@ export class SiWebgl implements OnInit, OnChanges {
 
   private actualizar(): void {
     this.contenedor.clear();
-    const val = this.appSiWebgl();
-    const soportado =
-      typeof val === 'boolean'
-        ? val
-        : soportaWebgl();
+
+    const valor = this.appSiWebgl();
+    let soportado: boolean;
+    if (typeof valor === 'boolean') {
+      soportado = valor;
+    } else {
+      soportado = soportaWebgl();
+    }
 
     if (soportado) {
       this.contenedor.createEmbeddedView(this.template);
-    } else {
-      const sino = this.appSiWebglSino();
-      if (sino) {
-        this.contenedor.createEmbeddedView(sino);
-      }
+      return;
     }
+
+    const sino = this.appSiWebglSino();
+    if (sino) this.contenedor.createEmbeddedView(sino);
   }
 }

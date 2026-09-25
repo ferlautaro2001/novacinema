@@ -14,9 +14,9 @@ export interface ParametrosProgramacion {
   peliculaId: string;
   duracionMin: number;
   fechaInicio: string; // 'AAAA-MM-DD'
-  semanas: number; // 1, 2, 3, 4
-  diasSemana: number[]; // 1=Lun ... 7=Dom
-  horarios: string[]; // ['18:00', '21:00']
+  semanas: number;
+  diasSemana: number[]; // 1 = lunes ... 7 = domingo
+  horarios: string[]; // 'HH:MM'
   formatoId: number;
   versionIdiomaId: number;
 }
@@ -63,116 +63,102 @@ export class ProgramacionService {
     return salas.filter((s) => s.activa).sort((a, b) => a.numero - b.numero);
   }
 
+  // Si no está configurado, uso los 30 minutos que pide el enunciado.
   async obtenerMinutosLimpieza(): Promise<number> {
-    try {
-      const { data, error } = await this.supS.Sup
-        .from('configuracion')
-        .select('valor')
-        .eq('clave', 'minutos_limpieza')
-        .single();
-      if (error || !data) return 30;
-      return parseInt(data.valor, 10) || 30;
-    } catch {
-      return 30;
-    }
+    const { data, error } = await this.supS.Sup.from('configuracion')
+      .select('valor')
+      .eq('clave', 'minutos_limpieza')
+      .single();
+    if (error) return 30;
+    return parseInt(data.valor, 10) || 30;
   }
 
   async obtenerFormatos(): Promise<FormatoInfo[]> {
-    const { data, error } = await this.supS.Sup
-      .from('formatos')
+    const { data, error } = await this.supS.Sup.from('formatos')
       .select('id, codigo, nombre')
       .order('id');
     if (error) throw error;
-    return data ?? [];
+    return data;
   }
 
   async obtenerVersionesIdioma(): Promise<VersionIdiomaInfo[]> {
-    const { data, error } = await this.supS.Sup
-      .from('versiones_idioma')
+    const { data, error } = await this.supS.Sup.from('versiones_idioma')
       .select('id, codigo, nombre')
       .order('id');
     if (error) throw error;
-    return data ?? [];
+    return data;
   }
 
   async consultarFuncionesDelDia(fechaStr: string): Promise<Funcion[]> {
-    const desde = `${fechaStr}T00:00:00.000Z`;
-    const hasta = `${fechaStr}T23:59:59.999Z`;
-
-    const { data, error } = await this.supS.Sup
-      .from('funciones')
+    const { data, error } = await this.supS.Sup.from('funciones')
       .select('*')
-      .gte('comienza_en', desde)
-      .lte('comienza_en', hasta)
+      .gte('comienza_en', `${fechaStr}T00:00:00.000Z`)
+      .lte('comienza_en', `${fechaStr}T23:59:59.999Z`)
       .neq('estado', 'cancelada');
-
     if (error) throw error;
-    return (data as Funcion[]) ?? [];
+    return data as Funcion[];
   }
 
-  async calcularProgramacion(
-    params: ParametrosProgramacion
-  ): Promise<ItemResumenProgramacion[]> {
+  async calcularProgramacion(params: ParametrosProgramacion): Promise<ItemResumenProgramacion[]> {
     const salas = await this.obtenerSalasActivas();
     const minutosLimpieza = await this.obtenerMinutosLimpieza();
     const ocurrencias = calcularOcurrencias(
       params.fechaInicio,
       params.semanas,
       params.diasSemana,
-      params.horarios
+      params.horarios,
     );
 
     const funcionesPorDia = new Map<string, Funcion[]>();
-    const fechasUnicas = [...new Set(ocurrencias.map((o) => o.fecha))];
-
-    for (const f of fechasUnicas) {
-      const lista = await this.consultarFuncionesDelDia(f);
-      funcionesPorDia.set(f, [...lista]);
+    for (const oc of ocurrencias) {
+      if (!funcionesPorDia.has(oc.fecha)) {
+        funcionesPorDia.set(oc.fecha, await this.consultarFuncionesDelDia(oc.fecha));
+      }
     }
 
     const resultado: ItemResumenProgramacion[] = [];
-
     for (const oc of ocurrencias) {
-      const funcionesExistentes = funcionesPorDia.get(oc.fecha) || [];
+      const funcionesDelDia = funcionesPorDia.get(oc.fecha)!;
       const sala = asignarSala(
         salas,
-        funcionesExistentes,
+        funcionesDelDia,
         oc.fechaHora,
         params.duracionMin,
-        minutosLimpieza
+        minutosLimpieza,
       );
 
-      if (sala) {
-        resultado.push({
-          ocurrencia: oc,
-          sala,
-          asignada: true,
-        });
-
-        // Agregamos virtualmente la función asignada a la lista del día para que
-        // las siguientes ocurrencias de esa misma programación no choquen en la misma sala
-        funcionesExistentes.push({
-          id: `simulada-${oc.fecha}-${oc.hora}`,
-          sala_id: sala.id,
-          pelicula_id: params.peliculaId,
-          formato_id: params.formatoId,
-          version_idioma_id: params.versionIdiomaId,
-          comienza_en: oc.fechaHora.toISOString(),
-          duracion_min: params.duracionMin,
-          termina_en: new Date(oc.fechaHora.getTime() + params.duracionMin * 60000).toISOString(),
-          libre_desde: new Date(oc.fechaHora.getTime() + (params.duracionMin + minutosLimpieza) * 60000).toISOString(),
-          estado: 'programada',
-          creada_en: new Date().toISOString(),
-          actualizado_en: new Date().toISOString(),
-        });
-      } else {
+      if (!sala) {
         resultado.push({
           ocurrencia: oc,
           sala: null,
           asignada: false,
           motivo: `Sin sala disponible: ${formatearDiaFechaHora(oc.fecha, oc.hora)}`,
         });
+        continue;
       }
+
+      resultado.push({ ocurrencia: oc, sala, asignada: true });
+
+      // Sumo la función al día como si ya existiera, así las siguientes de esta
+      // misma programación no se superponen en la misma sala.
+      const inicio = oc.fechaHora.getTime();
+      const ahora = new Date().toISOString();
+      funcionesDelDia.push({
+        id: `simulada-${oc.fecha}-${oc.hora}`,
+        sala_id: sala.id,
+        pelicula_id: params.peliculaId,
+        formato_id: params.formatoId,
+        version_idioma_id: params.versionIdiomaId,
+        comienza_en: oc.fechaHora.toISOString(),
+        duracion_min: params.duracionMin,
+        termina_en: new Date(inicio + params.duracionMin * 60000).toISOString(),
+        libre_desde: new Date(
+          inicio + (params.duracionMin + minutosLimpieza) * 60000,
+        ).toISOString(),
+        estado: 'programada',
+        creada_en: ahora,
+        actualizado_en: ahora,
+      });
     }
 
     return resultado;
@@ -183,36 +169,32 @@ export class ProgramacionService {
     peliculaId: string,
     duracionMin: number,
     formatoId: number,
-    versionIdiomaId: number
+    versionIdiomaId: number,
   ): Promise<{ creadas: number; fallidas: number; errores: string[] }> {
-    const aCrear = items.filter((i) => i.asignada && i.sala !== null);
     let creadas = 0;
     let fallidas = 0;
     const errores: string[] = [];
 
-    for (const item of aCrear) {
-      try {
-        const { error } = await this.supS.Sup.from('funciones').insert({
-          pelicula_id: peliculaId,
-          sala_id: item.sala!.id,
-          formato_id: formatoId,
-          version_idioma_id: versionIdiomaId,
-          comienza_en: item.ocurrencia.fechaHora.toISOString(),
-          duracion_min: duracionMin,
-          estado: 'programada',
-        });
+    for (const item of items) {
+      if (!item.asignada || !item.sala) continue;
 
-        if (error) {
-          fallidas++;
-          errores.push(
-            `Error al programar ${item.ocurrencia.fecha} ${item.ocurrencia.hora}: ${error.message}`
-          );
-        } else {
-          creadas++;
-        }
-      } catch (err: any) {
+      const { error } = await this.supS.Sup.from('funciones').insert({
+        pelicula_id: peliculaId,
+        sala_id: item.sala.id,
+        formato_id: formatoId,
+        version_idioma_id: versionIdiomaId,
+        comienza_en: item.ocurrencia.fechaHora.toISOString(),
+        duracion_min: duracionMin,
+        estado: 'programada',
+      });
+
+      if (error) {
         fallidas++;
-        errores.push(err?.message || 'Error inesperado');
+        errores.push(
+          `Error al programar ${item.ocurrencia.fecha} ${item.ocurrencia.hora}: ${error.message}`,
+        );
+      } else {
+        creadas++;
       }
     }
 
@@ -220,127 +202,99 @@ export class ProgramacionService {
   }
 
   async contarEntradasVendidas(funcionId: string): Promise<number> {
-    const { count, error } = await this.supS.Sup
-      .from('entradas')
+    const { count, error } = await this.supS.Sup.from('entradas')
       .select('*', { count: 'exact', head: true })
       .eq('funcion_id', funcionId)
       .is('anulada_en', null);
-
     if (error) throw error;
     return count ?? 0;
   }
 
   async eliminarFuncion(funcionId: string): Promise<void> {
-    const entradas = await this.contarEntradasVendidas(funcionId);
-    if (entradas > 0) {
-      throw new Error('No se puede eliminar una función con entradas vendidas');
+    const mensaje = 'No se puede eliminar una función con entradas vendidas';
+    if ((await this.contarEntradasVendidas(funcionId)) > 0) {
+      throw new Error(mensaje);
     }
 
-    const { error } = await this.supS.Sup
-      .from('funciones')
-      .delete()
-      .eq('id', funcionId);
-
-    if (error) {
-      if (error.code === '23503') {
-        throw new Error('No se puede eliminar una función con entradas vendidas');
-      }
-      throw error;
-    }
+    const { error } = await this.supS.Sup.from('funciones').delete().eq('id', funcionId);
+    // 23503: todavía hay entradas (aunque estén anuladas) que apuntan a la función.
+    if (error?.code === '23503') throw new Error(mensaje);
+    if (error) throw error;
   }
 
-  async obtenerDetalleCancelacion(
-    funcionId: string
-  ): Promise<DetalleCancelacionFuncion> {
-    const { data, error } = await this.supS.Sup
-      .from('entradas')
-      .select(`
-        id,
-        compra_id,
-        compras (
-          id,
-          codigo,
-          usuario_id,
-          estado
-        )
-      `)
+  async obtenerDetalleCancelacion(funcionId: string): Promise<DetalleCancelacionFuncion> {
+    const { data, error } = await this.supS.Sup.from('entradas')
+      .select('id, compras(id, codigo, usuario_id)')
       .eq('funcion_id', funcionId)
       .is('anulada_en', null);
-
     if (error) throw error;
 
-    const entradas = (data ?? []) as any[];
-    const comprasMap = new Map<
+    // Agrupo las entradas por compra.
+    const compras = new Map<
       string,
-      { codigo: string; usuario_id: string | null; cantidad: number }
+      { codigo: string; usuarioId: string | null; cantidad: number }
     >();
-
-    for (const item of entradas) {
-      const c = item.compras;
-      if (!c) continue;
-      const cid = c.id;
-      if (!comprasMap.has(cid)) {
-        comprasMap.set(cid, {
-          codigo: c.codigo || 'SIN-CODIGO',
-          usuario_id: c.usuario_id ?? null,
-          cantidad: 0,
+    for (const entrada of data) {
+      const compra = entrada.compras;
+      if (!compra) continue;
+      const existente = compras.get(compra.id);
+      if (existente) {
+        existente.cantidad++;
+      } else {
+        compras.set(compra.id, {
+          codigo: compra.codigo || 'SIN-CODIGO',
+          usuarioId: compra.usuario_id,
+          cantidad: 1,
         });
       }
-      comprasMap.get(cid)!.cantidad++;
     }
 
     let comprasRegistradas = 0;
     const comprasAnonimas: CompraResumenCancelacion[] = [];
-    const usuarioIdsSet = new Set<string>();
-
-    for (const c of comprasMap.values()) {
-      if (c.usuario_id) {
+    const usuarioIds = new Set<string>();
+    for (const compra of compras.values()) {
+      if (compra.usuarioId) {
         comprasRegistradas++;
-        usuarioIdsSet.add(c.usuario_id);
+        usuarioIds.add(compra.usuarioId);
       } else {
-        comprasAnonimas.push({
-          codigo: c.codigo,
-          cantidadEntradas: c.cantidad,
-        });
+        comprasAnonimas.push({ codigo: compra.codigo, cantidadEntradas: compra.cantidad });
       }
     }
 
     return {
       funcionId,
-      totalEntradas: entradas.length,
+      totalEntradas: data.length,
       comprasRegistradas,
       comprasAnonimas,
-      usuarioIds: Array.from(usuarioIdsSet),
+      usuarioIds: [...usuarioIds],
     };
   }
 
   async cancelarFuncion(
     funcionId: string,
     peliculaTitulo?: string,
-    fechaHora?: string
+    fechaHora?: string,
   ): Promise<void> {
     const detalle = await this.obtenerDetalleCancelacion(funcionId);
 
-    const { error } = await this.supS.Sup
-      .from('funciones')
+    const { error } = await this.supS.Sup.from('funciones')
       .update({ estado: 'cancelada' })
       .eq('id', funcionId);
-
     if (error) throw error;
 
-    if (detalle.usuarioIds.length > 0) {
-      try {
-        const notificaciones = detalle.usuarioIds.map((uid) => ({
-          usuario_id: uid,
-          titulo: `Función cancelada: ${peliculaTitulo || 'Función'}`,
-          mensaje: `La función de ${peliculaTitulo || 'la película'} programada para el ${fechaHora || 'horario programado'} fue cancelada. Se acreditó el dinero a favor en tu cuenta.`,
-          tipo: 'funcion_cancelada',
-        }));
+    if (detalle.usuarioIds.length === 0) return;
 
-        await this.supS.Sup.from('notificaciones').insert(notificaciones);
-      } catch {
-        // En caso de que la inserción de notificaciones no esté permitida por RLS
-      }
-    }
+    const titulo = peliculaTitulo || 'Función';
+    const pelicula = peliculaTitulo || 'la película';
+    const horario = fechaHora || 'horario programado';
+    const notificaciones = detalle.usuarioIds.map((usuarioId) => ({
+      usuario_id: usuarioId,
+      titulo: `Función cancelada: ${titulo}`,
+      mensaje: `La función de ${pelicula} programada para el ${horario} fue cancelada. Se acreditó el dinero a favor en tu cuenta.`,
+      tipo: 'funcion_cancelada',
+    }));
+    // Si RLS no deja insertar las notificaciones, la función ya quedó cancelada
+    // igual: por eso no miro el error.
+    await this.supS.Sup.from('notificaciones').insert(notificaciones);
   }
 }

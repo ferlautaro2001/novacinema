@@ -7,6 +7,7 @@ export const EDADES_MINIMAS: Record<ClasificacionCodigo, number> = {
   '+16': 16,
   '+18': 18,
 };
+
 export const GENEROS_PELICULA = [
   'Acción',
   'Animación',
@@ -22,19 +23,20 @@ export const GENEROS_PELICULA = [
   'Suspenso',
   'Terror',
 ];
-// El catálogo importado de TMDB conserva sus ids; adaptamos las etiquetas al TP.
+
+// El catálogo importado de TMDB trae algunos géneros con otro nombre.
 export function nombreGenero(nombre: string): string {
-  const equivalencias: Record<string, string> = {
-    Familia: 'Familiar',
-    Música: 'Musical',
-    Suspense: 'Suspenso',
-  };
-  return equivalencias[nombre] ?? nombre;
+  if (nombre === 'Familia') return 'Familiar';
+  if (nombre === 'Música') return 'Musical';
+  if (nombre === 'Suspense') return 'Suspenso';
+  return nombre;
 }
+
 export interface PeliculaConCatalogo extends Pelicula {
   clasificacion: { codigo: ClasificacionCodigo; edad_minima: number };
   pelicula_generos: { genero: { id: number; nombre: string } }[];
 }
+
 export interface DatosPelicula {
   titulo: string;
   sinopsis: string;
@@ -45,8 +47,7 @@ export interface DatosPelicula {
   estado: EstadoPelicula;
 }
 
-// `estado` se angosta al alias literal: en la base es text con CHECK, y los
-// tipos generados lo ven como string.
+// En la base estado es text con CHECK, por eso lo piso con el tipo literal.
 export type Pelicula = Omit<Tables<'peliculas'>, 'estado'> & { estado: EstadoPelicula };
 export type PeliculaPorCrear = TablesInsert<'peliculas'>;
 export type PeliculaPorModificar = TablesUpdate<'peliculas'>;

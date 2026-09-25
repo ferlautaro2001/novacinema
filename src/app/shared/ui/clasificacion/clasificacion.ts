@@ -1,7 +1,6 @@
 import { Component, input } from '@angular/core';
 
-// Distintivo de la clasificación por edad. La edad mínima llega por input (sale de
-// la tabla clasificaciones), así el componente no depende del modelo de core.
+// La edad mínima la recibo por input para no depender del modelo de core.
 @Component({
   selector: 'nc-clasificacion',
   templateUrl: './clasificacion.html',

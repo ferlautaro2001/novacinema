@@ -2,9 +2,8 @@ import { Component, input, output } from '@angular/core';
 import { Clasificacion } from '../clasificacion/clasificacion';
 import { DuracionPipe } from '../../pipes/duracion-pipe';
 
-// Lo que la tarjeta necesita mostrar. Es un subconjunto de la película de core:
-// quien la usa le pasa la suya tal cual, y la URL de la portada ya armada, para que
-// este componente no dependa del modelo ni de Storage.
+// Solo los campos que muestra la tarjeta. Quien la usa le pasa su película y la URL
+// de la portada ya armada, así este componente no depende de core ni de Storage.
 export interface PeliculaTarjeta {
   titulo: string;
   sinopsis: string;
@@ -22,6 +21,5 @@ export interface PeliculaTarjeta {
 export class PeliculaCard {
   pelicula = input.required<PeliculaTarjeta>();
   imagenUrl = input.required<string>();
-  // Sin datos: quien usa la tarjeta ya sabe qué película es.
   verDetalle = output<void>();
 }

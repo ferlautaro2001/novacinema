@@ -11,8 +11,8 @@ export interface OcurrenciaProgramacion {
   fecha: string; // 'AAAA-MM-DD'
   hora: string; // 'HH:MM'
   fechaHora: Date;
-  diaSemana: number; // 0=Domingo, 1=Lunes, ...
-  diaNombre: string; // 'lunes', 'martes', etc.
+  diaSemana: number; // 0 = domingo, como Date.getDay()
+  diaNombre: string;
 }
 
 export interface AsignacionResultado {
@@ -21,15 +21,7 @@ export interface AsignacionResultado {
   mensaje?: string;
 }
 
-const NOMBRES_DIAS: Record<number, string> = {
-  0: 'domingo',
-  1: 'lunes',
-  2: 'martes',
-  3: 'miércoles',
-  4: 'jueves',
-  5: 'viernes',
-  6: 'sábado',
-};
+const NOMBRES_DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
 
 export function parseFechaHora(valor: string | Date): Date {
   return valor instanceof Date ? valor : new Date(valor);
@@ -39,13 +31,13 @@ export function calcularFin(comienza: Date, duracionMinutos: number): Date {
   return new Date(comienza.getTime() + duracionMinutos * 60 * 1000);
 }
 
-// Verifica si una sala está libre para una nueva función, exigiendo un intervalo
-// mínimo de limpieza (por defecto 30 minutos) antes y después de cada función (AC-04.04.01, AC-04.04.02).
+// Entre una función y otra de la misma sala tiene que quedar el tiempo de limpieza,
+// tanto antes como después de la nueva.
 export function salaLibre(
   funcionesDeLaSala: IntervaloHorario[],
   nuevoInicio: string | Date,
   duracionMinutos: number,
-  intervaloLimpiezaMinutos = 30
+  intervaloLimpiezaMinutos = 30,
 ): boolean {
   const inicioNuevo = parseFechaHora(nuevoInicio);
   const finNuevo = calcularFin(inicioNuevo, duracionMinutos);
@@ -53,19 +45,16 @@ export function salaLibre(
 
   for (const f of funcionesDeLaSala) {
     const fInicio = parseFechaHora(f.comienza_en);
-    const fFin = f.termina_en
-      ? parseFechaHora(f.termina_en)
-      : f.duracion_min
-        ? calcularFin(fInicio, f.duracion_min)
-        : fInicio;
+    let fFin = fInicio;
+    if (f.termina_en) {
+      fFin = parseFechaHora(f.termina_en);
+    } else if (f.duracion_min) {
+      fFin = calcularFin(fInicio, f.duracion_min);
+    }
 
-    // Para que no haya solape ni conflicto de limpieza:
-    // La nueva debe empezar al menos 30 min después de fFin, O
-    // fInicio debe empezar al menos 30 min después de finNuevo.
-    const despues = inicioNuevo.getTime() >= fFin.getTime() + limpiezaMs;
-    const antes = fInicio.getTime() >= finNuevo.getTime() + limpiezaMs;
-
-    if (!despues && !antes) {
+    const empiezaDespues = inicioNuevo.getTime() >= fFin.getTime() + limpiezaMs;
+    const terminaAntes = fInicio.getTime() >= finNuevo.getTime() + limpiezaMs;
+    if (!empiezaDespues && !terminaAntes) {
       return false;
     }
   }
@@ -73,17 +62,15 @@ export function salaLibre(
   return true;
 }
 
-// Asigna automáticamente la sala activa de menor número disponible (AC-04.03.02).
+// Elige la sala activa libre de menor número.
 export function asignarSala(
   salas: Sala[],
   funcionesExistentes: IntervaloHorario[],
   nuevoInicio: string | Date,
   duracionMinutos: number,
-  intervaloLimpiezaMinutos = 30
+  intervaloLimpiezaMinutos = 30,
 ): Sala | null {
-  const salasActivas = salas
-    .filter((s) => s.activa)
-    .sort((a, b) => a.numero - b.numero);
+  const salasActivas = salas.filter((s) => s.activa).sort((a, b) => a.numero - b.numero);
 
   for (const sala of salasActivas) {
     const funcionesDeSala = funcionesExistentes.filter((f) => f.sala_id === sala.id);
@@ -95,46 +82,36 @@ export function asignarSala(
   return null;
 }
 
-// Calcula las ocurrencias a partir de fecha de inicio, cantidad de semanas,
-// días de la semana (1=Lun ... 7=Dom o 0=Dom) y lista de horarios 'HH:MM' (AC-04.03.01).
+// Días de la semana de 1 (lunes) a 7 (domingo); también acepta 0 como domingo.
 export function calcularOcurrencias(
   fechaInicioStr: string,
   semanas: number,
   diasSemana: number[],
-  horarios: string[]
+  horarios: string[],
 ): OcurrenciaProgramacion[] {
   const ocurrencias: OcurrenciaProgramacion[] = [];
   const [año, mes, dia] = fechaInicioStr.split('-').map(Number);
-  const totalDias = semanas * 7;
+  // Date.getDay() usa 0 para el domingo.
+  const dias = diasSemana.map((d) => (d === 7 ? 0 : d));
 
-  // Normalizamos días seleccionados (si vienen 1..7 donde 7 es Domingo, se mapea a 0)
-  const diasNormalizados = diasSemana.map((d) => (d === 7 ? 0 : d));
+  for (let i = 0; i < semanas * 7; i++) {
+    const fecha = new Date(año, mes - 1, dia + i);
+    const diaSemana = fecha.getDay();
+    if (!dias.includes(diaSemana)) continue;
 
-  for (let offset = 0; offset < totalDias; offset++) {
-    const fechaActual = new Date(año, mes - 1, dia + offset);
-    const diaActualSemana = fechaActual.getDay();
+    const m = String(fecha.getMonth() + 1).padStart(2, '0');
+    const d = String(fecha.getDate()).padStart(2, '0');
+    const fechaTexto = `${fecha.getFullYear()}-${m}-${d}`;
 
-    if (!diasNormalizados.includes(diaActualSemana)) {
-      continue;
-    }
-
-    const y = fechaActual.getFullYear();
-    const m = String(fechaActual.getMonth() + 1).padStart(2, '0');
-    const d = String(fechaActual.getDate()).padStart(2, '0');
-    const fechaFmt = `${y}-${m}-${d}`;
-    const diaNombre = NOMBRES_DIAS[diaActualSemana];
-
-    for (const h of horarios) {
-      if (!h || !h.includes(':')) continue;
-      const [horas, minutos] = h.split(':').map(Number);
-      const fechaHora = new Date(y, fechaActual.getMonth(), fechaActual.getDate(), horas, minutos, 0, 0);
-
+    for (const hora of horarios) {
+      if (!hora || !hora.includes(':')) continue;
+      const [horas, minutos] = hora.split(':').map(Number);
       ocurrencias.push({
-        fecha: fechaFmt,
-        hora: h,
-        fechaHora,
-        diaSemana: diaActualSemana,
-        diaNombre,
+        fecha: fechaTexto,
+        hora,
+        fechaHora: new Date(fecha.getFullYear(), fecha.getMonth(), fecha.getDate(), horas, minutos),
+        diaSemana,
+        diaNombre: NOMBRES_DIAS[diaSemana],
       });
     }
   }
@@ -146,8 +123,7 @@ export function calcularOcurrencias(
 export function formatearDiaFechaHora(fechaStr: string, hora: string): string {
   const [y, m, d] = fechaStr.split('-').map(Number);
   const fecha = new Date(y, m - 1, d);
-  const diaNombre = NOMBRES_DIAS[fecha.getDay()];
   const dia = String(d).padStart(2, '0');
   const mes = String(m).padStart(2, '0');
-  return `${diaNombre} ${dia}/${mes} ${hora}`;
+  return `${NOMBRES_DIAS[fecha.getDay()]} ${dia}/${mes} ${hora}`;
 }

@@ -11,14 +11,12 @@ import {
 } from '../reglas/actividad';
 import { Supabase } from '../supabase/supabase-client';
 
-// Solo lectura a propósito: el log lo escribe la base con triggers y nadie
-// puede modificarlo ni borrarlo (AC-01.06.02). Por eso acá no hay alta, edición
-// ni baja.
+// Solo lectura a propósito: el log lo escribe la base con triggers y nadie puede
+// modificarlo ni borrarlo.
 @Service()
 export class ActividadService {
   private supS = inject(Supabase);
 
-  // Del más reciente al más antiguo, con autor, acción y detalle legibles.
   async findAll(): Promise<RegistroActividad[]> {
     const { data, error } = await this.supS.Sup.from('actividad')
       .select(
@@ -42,34 +40,28 @@ export class ActividadService {
     });
   }
 
-  // El trigger guarda ids; busco de una sola vez los nombres que hacen falta,
-  // una consulta por tabla y solo si hay algo que buscar.
+  // El trigger guarda ids: junto los que hacen falta y busco los nombres con una
+  // consulta por tabla, solo si hay algo que buscar.
   private async cargarNombres(
-    filas: { entidad: string; detalle: RegistroDetalle }[],
+    filas: { entidad: string; detalle: Json | null }[],
   ): Promise<NombresActividad> {
-    const ids = {
-      peliculas: new Set<string>(),
-      salas: new Set<string>(),
-      compras: new Set<string>(),
-      productos: new Set<string>(),
-    };
+    const peliculas = new Set<string>();
+    const salas = new Set<string>();
+    const compras = new Set<string>();
+    const productos = new Set<string>();
     let tiposButaca = false;
     let formatos = false;
     let roles = false;
 
     for (const { entidad, detalle } of filas) {
       const f = filaAuditada(detalle);
-      const agregar = (conjunto: Set<string>, valor: unknown) => {
-        if (typeof valor === 'string') conjunto.add(valor);
-      };
       if (entidad === 'funciones') {
-        agregar(ids.peliculas, f['pelicula_id']);
-        agregar(ids.salas, f['sala_id']);
+        agregar(peliculas, f['pelicula_id']);
+        agregar(salas, f['sala_id']);
       }
-      if (entidad === 'preventas') agregar(ids.peliculas, f['pelicula_id']);
-      if (entidad === 'entradas' || entidad === 'pedidos_candy')
-        agregar(ids.compras, f['compra_id']);
-      if (entidad === 'precios_producto') agregar(ids.productos, f['producto_id']);
+      if (entidad === 'preventas') agregar(peliculas, f['pelicula_id']);
+      if (entidad === 'entradas' || entidad === 'pedidos_candy') agregar(compras, f['compra_id']);
+      if (entidad === 'precios_producto') agregar(productos, f['producto_id']);
       if (entidad === 'precios_butaca') tiposButaca = true;
       if (entidad === 'adicionales_formato') formatos = true;
       if (entidad === 'usuarios') roles = true;
@@ -77,84 +69,59 @@ export class ActividadService {
 
     const nombres = nombresVacios();
     const sup = this.supS.Sup;
-    const consultas: Promise<void>[] = [];
 
-    if (ids.peliculas.size) {
-      consultas.push(
-        this.leer(
-          sup
-            .from('peliculas')
-            .select('id, titulo')
-            .in('id', [...ids.peliculas]),
-          (f) => nombres.peliculas.set(f.id, f.titulo),
-        ),
-      );
+    if (peliculas.size) {
+      const { data, error } = await sup
+        .from('peliculas')
+        .select('id, titulo')
+        .in('id', [...peliculas]);
+      if (error) throw error;
+      for (const p of data) nombres.peliculas.set(p.id, p.titulo);
     }
-    if (ids.salas.size) {
-      consultas.push(
-        this.leer(
-          sup
-            .from('salas')
-            .select('id, nombre')
-            .in('id', [...ids.salas]),
-          (f) => nombres.salas.set(f.id, f.nombre),
-        ),
-      );
+    if (salas.size) {
+      const { data, error } = await sup
+        .from('salas')
+        .select('id, nombre')
+        .in('id', [...salas]);
+      if (error) throw error;
+      for (const s of data) nombres.salas.set(s.id, s.nombre);
     }
-    if (ids.compras.size) {
-      consultas.push(
-        this.leer(
-          sup
-            .from('compras')
-            .select('id, codigo')
-            .in('id', [...ids.compras]),
-          (f) => nombres.compras.set(f.id, f.codigo),
-        ),
-      );
+    if (compras.size) {
+      const { data, error } = await sup
+        .from('compras')
+        .select('id, codigo')
+        .in('id', [...compras]);
+      if (error) throw error;
+      for (const c of data) nombres.compras.set(c.id, c.codigo);
     }
-    if (ids.productos.size) {
-      consultas.push(
-        this.leer(
-          sup
-            .from('productos')
-            .select('id, nombre')
-            .in('id', [...ids.productos]),
-          (f) => nombres.productos.set(f.id, f.nombre),
-        ),
-      );
+    if (productos.size) {
+      const { data, error } = await sup
+        .from('productos')
+        .select('id, nombre')
+        .in('id', [...productos]);
+      if (error) throw error;
+      for (const p of data) nombres.productos.set(p.id, p.nombre);
     }
     if (tiposButaca) {
-      consultas.push(
-        this.leer(sup.from('tipos_butaca').select('id, nombre'), (f) =>
-          nombres.tiposButaca.set(f.id, f.nombre),
-        ),
-      );
+      const { data, error } = await sup.from('tipos_butaca').select('id, nombre');
+      if (error) throw error;
+      for (const t of data) nombres.tiposButaca.set(t.id, t.nombre);
     }
     if (formatos) {
-      consultas.push(
-        this.leer(sup.from('formatos').select('id, codigo'), (f) =>
-          nombres.formatos.set(f.id, f.codigo),
-        ),
-      );
+      const { data, error } = await sup.from('formatos').select('id, codigo');
+      if (error) throw error;
+      for (const f of data) nombres.formatos.set(f.id, f.codigo);
     }
     if (roles) {
-      consultas.push(
-        this.leer(sup.from('roles').select('id, nombre'), (f) => nombres.roles.set(f.id, f.nombre)),
-      );
+      const { data, error } = await sup.from('roles').select('id, nombre');
+      if (error) throw error;
+      for (const r of data) nombres.roles.set(r.id, r.nombre);
     }
 
-    await Promise.all(consultas);
     return nombres;
-  }
-
-  private async leer<T>(
-    consulta: PromiseLike<{ data: T[] | null; error: unknown }>,
-    guardar: (fila: T) => void,
-  ): Promise<void> {
-    const { data, error } = await consulta;
-    if (error) throw error;
-    data?.forEach(guardar);
   }
 }
 
-type RegistroDetalle = Json | null;
+function agregar(conjunto: Set<string>, valor: unknown) {
+  if (typeof valor === 'string') conjunto.add(valor);
+}

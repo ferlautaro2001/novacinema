@@ -36,7 +36,7 @@ export class Login {
       await this.router.navigateByUrl(inicioSegunRol(rol));
     } catch (e) {
       this.error.set((e as Error).message);
-      // Se borra la contraseña para que no quede el intento equivocado escrito.
+      // Borro la contraseña para que no quede escrito el intento equivocado.
       this.form.controls.clave.reset();
     } finally {
       this.enviando.set(false);

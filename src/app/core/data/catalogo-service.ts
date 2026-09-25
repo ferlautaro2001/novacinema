@@ -10,10 +10,7 @@ import type {
   VersionIdioma,
 } from '../models/catalogo';
 
-// Devuelvo los datos ya desempaquetados en vez del { data, error } crudo de
-// Supabase, y si viene error lo tiro. Así el componente recibe el array y listo,
-// y el manejo del error queda en un solo lugar en vez de repetirse en cada
-// pantalla.
+// Tablas de referencia: solo las leo.
 @Service()
 export class CatalogoService {
   private supS = inject(Supabase);

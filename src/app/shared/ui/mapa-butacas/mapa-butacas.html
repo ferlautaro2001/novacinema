@@ -1,5 +1,4 @@
 <div class="mapa-wrapper">
-  <!-- Barra superior con segmentado 2D / 3D -->
   <div class="mapa-topbar">
     <div class="vista-seg" role="group" aria-label="Modo de visualización">
       <button
@@ -46,7 +45,6 @@
       </ng-template>
     </div>
 
-    <!-- Referencias de tipos de butacas (AC-04.02.03) -->
     <div class="referencias" aria-label="Referencias de butacas">
       <div class="ref-item">
         <span class="ref-color ref-comun"></span>
@@ -60,7 +58,14 @@
         <span class="ref-color ref-accesible">
           <svg viewBox="0 0 24 24" class="ref-ic" aria-hidden="true">
             <circle cx="12.2" cy="4.6" r="1.8" fill="currentColor" />
-            <path d="M12 8.5v5h4.2l2 4.8M12 11h3.6M9.2 11.2a4.8 4.8 0 1 0 6.3 6.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+            <path
+              d="M12 8.5v5h4.2l2 4.8M12 11h3.6M9.2 11.2a4.8 4.8 0 1 0 6.3 6.2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
           </svg>
         </span>
         <span class="ref-label">Accesible</span>
@@ -68,18 +73,9 @@
     </div>
   </div>
 
-  <!-- Contenedor principal de visualización -->
   <div class="mapa-viewport">
-    <!-- Vista 2D -->
-    <div
-      class="mapa-2d-contenedor"
-      [hidden]="vista() !== '2d'"
-      #mapScroll
-    >
-      <div
-        class="pantalla-curva"
-        aria-hidden="true"
-      >
+    <div class="mapa-2d-contenedor" [hidden]="vista() !== '2d'">
+      <div class="pantalla-curva" aria-hidden="true">
         <span>PANTALLA</span>
       </div>
 
@@ -90,11 +86,14 @@
         aria-label="Disposición de butacas"
       >
         @for (fila of filasVisuales(); track fila.letra; let ri = $index) {
-          <div class="fila-contenedor" [class.fila-vip]="fila.esVip" [class.fila-j]="fila.esAccesible">
+          <div
+            class="fila-contenedor"
+            [class.fila-vip]="fila.esVip"
+            [class.fila-j]="fila.esAccesible"
+          >
             <span class="fila-etiqueta" aria-hidden="true">{{ fila.letra }}</span>
 
             @if (fila.esCirculacion) {
-              <!-- Fila K: Espacio libre sin butacas (AC-04.02.01) -->
               <div class="fila-circulacion" aria-label="Fila K circulación">
                 <span>CIRCULACIÓN LIBRE · FILA K</span>
               </div>
@@ -102,7 +101,7 @@
               <div class="fila-butacas">
                 @for (pos of fila.posiciones; track $index; let ci = $index) {
                   @if (ci === 4 || ci === 25) {
-                    <!-- Pasillos en columna 5 y 26 sin sumar butacas (AC-04.02.01) -->
+                    <!-- Pasillos en las columnas 5 y 26 -->
                     <span class="pasillo" aria-hidden="true"></span>
                   }
 
@@ -110,8 +109,8 @@
                     <ng-container
                       *ngTemplateOutlet="tplButaca; context: { $implicit: pos, ri: ri, ci: ci }"
                     ></ng-container>
-                  } @else if (!fila.esCirculacion && ci !== 4 && ci !== 25) {
-                    <!-- Posición vacía (por ej. huecos en fila J accesible) -->
+                  } @else if (ci !== 4 && ci !== 25) {
+                    <!-- Huecos de la fila J -->
                     <span class="butaca-vacia" aria-hidden="true"></span>
                   }
                 }
@@ -123,7 +122,6 @@
         }
       </div>
 
-      <!-- Controles de zoom 2D (AC-04.02.05) -->
       <div class="zoom-controles" aria-label="Controles de zoom">
         <button
           type="button"
@@ -157,7 +155,6 @@
       </div>
     </div>
 
-    <!-- Vista 3D (AC-04.02.04, AC-04.02.05) -->
     <div class="mapa-3d-contenedor" [hidden]="vista() !== '3d'">
       <canvas
         appSala3d
@@ -174,7 +171,6 @@
         id="scene-canvas"
       ></canvas>
 
-      <!-- Dock de cámaras y controles 3D (AC-04.02.05) -->
       <nav class="dock-camaras" aria-label="Controles de cámara 3D">
         <button
           type="button"
@@ -228,7 +224,6 @@
       </nav>
     </div>
 
-    <!-- Panel lateral de selección (SOLO en modo 'elegir') (AC-04.02.06) -->
     @if (modo() === 'elegir') {
       <aside class="panel-seleccion" id="panel-seleccion">
         <h3 class="panel-titulo">
@@ -258,7 +253,7 @@
 
         <div class="panel-total">
           <span>Total</span>
-          <strong id="total-precio">$ {{ totalPrecio() | number:'1.0-0' }}</strong>
+          <strong id="total-precio">$ {{ totalPrecio() | number: '1.0-0' }}</strong>
         </div>
 
         <button
@@ -274,7 +269,6 @@
     }
   </div>
 
-  <!-- Tooltip flotante (AC-04.02.06) -->
   @if (tooltipData()) {
     <div
       class="mapa-tooltip"
@@ -294,7 +288,6 @@
     </div>
   }
 
-  <!-- Toast de aviso / notificación (Modo función, etc.) -->
   @if (mensajeNotificacion()) {
     <div class="aviso-toast" role="status" aria-live="polite">
       {{ mensajeNotificacion() }}
@@ -302,7 +295,6 @@
   }
 </div>
 
-<!-- Plantilla reusable para la butaca 2D renderizada con ngTemplateOutlet -->
 <ng-template #tplButaca let-butaca let-ri="ri" let-ci="ci">
   <button
     type="button"
@@ -313,7 +305,13 @@
     [class.st-bloqueada]="butaca.estado === 'bloqueada'"
     [class.st-seleccionada]="butaca.seleccionada"
     [attr.data-id]="butaca.id"
-    [attr.aria-label]="butaca.id + ' · ' + nombreTipo(butaca.tipo) + ' · ' + estadoTexto(butaca.estado, butaca.seleccionada)"
+    [attr.aria-label]="
+      butaca.id +
+      ' · ' +
+      nombreTipo(butaca.tipo) +
+      ' · ' +
+      estadoTexto(butaca.estado, butaca.seleccionada)
+    "
     [attr.aria-pressed]="butaca.seleccionada"
     (click)="tocarButaca(butaca, $event)"
     (mouseenter)="mostrarTooltip(butaca, $event)"
@@ -328,14 +326,20 @@
       <rect x="8" y="18" width="24" height="18" rx="4.5" class="seat-cush" />
     </svg>
 
-    <!-- Ícono especial para accesible o seleccionado -->
     @if (butaca.seleccionada) {
       <span class="seat-icon seat-icon-check">✓</span>
     } @else if (butaca.tipo === 'accesible') {
       <span class="seat-icon seat-icon-wc" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="10" height="10" class="seat-wc-svg" aria-hidden="true">
           <circle cx="12.2" cy="4.6" r="1.8" fill="currentColor" />
-          <path d="M12 8.5v5h4.2l2 4.8M12 11h3.6M9.2 11.2a4.8 4.8 0 1 0 6.3 6.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+          <path
+            d="M12 8.5v5h4.2l2 4.8M12 11h3.6M9.2 11.2a4.8 4.8 0 1 0 6.3 6.2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
         </svg>
       </span>
     } @else if (butaca.tipo === 'vip') {

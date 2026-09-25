@@ -9,33 +9,36 @@ export const ERROR_HISTORIAL =
 export const ERROR_DURACION = 'No se puede cambiar la duración con funciones programadas';
 export const ERROR_DESTACADAS = 'Podés destacar hasta 6 películas';
 
+// Traduce el error de la base a un mensaje para mostrar.
 export function errorPelicula(error: unknown): string {
-  const mensaje = (error as { message?: string })?.message ?? '';
-  for (const conocido of [ERROR_HISTORIAL, ERROR_DURACION, ERROR_DESTACADAS]) {
-    if (mensaje.includes(conocido)) return conocido;
-  }
-  if (mensaje.includes('modificada'))
+  const { message = '', code = '' } = (error ?? {}) as { message?: string; code?: string };
+  if (message.includes(ERROR_HISTORIAL)) return ERROR_HISTORIAL;
+  if (message.includes(ERROR_DURACION)) return ERROR_DURACION;
+  if (message.includes(ERROR_DESTACADAS)) return ERROR_DESTACADAS;
+  if (message.includes('modificada')) {
     return 'La película fue modificada en otra sesión. Volvé al listado y abrila de nuevo.';
-  if ((error as { code?: string })?.code === '23503') return ERROR_HISTORIAL;
+  }
+  // 23503: la película tiene funciones o ventas que la referencian.
+  if (code === '23503') return ERROR_HISTORIAL;
   return 'No se pudo guardar el cambio. Revisá tu conexión y probá de nuevo.';
 }
 
 @Service()
 export class PeliculasService {
-  private sup = inject(Supabase).Sup;
+  private supS = inject(Supabase);
 
   async listar(soloDestacadas = false): Promise<PeliculaConCatalogo[]> {
-    let consulta = this.sup.from('peliculas').select(SELECCION).order('titulo');
-    if (soloDestacadas)
+    let consulta = this.supS.Sup.from('peliculas').select(SELECCION).order('titulo');
+    if (soloDestacadas) {
       consulta = consulta.eq('destacada', true).eq('activo', true).neq('estado', 'archivada');
+    }
     const { data, error } = await consulta;
     if (error) throw error;
     return data as PeliculaConCatalogo[];
   }
 
   async buscar(id: string): Promise<PeliculaConCatalogo> {
-    const { data, error } = await this.sup
-      .from('peliculas')
+    const { data, error } = await this.supS.Sup.from('peliculas')
       .select(SELECCION)
       .eq('id', id)
       .single();
@@ -44,8 +47,7 @@ export class PeliculasService {
   }
 
   async tieneFuncionesFuturas(id: string): Promise<boolean> {
-    const { count, error } = await this.sup
-      .from('funciones')
+    const { count, error } = await this.supS.Sup.from('funciones')
       .select('id', { count: 'exact', head: true })
       .eq('pelicula_id', id)
       .eq('estado', 'programada')
@@ -59,9 +61,9 @@ export class PeliculasService {
     generos: number[],
     original: PeliculaConCatalogo | null,
   ): Promise<string> {
-    // Película y géneros forman una sola operación: la función ejecuta INSERT / UPDATE
-    // con RLS y revierte todo si falla una de las tablas. Evita altas a medias.
-    const { data, error } = await this.sup.rpc('guardar_pelicula', {
+    // Uso RPC para guardar película y géneros en una sola transacción: si falla
+    // una de las tablas se revierte todo y no quedan altas a medias.
+    const { data, error } = await this.supS.Sup.rpc('guardar_pelicula', {
       p_id: original?.id ?? null,
       p_datos: { ...datos },
       p_generos: generos,
@@ -72,8 +74,7 @@ export class PeliculasService {
   }
 
   async destacar(pelicula: PeliculaConCatalogo): Promise<void> {
-    const { error } = await this.sup
-      .from('peliculas')
+    const { error } = await this.supS.Sup.from('peliculas')
       .update({ destacada: !pelicula.destacada })
       .eq('id', pelicula.id)
       .eq('actualizado_en', pelicula.actualizado_en)
@@ -83,8 +84,7 @@ export class PeliculasService {
   }
 
   async finalizar(pelicula: PeliculaConCatalogo): Promise<void> {
-    const { error } = await this.sup
-      .from('peliculas')
+    const { error } = await this.supS.Sup.from('peliculas')
       .update({ activo: false, estado: 'archivada', destacada: false })
       .eq('id', pelicula.id)
       .eq('actualizado_en', pelicula.actualizado_en)
@@ -94,15 +94,13 @@ export class PeliculasService {
   }
 
   async eliminar(pelicula: PeliculaConCatalogo): Promise<void> {
-    const { count, error: consultaError } = await this.sup
-      .from('funciones')
+    const { count, error: consultaError } = await this.supS.Sup.from('funciones')
       .select('id', { count: 'exact', head: true })
       .eq('pelicula_id', pelicula.id);
     if (consultaError) throw consultaError;
-    // Toda entrada referencia una función: si hay funciones, ya no se puede eliminar.
+    // Toda entrada referencia una función, así que con funciones ya no se puede borrar.
     if (count) throw new Error(ERROR_HISTORIAL);
-    const { error } = await this.sup
-      .from('peliculas')
+    const { error } = await this.supS.Sup.from('peliculas')
       .delete()
       .eq('id', pelicula.id)
       .eq('actualizado_en', pelicula.actualizado_en)

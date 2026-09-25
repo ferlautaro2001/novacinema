@@ -1,7 +1,6 @@
 import { Routes } from '@angular/router';
 import { cambiosPendientesGuard } from '../../core/guards/cambios-pendientes-guard';
 
-// Ingreso y registro (EP-02).
 export const authRoutes: Routes = [
   {
     path: 'login',
