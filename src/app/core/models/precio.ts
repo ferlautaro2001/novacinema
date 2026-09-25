@@ -1,6 +1,5 @@
-/* Armé los precios como histórico: cada fila vale desde su `vigente_desde`.
-   Nunca modifico una fila existente, inserto una nueva, así queda el registro de
-   cuánto salía una entrada en cada momento. */
+// Los precios son un histórico: nunca modifico una fila, inserto una nueva con su
+// vigente_desde, así sé cuánto salía una entrada en cada momento.
 import type { Tables, TablesInsert, TablesUpdate } from '../supabase/database.types';
 
 export type PrecioButaca = Tables<'precios_butaca'>;

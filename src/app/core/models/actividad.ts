@@ -6,7 +6,7 @@ export type ActividadPorCrear = TablesInsert<'actividad'>;
 
 export type AccionAuditoria = Tables<'acciones_auditoria'>;
 
-/** Un registro del log ya listo para mostrar: quién, qué, sobre qué y cuándo. */
+// Un registro del log listo para mostrar.
 export interface RegistroActividad {
   id: string;
   fecha: Date;

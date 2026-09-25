@@ -2,7 +2,6 @@ import { inject, Service } from '@angular/core';
 import type { Rol } from '../models/enumerados';
 import { Supabase } from '../supabase/supabase-client';
 
-// Lo que muestra el listado de usuarios del Panel.
 export interface UsuarioConRol {
   id: string;
   nombre: string;
@@ -11,7 +10,7 @@ export interface UsuarioConRol {
   rol: Rol;
 }
 
-// La función de la base responde en impersonal; en la app se habla de vos.
+// La función de la base responde en impersonal y en la app hablamos de vos.
 const MENSAJES_RPC: Record<string, string> = {
   'Solo el administrador puede cambiar roles': 'Solo un administrador puede cambiar roles.',
   'No puede modificar su propio rol': 'No podés cambiar tu propio rol.',
@@ -23,7 +22,7 @@ const MENSAJES_RPC: Record<string, string> = {
 export class UsuariosService {
   private supS = inject(Supabase);
 
-  // RLS deja leer todos los perfiles solo al personal (US-01.07).
+  // RLS deja leer todos los perfiles solo al personal.
   async findAllConRol(): Promise<UsuarioConRol[]> {
     const { data, error } = await this.supS.Sup.from('usuarios')
       .select('id, nombre, apellido, email, rol:roles(codigo)')
@@ -39,10 +38,8 @@ export class UsuariosService {
     }));
   }
 
-  // Excepción justificada a "sin RPC desde Angular" (US-02.07): el cliente no
-  // tiene UPDATE sobre usuarios.rol_id, y la función verifica que quien llama sea
-  // administrador, que no se cambie su propio rol y que solo alterne entre
-  // cliente y empleado.
+  // Uso RPC porque el cliente no tiene UPDATE sobre usuarios.rol_id: la función
+  // verifica que quien llama sea administrador y que no cambie su propio rol.
   async asignarRolEmpleado(usuarioId: string, empleado: boolean): Promise<void> {
     const { error } = await this.supS.Sup.rpc('asignar_rol_empleado', {
       p_usuario_id: usuarioId,

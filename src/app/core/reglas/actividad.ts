@@ -1,9 +1,8 @@
 import type { Json } from '../supabase/database.types';
 import type { AccionAuditoriaCodigo } from '../models/enumerados';
 
-// Cómo se lee cada registro del log de actividad. El trigger guarda la fila tal
-// como quedó ({ antes, despues }) con ids; acá la convierto en una línea que el
-// administrador entiende: "Dune · Sala 2 · 09/10/2026 18:00".
+// El trigger guarda la fila ({ antes, despues }) con ids; acá la convierto en una
+// línea que el administrador entiende: "Dune · Sala 2 · 09/10/2026 18:00".
 
 const ETIQUETAS: Record<AccionAuditoriaCodigo, string> = {
   funcion_creada: 'Creó función',
@@ -21,7 +20,7 @@ export function etiquetaAccion(codigo: AccionAuditoriaCodigo): string {
   return ETIQUETAS[codigo];
 }
 
-// Los nombres que el detalle necesita y que no están en la fila auditada.
+// Los nombres que no están en la fila auditada.
 export interface NombresActividad {
   peliculas: Map<string, string>;
   salas: Map<string, string>;
@@ -46,21 +45,30 @@ export function nombresVacios(): NombresActividad {
 
 type Fila = Record<string, Json | undefined>;
 
+function esObjeto(valor: Json | undefined): boolean {
+  return !!valor && typeof valor === 'object' && !Array.isArray(valor);
+}
+
 // La fila después del cambio o, si fue un borrado, la de antes.
 export function filaAuditada(detalle: Json | null): Fila {
-  if (!detalle || typeof detalle !== 'object' || Array.isArray(detalle)) return {};
+  if (!esObjeto(detalle)) return {};
   const { antes, despues } = detalle as { antes?: Json; despues?: Json };
   const fila = despues ?? antes;
-  return fila && typeof fila === 'object' && !Array.isArray(fila) ? (fila as Fila) : {};
+  if (!esObjeto(fila)) return {};
+  return fila as Fila;
 }
 
 function filaAnterior(detalle: Json | null): Fila {
-  if (!detalle || typeof detalle !== 'object' || Array.isArray(detalle)) return {};
+  if (!esObjeto(detalle)) return {};
   const antes = (detalle as { antes?: Json }).antes;
-  return antes && typeof antes === 'object' && !Array.isArray(antes) ? (antes as Fila) : {};
+  if (!esObjeto(antes)) return {};
+  return antes as Fila;
 }
 
-const texto = (v: Json | undefined): string => (v === null || v === undefined ? '' : String(v));
+function texto(valor: Json | undefined): string {
+  if (valor === null || valor === undefined) return '';
+  return String(valor);
+}
 
 // Fechas en hora de Argentina, sin importar la zona de quien mira el panel.
 const formatoFecha = new Intl.DateTimeFormat('es-AR', {
@@ -80,11 +88,20 @@ export function fechaHora(iso: string): string {
   return `${partes['day']}/${partes['month']}/${partes['year']} ${partes['hour']}:${partes['minute']}`;
 }
 
-const formatoDinero = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
-const dinero = (v: Json | undefined): string => `$ ${formatoDinero.format(Number(v))}`;
-const puntos = (v: Json | undefined): string => `${formatoDinero.format(Number(v))} Nova Points`;
+const formatoNumero = new Intl.NumberFormat('es-AR', { maximumFractionDigits: 2 });
 
-const unir = (...partes: string[]): string => partes.filter((p) => p !== '').join(' · ');
+function dinero(valor: Json | undefined): string {
+  return `$ ${formatoNumero.format(Number(valor))}`;
+}
+
+function puntos(valor: Json | undefined): string {
+  return `${formatoNumero.format(Number(valor))} Nova Points`;
+}
+
+// Junta las partes no vacías con " · ".
+function unir(...partes: string[]): string {
+  return partes.filter((p) => p !== '').join(' · ');
+}
 
 export function detalleActividad(
   entidad: string,

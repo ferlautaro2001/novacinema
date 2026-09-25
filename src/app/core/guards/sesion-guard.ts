@@ -2,7 +2,6 @@ import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../auth/auth-service';
 
-// Secciones privadas (perfil, compras, Mis películas): sin sesión se va al ingreso.
 // Protege la navegación, no los datos: eso lo hace RLS en la base.
 export const sesionGuard: CanActivateFn = async () => {
   // inject() solo funciona antes del primer await.
