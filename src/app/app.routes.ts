@@ -2,8 +2,7 @@ import { Routes } from '@angular/router';
 import { rolGuard } from './core/guards/rol-guard';
 import { sesionGuard } from './core/guards/sesion-guard';
 
-// Cada pantalla se carga recién cuando se visita. Los grupos de ingreso, Panel y
-// boletería van en su propio archivo de rutas para que crezcan sin tocar este.
+// Todas las pantallas son lazy. Los grupos grandes tienen su propio archivo de rutas.
 export const routes: Routes = [
   { path: '', redirectTo: 'inicio', pathMatch: 'full' },
   {

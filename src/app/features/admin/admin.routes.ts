@@ -2,9 +2,8 @@ import { Routes } from '@angular/router';
 import { adminHijosGuard } from '../../core/guards/admin-hijos-guard';
 import { cambiosPendientesGuard } from '../../core/guards/cambios-pendientes-guard';
 
-// Panel del administrador. Al grupo solo entra un administrador (rolGuard en
-// app.routes.ts) y cada subsección vuelve a verificar la sesión con
-// adminHijosGuard. Al ingresar arranca en la facturación del día.
+// Al Panel solo entra un administrador (rolGuard en app.routes.ts). Igual vuelvo a
+// chequear la sesión en cada sección con adminHijosGuard. Se arranca en facturación.
 export const adminRoutes: Routes = [
   {
     path: '',
@@ -14,8 +13,7 @@ export const adminRoutes: Routes = [
       {
         path: 'peliculas',
         title: 'Panel · Películas · NovaCinema',
-        loadComponent: () =>
-          import('./peliculas/peliculas/peliculas').then((m) => m.Peliculas),
+        loadComponent: () => import('./peliculas/peliculas/peliculas').then((m) => m.Peliculas),
       },
       {
         path: 'peliculas/nueva',
@@ -23,7 +21,7 @@ export const adminRoutes: Routes = [
         canDeactivate: [cambiosPendientesGuard],
         loadComponent: () =>
           import('./peliculas/formulario-pelicula/formulario-pelicula').then(
-            (m) => m.FormularioPelicula
+            (m) => m.FormularioPelicula,
           ),
       },
       {
@@ -32,7 +30,7 @@ export const adminRoutes: Routes = [
         canDeactivate: [cambiosPendientesGuard],
         loadComponent: () =>
           import('./peliculas/formulario-pelicula/formulario-pelicula').then(
-            (m) => m.FormularioPelicula
+            (m) => m.FormularioPelicula,
           ),
       },
       { path: '', redirectTo: 'facturacion', pathMatch: 'full' },
@@ -54,14 +52,12 @@ export const adminRoutes: Routes = [
       {
         path: 'salas/:id',
         title: 'Distribución de sala · NovaCinema',
-        loadComponent: () =>
-          import('./salas/sala-detalle/sala-detalle').then((m) => m.SalaDetalle),
+        loadComponent: () => import('./salas/sala-detalle/sala-detalle').then((m) => m.SalaDetalle),
       },
       {
         path: 'funciones',
         title: 'Panel · Funciones · NovaCinema',
-        loadComponent: () =>
-          import('./funciones/funciones/funciones').then((m) => m.Funciones),
+        loadComponent: () => import('./funciones/funciones/funciones').then((m) => m.Funciones),
       },
       {
         path: 'funciones/programar',
@@ -69,7 +65,7 @@ export const adminRoutes: Routes = [
         canDeactivate: [cambiosPendientesGuard],
         loadComponent: () =>
           import('./funciones/programar-funciones/programar-funciones').then(
-            (m) => m.ProgramarFunciones
+            (m) => m.ProgramarFunciones,
           ),
       },
     ],

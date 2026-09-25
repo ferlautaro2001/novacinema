@@ -31,20 +31,31 @@ import { TablaDatos } from '../../../../shared/ui/tabla-datos/tabla-datos';
 export class Peliculas implements OnInit {
   private servicio = inject(PeliculasService);
   storage = inject(StorageService);
+
   estado = signal<EstadoConsulta<PeliculaConCatalogo>>({ tipo: 'cargando' });
   confirmacion = signal<PeliculaConCatalogo | null>(null);
   trabajando = signal(false);
   error = signal('');
+  // Si vengo del formulario, el mensaje de guardado viaja en el state de la navegación.
   aviso = signal(history.state?.peliculaGuardada ?? '');
+
   estados = {
     proximamente: 'Próximamente',
     en_cartelera: 'En cartelera',
     archivada: 'Finalizada',
   };
 
+  // Textos del aviso que queda arriba de la tabla después de cada acción.
+  avisos = {
+    destacar: 'Destacadas actualizadas',
+    finalizar: 'Película finalizada',
+    eliminar: 'Película eliminada',
+  };
+
   ngOnInit(): void {
-    void this.cargar();
+    this.cargar();
   }
+
   async cargar(): Promise<void> {
     this.estado.set({ tipo: 'cargando' });
     try {
@@ -53,16 +64,16 @@ export class Peliculas implements OnInit {
       this.estado.set({ tipo: 'error', mensaje: 'No se pudo cargar el catálogo. Probá de nuevo.' });
     }
   }
+
   generos(p: PeliculaConCatalogo): string {
     return p.pelicula_generos.map((g) => nombreGenero(g.genero.nombre)).join(', ');
   }
+
   nombreEstado(p: PeliculaConCatalogo): string {
     return this.estados[p.estado];
   }
-  async accion(
-    tipo: 'destacar' | 'finalizar' | 'eliminar',
-    p: PeliculaConCatalogo,
-  ): Promise<void> {
+
+  async accion(tipo: 'destacar' | 'finalizar' | 'eliminar', p: PeliculaConCatalogo): Promise<void> {
     if (this.trabajando()) return;
     this.trabajando.set(true);
     this.error.set('');
@@ -70,13 +81,7 @@ export class Peliculas implements OnInit {
     try {
       await this.servicio[tipo](p);
       this.confirmacion.set(null);
-      this.aviso.set(
-        tipo === 'eliminar'
-          ? 'Película eliminada'
-          : tipo === 'finalizar'
-            ? 'Película finalizada'
-            : 'Destacadas actualizadas',
-      );
+      this.aviso.set(this.avisos[tipo]);
       await this.cargar();
     } catch (e) {
       this.confirmacion.set(null);

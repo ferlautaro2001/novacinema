@@ -44,8 +44,8 @@ export class Empleados implements OnInit {
     return NOMBRES_ROL[rol];
   }
 
-  // Alterna entre cliente y empleado. El nuevo rol rige desde el próximo ingreso
-  // o recarga de esa persona.
+  // Pasa de cliente a empleado o al revés. El rol nuevo recién se nota cuando esa
+  // persona vuelve a ingresar o recarga.
   async cambiarRol(usuario: UsuarioConRol): Promise<void> {
     const nuevoRol: Rol = usuario.rol === 'empleado' ? 'cliente' : 'empleado';
     this.cambiando.set(usuario.id);
