@@ -13,9 +13,10 @@ import { Cupon } from '../../../../core/models/precio';
 import { CampoTexto } from '../../../../shared/ui/campo-texto/campo-texto';
 
 // Uso un solo mensaje para cualquier error: nc-campo-texto lo muestra cuando el campo queda inválido.
+// El input devuelve texto aunque sea de tipo number, por eso lo convierto antes de chequear.
 function entero(control: AbstractControl): ValidationErrors | null {
   if (control.value === null || control.value === '') return null;
-  return Number.isInteger(control.value) ? null : { entero: true };
+  return Number.isInteger(Number(control.value)) ? null : { entero: true };
 }
 
 @Component({
@@ -59,7 +60,7 @@ export class PrimeraCompra implements OnInit, FormularioConCambios {
     this.formulario.markAllAsTouched();
     if (!cupon || this.formulario.invalid) return;
 
-    const porcentaje = this.formulario.getRawValue().porcentaje;
+    const porcentaje = Number(this.formulario.getRawValue().porcentaje);
     this.guardando.set(true);
     this.aviso.set('');
     this.error.set('');
