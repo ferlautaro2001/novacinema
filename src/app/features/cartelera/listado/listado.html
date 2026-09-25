@@ -1,7 +1,14 @@
 <h1 class="marquee-lg">Cartelera</h1>
 <nc-buscador-peliculas [(texto)]="texto" />
 <nc-filtro-generos [generos]="generosDisponibles()" [(genero)]="genero" />
-<div class="grilla">
+<ng-template #vacio>
+  <p class="body">No hay películas en cartelera para mostrar.</p>
+</ng-template>
+<ng-template #fallo let-mensaje>
+  <p class="error body" role="alert">{{ mensaje }}</p>
+  <button class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button>
+</ng-template>
+<div class="grilla" *appCargando="estado(); vacio: vacio; error: fallo">
   @for (p of peliculas() | filtroPeliculas: texto() : genero(); track p.id) {
     <nc-pelicula-card
       [pelicula]="p"
@@ -12,7 +19,7 @@
       (verDetalle)="detalleId.set(p.id)"
     />
   } @empty {
-    @if (texto() !== '') {
+    @if (texto().trim() !== '') {
       <p class="body">No encontramos películas para “{{ texto() }}”</p>
     } @else {
       <p class="body">No hay películas en cartelera para mostrar.</p>

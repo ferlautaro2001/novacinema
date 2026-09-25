@@ -1,22 +1,40 @@
 <article class="pelicula">
-  <img
-    [src]="imagenUrl()"
-    [alt]="'Portada de ' + pelicula().titulo"
-    loading="lazy"
-    width="240"
-    height="360"
-  />
+  <div class="portada">
+    <img
+      [src]="imagenUrl()"
+      [alt]="'Portada de ' + pelicula().titulo"
+      loading="lazy"
+      width="240"
+      height="360"
+    />
+    @if (enPreventa()) {
+      <span class="nc-badge nc-badge--gold preventa">Preventa</span>
+    }
+  </div>
   <div class="contenido">
     @if (leyenda() !== '') {
       <p class="overline">{{ leyenda() }}</p>
     }
     <h3 class="body-strong">{{ pelicula().titulo }}</h3>
+    @if (generos().length > 0) {
+      <p class="generos caption">{{ generos().join(' · ') }}</p>
+    }
     <div class="metadatos">
       <nc-clasificacion
         [codigo]="pelicula().clasificacion.codigo"
         [edadMinima]="pelicula().clasificacion.edad_minima"
       /><span class="caption">{{ pelicula().duracion_min | duracion }}</span>
     </div>
+    @let puntaje = puntuacion();
+    @if (puntaje === null) {
+      <p class="puntuacion caption">{{ puntaje | puntaje }}</p>
+    } @else if (puntaje !== undefined) {
+      <div class="puntuacion">
+        <!-- De 0 a 10 a estrellas: la mitad, redondeada a la entera más cercana. -->
+        <nc-estrellas [cantidad]="puntaje / 2" />
+        <span class="code puntaje">{{ puntaje | puntaje }}</span>
+      </div>
+    }
     <p class="sinopsis body">{{ pelicula().sinopsis }}</p>
     <button
       class="nc-btn nc-btn--secondary"
