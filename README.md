@@ -70,7 +70,6 @@ repartidas en 12 milestones.
   <img src="https://img.shields.io/badge/Supabase-3FCF8E?style=flat-square&logo=supabase&logoColor=white" alt="supabase"/>
   <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="typescript"/>
   <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="postgresql"/>
-  <img src="https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white" alt="vitest"/>
   <img src="https://img.shields.io/badge/RxJS-B7178C?style=flat-square&logo=reactivex&logoColor=white" alt="rxjs"/>
   <img src="https://img.shields.io/badge/HTML5-E34F26?style=flat-square&logo=html5&logoColor=white" alt="html5"/>
   <img src="https://img.shields.io/badge/CSS3-1572B6?style=flat-square&logo=css3&logoColor=white" alt="css3"/>
@@ -81,7 +80,6 @@ repartidas en 12 milestones.
 - **Lenguajes & estilos:** TypeScript 6, HTML5, CSS3 con los tokens en `src/styles/tokens.css`
 - **Tipografías:** Anton, Figtree e IBM Plex Mono (Google Fonts)
 - **Documentos y códigos:** `jspdf` (entradas y reportes en PDF), `write-excel-file` (reportes en Excel), `angularx-qrcode` (QR de entradas y productos)
-- **Testing:** Vitest + jsdom (`ng test`)
 - **Formato:** Prettier
 
 ---
