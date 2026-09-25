@@ -1,3 +1,24 @@
-<section aria-labelledby="mas-vendidas-titulo">
+<section class="mas-vendidas" aria-labelledby="mas-vendidas-titulo">
   <h2 id="mas-vendidas-titulo" class="marquee-md">Las más vistas</h2>
+  @if (cargando()) {
+    <p class="body" role="status">Cargando las más vistas…</p>
+  } @else if (error()) {
+    <p class="body" role="alert">No se pudieron cargar las más vistas.</p>
+    <button class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button>
+  } @else {
+    <ol class="grilla">
+      @for (pelicula of peliculas(); track pelicula.id; let indice = $index) {
+        <li>
+          <nc-pelicula-card
+            [pelicula]="pelicula"
+            [imagenUrl]="storage.urlPublica(pelicula.imagen_path)"
+            [leyenda]="leyendaPuesto(indice)"
+            (verDetalle)="verDetalle.emit(pelicula.id)"
+          />
+        </li>
+      } @empty {
+        <li class="body">Todavía no hay ventas registradas</li>
+      }
+    </ol>
+  }
 </section>
