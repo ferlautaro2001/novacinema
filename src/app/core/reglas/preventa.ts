@@ -5,17 +5,25 @@ type Ventana = Pick<Preventa, 'habilitada' | 'dias_antes'>;
 
 // La fecha de estreno viene de la base como 'AAAA-MM-DD'. La paso a Date local a las 00:00.
 export function diaDeEstreno(fechaEstreno: string): Date {
-  const [anio, mes, dia] = fechaEstreno.split('-').map(Number);
-  return new Date(anio, mes - 1, dia);
+  const partesFecha = fechaEstreno.split('-');
+  const anio = Number(partesFecha[0]);
+  const mes = Number(partesFecha[1]);
+  const dia = Number(partesFecha[2]);
+
+  const estreno = new Date(anio, mes - 1, dia);
+
+  return estreno;
 }
 
 // Con preventa, la venta abre dias_antes días antes del estreno a las 00:00.
 // Sin preventa (o si la película no tiene una cargada), abre el día del estreno.
 export function aperturaDeVenta(fechaEstreno: string, preventa: Ventana | null): Date {
   const apertura = diaDeEstreno(fechaEstreno);
-  if (preventa?.habilitada) {
+
+  if (preventa !== null && preventa !== undefined && preventa.habilitada) {
     apertura.setDate(apertura.getDate() - preventa.dias_antes);
   }
+
   return apertura;
 }
 
@@ -25,6 +33,16 @@ export function estaEnPreventa(
   preventa: Ventana | null,
   fecha: Date,
 ): boolean {
-  if (!preventa?.habilitada) return false;
-  return fecha >= aperturaDeVenta(fechaEstreno, preventa) && fecha < diaDeEstreno(fechaEstreno);
+  let enPreventa = false;
+
+  if (preventa !== null && preventa !== undefined && preventa.habilitada) {
+    const apertura = aperturaDeVenta(fechaEstreno, preventa);
+    const estreno = diaDeEstreno(fechaEstreno);
+
+    if (fecha >= apertura && fecha < estreno) {
+      enPreventa = true;
+    }
+  }
+
+  return enPreventa;
 }

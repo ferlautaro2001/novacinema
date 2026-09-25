@@ -8,42 +8,77 @@ export class SalasService {
 
   async listar(): Promise<Sala[]> {
     const { data, error } = await this.supS.Sup.from('salas').select('*').order('numero');
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
   async buscar(id: string): Promise<Sala | null> {
     const { data, error } = await this.supS.Sup.from('salas').select('*').eq('id', id).single();
-    if (error) return null;
-    return data;
+
+    let sala: Sala | null = null;
+
+    if (error === null) {
+      sala = data;
+    }
+
+    return sala;
   }
 
   // Si la sala tiene funciones futuras con entradas vendidas.
   async tieneVentasFuturas(salaId: string): Promise<boolean> {
+    const ahora = new Date().toISOString();
     const { data: funciones, error } = await this.supS.Sup.from('funciones')
       .select('id')
       .eq('sala_id', salaId)
       .neq('estado', 'cancelada')
-      .gte('comienza_en', new Date().toISOString());
-    if (error) throw error;
-    if (funciones.length === 0) return false;
+      .gte('comienza_en', ahora);
+    if (error !== null) {
+      throw error;
+    }
 
-    const ids = funciones.map((f) => f.id);
-    const { count, error: errorEntradas } = await this.supS.Sup.from('entradas')
-      .select('*', { count: 'exact', head: true })
-      .in('funcion_id', ids)
-      .is('anulada_en', null);
-    if (errorEntradas) throw errorEntradas;
-    return (count ?? 0) > 0;
+    let tieneVentas = false;
+
+    if (funciones.length !== 0) {
+      const ids: string[] = [];
+
+      for (const funcion of funciones) {
+        ids.push(funcion.id);
+      }
+
+      const { count, error: errorEntradas } = await this.supS.Sup.from('entradas')
+        .select('*', { count: 'exact', head: true })
+        .in('funcion_id', ids)
+        .is('anulada_en', null);
+      if (errorEntradas !== null) {
+        throw errorEntradas;
+      }
+
+      if (count !== null && count > 0) {
+        tieneVentas = true;
+      }
+    }
+
+    return tieneVentas;
   }
 
   async activarSala(id: string, activa: boolean): Promise<void> {
-    if (!activa && (await this.tieneVentasFuturas(id))) {
-      throw new Error('La sala tiene funciones con entradas vendidas');
+    if (activa === false) {
+      const tieneVentas = await this.tieneVentasFuturas(id);
+
+      if (tieneVentas) {
+        throw new Error('La sala tiene funciones con entradas vendidas');
+      }
     }
+
+    const ahora = new Date().toISOString();
     const { error } = await this.supS.Sup.from('salas')
-      .update({ activa, actualizado_en: new Date().toISOString() })
+      .update({ activa: activa, actualizado_en: ahora })
       .eq('id', id);
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
   }
 }

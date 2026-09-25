@@ -16,7 +16,8 @@ export class SelectorHora implements OnChanges {
     // Si cambian los horarios (otro día, por ejemplo) y la hora elegida ya no está,
     // la desmarco.
     const elegida = this.elegida();
-    if (elegida !== null && !this.horarios().includes(elegida)) {
+
+    if (elegida !== null && this.horarios().includes(elegida) === false) {
       this.elegida.set(null);
     }
   }

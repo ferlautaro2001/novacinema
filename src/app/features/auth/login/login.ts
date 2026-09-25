@@ -26,16 +26,24 @@ export class Login {
   async ingresar(): Promise<void> {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      return;
+    } else {
+      await this.enviar();
     }
-    const { email, clave } = this.form.getRawValue();
+  }
+
+  private async enviar(): Promise<void> {
+    const datos = this.form.getRawValue();
+
     this.enviando.set(true);
     this.error.set(null);
+
     try {
-      const rol = await this.auth.iniciarSesion(email, clave);
-      await this.router.navigateByUrl(inicioSegunRol(rol));
-    } catch (e) {
-      this.error.set((e as Error).message);
+      const rol = await this.auth.iniciarSesion(datos.email, datos.clave);
+      const destino = inicioSegunRol(rol);
+      await this.router.navigateByUrl(destino);
+    } catch (excepcion) {
+      const falla = excepcion as Error;
+      this.error.set(falla.message);
       // Borro la contraseña para que no quede escrito el intento equivocado.
       this.form.controls.clave.reset();
     } finally {

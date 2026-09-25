@@ -32,8 +32,10 @@ export class Inicio implements OnInit {
   async cargar(): Promise<void> {
     this.cargando.set(true);
     this.error.set(false);
+
     try {
-      this.destacadas.set(await this.peliculas.listar(true));
+      const peliculas = await this.peliculas.listar(true);
+      this.destacadas.set(peliculas);
     } catch {
       this.error.set(true);
     } finally {

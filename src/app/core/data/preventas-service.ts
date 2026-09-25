@@ -12,7 +12,10 @@ export class PreventasService {
       .select('*')
       .eq('pelicula_id', peliculaId)
       .maybeSingle();
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
@@ -21,6 +24,8 @@ export class PreventasService {
     const { error } = await this.supS.Sup.from('preventas').upsert(preventa, {
       onConflict: 'pelicula_id',
     });
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
   }
 }

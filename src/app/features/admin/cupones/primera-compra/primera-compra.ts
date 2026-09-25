@@ -12,13 +12,6 @@ import { FormularioConCambios } from '../../../../core/guards/cambios-pendientes
 import { Cupon } from '../../../../core/models/precio';
 import { CampoTexto } from '../../../../shared/ui/campo-texto/campo-texto';
 
-// Uso un solo mensaje para cualquier error: nc-campo-texto lo muestra cuando el campo queda inválido.
-// El input devuelve texto aunque sea de tipo number, por eso lo convierto antes de chequear.
-function entero(control: AbstractControl): ValidationErrors | null {
-  if (control.value === null || control.value === '') return null;
-  return Number.isInteger(Number(control.value)) ? null : { entero: true };
-}
-
 @Component({
   selector: 'nc-primera-compra',
   imports: [ReactiveFormsModule, RouterLink, CampoTexto],
@@ -52,15 +45,24 @@ export class PrimeraCompra implements OnInit, FormularioConCambios {
   }
 
   noGuardado(): boolean {
-    return this.formulario.dirty;
+    const bandera = this.formulario.dirty;
+
+    return bandera;
   }
 
   async guardar(): Promise<void> {
     const cupon = this.cupon();
     this.formulario.markAllAsTouched();
-    if (!cupon || this.formulario.invalid) return;
 
-    const porcentaje = Number(this.formulario.getRawValue().porcentaje);
+    if (cupon !== null && this.formulario.invalid === false) {
+      await this.guardarPorcentaje(cupon);
+    }
+  }
+
+  private async guardarPorcentaje(cupon: Cupon): Promise<void> {
+    const valores = this.formulario.getRawValue();
+    const porcentaje = Number(valores.porcentaje);
+
     this.guardando.set(true);
     this.aviso.set('');
     this.error.set('');
@@ -76,4 +78,23 @@ export class PrimeraCompra implements OnInit, FormularioConCambios {
       this.guardando.set(false);
     }
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+// Uso un solo mensaje para cualquier error: nc-campo-texto lo muestra cuando el campo queda inválido.
+// El input devuelve texto aunque sea de tipo number, por eso lo convierto antes de chequear.
+function entero(control: AbstractControl): ValidationErrors | null {
+  let errores: ValidationErrors | null = null;
+
+  if (control.value !== null && control.value !== '') {
+    const numero = Number(control.value);
+
+    if (Number.isInteger(numero) === false) {
+      const noEsEntero: ValidationErrors = { entero: true };
+      errores = noEsEntero;
+    }
+  }
+
+  return errores;
 }

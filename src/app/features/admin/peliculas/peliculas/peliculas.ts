@@ -37,7 +37,7 @@ export class Peliculas implements OnInit {
   trabajando = signal(false);
   error = signal('');
   // Si vengo del formulario, el mensaje de guardado viaja en el state de la navegación.
-  aviso = signal(history.state?.peliculaGuardada ?? '');
+  aviso = signal(avisoGuardado());
 
   estados = {
     proximamente: 'Próximamente',
@@ -58,36 +58,80 @@ export class Peliculas implements OnInit {
 
   async cargar(): Promise<void> {
     this.estado.set({ tipo: 'cargando' });
+
     try {
-      this.estado.set({ tipo: 'datos', datos: await this.servicio.listar() });
+      const peliculas = await this.servicio.listar();
+
+      this.estado.set({ tipo: 'datos', datos: peliculas });
     } catch {
       this.estado.set({ tipo: 'error', mensaje: 'No se pudo cargar el catálogo. Probá de nuevo.' });
     }
   }
 
-  generos(p: PeliculaConCatalogo): string {
-    return p.pelicula_generos.map((g) => nombreGenero(g.genero.nombre)).join(', ');
+  generos(pelicula: PeliculaConCatalogo): string {
+    const nombres: string[] = [];
+
+    for (const peliculaGenero of pelicula.pelicula_generos) {
+      const nombre = nombreGenero(peliculaGenero.genero.nombre);
+
+      nombres.push(nombre);
+    }
+
+    const lista = nombres.join(', ');
+
+    return lista;
   }
 
-  nombreEstado(p: PeliculaConCatalogo): string {
-    return this.estados[p.estado];
+  nombreEstado(pelicula: PeliculaConCatalogo): string {
+    const nombre = this.estados[pelicula.estado];
+
+    return nombre;
   }
 
-  async accion(tipo: 'destacar' | 'finalizar' | 'eliminar', p: PeliculaConCatalogo): Promise<void> {
-    if (this.trabajando()) return;
-    this.trabajando.set(true);
-    this.error.set('');
-    this.aviso.set('');
-    try {
-      await this.servicio[tipo](p);
-      this.confirmacion.set(null);
-      this.aviso.set(this.avisos[tipo]);
-      await this.cargar();
-    } catch (e) {
-      this.confirmacion.set(null);
-      this.error.set(errorPelicula(e));
-    } finally {
-      this.trabajando.set(false);
+  async accion(
+    tipo: 'destacar' | 'finalizar' | 'eliminar',
+    pelicula: PeliculaConCatalogo,
+  ): Promise<void> {
+    if (this.trabajando() === false) {
+      this.trabajando.set(true);
+      this.error.set('');
+      this.aviso.set('');
+
+      try {
+        await this.servicio[tipo](pelicula);
+        this.confirmacion.set(null);
+
+        const mensaje = this.avisos[tipo];
+
+        this.aviso.set(mensaje);
+        await this.cargar();
+      } catch (excepcion) {
+        this.confirmacion.set(null);
+
+        const mensajeError = errorPelicula(excepcion);
+
+        this.error.set(mensajeError);
+      } finally {
+        this.trabajando.set(false);
+      }
     }
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function avisoGuardado(): string {
+  let aviso = '';
+
+  const estadoNavegacion = history.state;
+
+  if (estadoNavegacion !== null && estadoNavegacion !== undefined) {
+    const peliculaGuardada = estadoNavegacion.peliculaGuardada;
+
+    if (peliculaGuardada !== null && peliculaGuardada !== undefined) {
+      aviso = peliculaGuardada;
+    }
+  }
+
+  return aviso;
 }

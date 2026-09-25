@@ -23,10 +23,15 @@ export class ErrorCampo implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.suscripcion?.unsubscribe();
+    if (this.suscripcion !== undefined) {
+      this.suscripcion.unsubscribe();
+    }
   }
 
   private actualizar(): void {
-    this.visible.set(this.control().hasError(this.error()));
+    const control = this.control();
+    const tieneError = control.hasError(this.error());
+
+    this.visible.set(tieneError);
   }
 }

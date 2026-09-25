@@ -42,43 +42,73 @@ export class NuevoCupon implements FormularioConCambios {
   private guardado = false;
 
   noGuardado(): boolean {
-    return this.form.dirty && !this.guardado;
+    let bandera = false;
+
+    if (this.form.dirty && this.guardado === false) {
+      bandera = true;
+    }
+
+    return bandera;
   }
 
   elegirDesde(fecha: Date): void {
-    this.form.controls.vigente_desde.setValue(aISO(fecha));
+    const iso = aISO(fecha);
+    this.form.controls.vigente_desde.setValue(iso);
     this.form.controls.vigente_desde.markAsDirty();
   }
 
   elegirHasta(fecha: Date): void {
-    this.form.controls.vigente_hasta.setValue(aISO(fecha));
+    const iso = aISO(fecha);
+    this.form.controls.vigente_hasta.setValue(iso);
     this.form.controls.vigente_hasta.markAsDirty();
   }
 
   async guardar(): Promise<void> {
-    if (this.guardando()) return;
-    this.form.markAllAsTouched();
-    if (this.form.invalid) return;
+    if (this.guardando() === false) {
+      this.form.markAllAsTouched();
 
-    const { codigo, porcentaje, vigente_desde, vigente_hasta } = this.form.getRawValue();
+      if (this.form.invalid === false) {
+        await this.crearCupon();
+      }
+    }
+  }
+
+  private async crearCupon(): Promise<void> {
+    const valores = this.form.getRawValue();
+
     this.guardando.set(true);
     this.error.set('');
     try {
       // En la base la vigencia es un momento: va desde el primer minuto del día de
       // inicio hasta el último del día de fin.
       // Los códigos se guardan siempre en mayúsculas.
+      const codigo = valores.codigo.toUpperCase();
+      const porcentaje = Number(valores.porcentaje);
+      const inicio = new Date(valores.vigente_desde + 'T00:00:00');
+      const fin = new Date(valores.vigente_hasta + 'T23:59:59.999');
+      const vigenteDesde = inicio.toISOString();
+      const vigenteHasta = fin.toISOString();
+
       await this.cupones.crear({
-        codigo: codigo.toUpperCase(),
+        codigo: codigo,
         tipo: 'edad_minima',
         edad_minima: 51,
-        porcentaje: Number(porcentaje),
-        vigente_desde: new Date(vigente_desde + 'T00:00:00').toISOString(),
-        vigente_hasta: new Date(vigente_hasta + 'T23:59:59.999').toISOString(),
+        porcentaje: porcentaje,
+        vigente_desde: vigenteDesde,
+        vigente_hasta: vigenteHasta,
       });
       this.guardado = true;
       await this.router.navigateByUrl('/admin/cupones');
     } catch (e) {
-      if (e instanceof Error && e.message === 'Ese código ya existe') {
+      let esRepetido = false;
+
+      if (e instanceof Error) {
+        if (e.message === 'Ese código ya existe') {
+          esRepetido = true;
+        }
+      }
+
+      if (esRepetido) {
         this.form.controls.codigo.setErrors({ repetido: true });
       } else {
         this.error.set('No se pudo guardar el cupón. Revisá la conexión y volvé a intentarlo.');

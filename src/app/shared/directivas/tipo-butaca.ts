@@ -19,20 +19,43 @@ export class TipoButacaDirective {
 
   tipo(): TipoButaca {
     const valor = this.appTipoButaca();
-    if (valor === 'wc' || valor === 'accesible') return 'accesible';
-    if (valor === 'vip') return 'vip';
-    return 'comun';
+
+    let bandera: TipoButaca = 'comun';
+
+    if (valor === 'wc' || valor === 'accesible') {
+      bandera = 'accesible';
+    } else if (valor === 'vip') {
+      bandera = 'vip';
+    }
+
+    return bandera;
   }
 
   esComun(): boolean {
-    return this.tipo() === 'comun';
+    const bandera = this.esTipo('comun');
+
+    return bandera;
   }
 
   esVip(): boolean {
-    return this.tipo() === 'vip';
+    const bandera = this.esTipo('vip');
+
+    return bandera;
   }
 
   esAccesible(): boolean {
-    return this.tipo() === 'accesible';
+    const bandera = this.esTipo('accesible');
+
+    return bandera;
+  }
+
+  private esTipo(buscado: TipoButaca): boolean {
+    let bandera = false;
+
+    if (this.tipo() === buscado) {
+      bandera = true;
+    }
+
+    return bandera;
   }
 }

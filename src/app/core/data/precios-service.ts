@@ -10,36 +10,46 @@ export class PreciosService {
 
   // Tarifa vigente por id de tipo de butaca.
   async tarifasVigentes(): Promise<Map<number, number>> {
+    const ahora = new Date().toISOString();
     const { data, error } = await this.supS.Sup.from('precios_butaca')
       .select('tipo_butaca_id, precio')
-      .lte('vigente_desde', new Date().toISOString())
+      .lte('vigente_desde', ahora)
       .order('vigente_desde', { ascending: false });
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
 
     // Vienen de la más nueva a la más vieja: me quedo con la primera de cada tipo.
     const tarifas = new Map<number, number>();
+
     for (const fila of data) {
-      if (!tarifas.has(fila.tipo_butaca_id)) {
+      if (tarifas.has(fila.tipo_butaca_id) === false) {
         tarifas.set(fila.tipo_butaca_id, fila.precio);
       }
     }
+
     return tarifas;
   }
 
   // Adicional vigente por id de formato.
   async adicionalesVigentes(): Promise<Map<number, number>> {
+    const ahora = new Date().toISOString();
     const { data, error } = await this.supS.Sup.from('adicionales_formato')
       .select('formato_id, adicional')
-      .lte('vigente_desde', new Date().toISOString())
+      .lte('vigente_desde', ahora)
       .order('vigente_desde', { ascending: false });
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
 
     const adicionales = new Map<number, number>();
+
     for (const fila of data) {
-      if (!adicionales.has(fila.formato_id)) {
+      if (adicionales.has(fila.formato_id) === false) {
         adicionales.set(fila.formato_id, fila.adicional);
       }
     }
+
     return adicionales;
   }
 
@@ -52,27 +62,49 @@ export class PreciosService {
     const ahora = new Date().toISOString();
 
     const preciosNuevos: PrecioButacaPorCrear[] = [];
+
     for (const [tipoId, precio] of tarifas) {
       if (tarifasActuales.get(tipoId) !== precio) {
-        preciosNuevos.push({ tipo_butaca_id: tipoId, precio, vigente_desde: ahora });
+        const precioNuevo: PrecioButacaPorCrear = {
+          tipo_butaca_id: tipoId,
+          precio: precio,
+          vigente_desde: ahora,
+        };
+
+        preciosNuevos.push(precioNuevo);
       }
     }
 
     const adicionalesNuevos: AdicionalFormatoPorCrear[] = [];
+
     for (const [formatoId, adicional] of adicionales) {
       if (adicionalesActuales.get(formatoId) !== adicional) {
-        adicionalesNuevos.push({ formato_id: formatoId, adicional, vigente_desde: ahora });
+        const adicionalNuevo: AdicionalFormatoPorCrear = {
+          formato_id: formatoId,
+          adicional: adicional,
+          vigente_desde: ahora,
+        };
+
+        adicionalesNuevos.push(adicionalNuevo);
       }
     }
 
     if (preciosNuevos.length > 0) {
       const { error } = await this.supS.Sup.from('precios_butaca').insert(preciosNuevos);
-      if (error) throw error;
+      if (error !== null) {
+        throw error;
+      }
     }
+
     if (adicionalesNuevos.length > 0) {
       const { error } = await this.supS.Sup.from('adicionales_formato').insert(adicionalesNuevos);
-      if (error) throw error;
+      if (error !== null) {
+        throw error;
+      }
     }
-    return preciosNuevos.length + adicionalesNuevos.length;
+
+    const cantidadCambios = preciosNuevos.length + adicionalesNuevos.length;
+
+    return cantidadCambios;
   }
 }

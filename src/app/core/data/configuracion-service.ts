@@ -11,7 +11,16 @@ export class ConfiguracionService {
       .select('valor')
       .eq('clave', clave)
       .maybeSingle();
-    if (error) throw error;
-    return data?.valor ?? null;
+    if (error !== null) {
+      throw error;
+    }
+
+    let valor: string | null = null;
+
+    if (data !== null) {
+      valor = data.valor;
+    }
+
+    return valor;
   }
 }

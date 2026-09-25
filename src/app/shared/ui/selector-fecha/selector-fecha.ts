@@ -48,11 +48,13 @@ export class SelectorFecha implements OnInit, OnChanges {
   }
 
   semanaSiguiente(): void {
-    this.mostrarSemana(sumarDias(this.desde, DIAS_POR_SEMANA));
+    const siguiente = sumarDias(this.desde, DIAS_POR_SEMANA);
+    this.mostrarSemana(siguiente);
   }
 
   semanaAnterior(): void {
-    this.mostrarSemana(sumarDias(this.desde, -DIAS_POR_SEMANA));
+    const anterior = sumarDias(this.desde, -DIAS_POR_SEMANA);
+    this.mostrarSemana(anterior);
   }
 
   elegir(dia: OpcionDia): void {
@@ -62,34 +64,61 @@ export class SelectorFecha implements OnInit, OnChanges {
 
   estaElegida(dia: OpcionDia): boolean {
     const elegida = this.elegida();
-    return elegida !== null && mismoDia(elegida, dia.fecha);
+
+    let bandera = false;
+
+    if (elegida !== null && mismoDia(elegida, dia.fecha)) {
+      bandera = true;
+    }
+
+    return bandera;
   }
 
   private actualizarFecha(): void {
     const iso = this.fechaInicial();
-    if (!iso) {
+
+    if (iso !== '') {
+      const mediodia = new Date(iso + 'T12:00:00');
+      const fecha = inicioDelDia(mediodia);
+      this.elegida.set(fecha);
+
+      let desde = this.hoy;
+
+      if (fecha > this.hoy) {
+        desde = fecha;
+      }
+
+      this.mostrarSemana(desde);
+    } else {
       this.elegida.set(null);
       this.mostrarSemana(this.hoy);
-      return;
     }
-
-    const fecha = inicioDelDia(new Date(iso + 'T12:00:00'));
-    this.elegida.set(fecha);
-    this.mostrarSemana(fecha > this.hoy ? fecha : this.hoy);
   }
 
   private mostrarSemana(desde: Date): void {
     // Nunca antes de hoy: con este selector no se eligen fechas pasadas.
-    this.desde = desde < this.hoy ? this.hoy : desde;
+    let inicio = desde;
+
+    if (desde < this.hoy) {
+      inicio = this.hoy;
+    }
+
+    this.desde = inicio;
 
     const fechas = diasConsecutivos(this.desde, DIAS_POR_SEMANA);
     const dias: OpcionDia[] = [];
+
     for (const fecha of fechas) {
-      dias.push({ fecha, etiqueta: etiquetaDia(fecha, this.hoy), descripcion: fechaLarga(fecha) });
+      const etiqueta = etiquetaDia(fecha, this.hoy);
+      const descripcion = fechaLarga(fecha);
+      dias.push({ fecha, etiqueta, descripcion });
     }
 
+    const meses = mesesDe(fechas);
+    const esPrimeraSemana = mismoDia(this.desde, this.hoy);
+
     this.dias.set(dias);
-    this.meses.set(mesesDe(fechas));
-    this.esPrimeraSemana.set(mismoDia(this.desde, this.hoy));
+    this.meses.set(meses);
+    this.esPrimeraSemana.set(esPrimeraSemana);
   }
 }

@@ -5,13 +5,42 @@ export const MENSAJE_VIP_MAYOR = 'La tarifa VIP debe ser mayor que la común';
 // Validador de grupo: el grupo tiene que tener los controles "comun" y "vip".
 // Si alguno está vacío no digo nada, de eso se encarga el required de cada campo.
 export const vipMayorQueComun: ValidatorFn = (grupo: AbstractControl): ValidationErrors | null => {
-  const comun = grupo.get('comun')?.value;
-  const vip = grupo.get('vip')?.value;
-  if (comun === null || comun === '' || vip === null || vip === '') {
-    return null;
+  const comun = valorDeControl(grupo, 'comun');
+  const vip = valorDeControl(grupo, 'vip');
+
+  let hayVacio = false;
+
+  if (comun === null || comun === '') {
+    hayVacio = true;
+  } else if (vip === null || vip === '') {
+    hayVacio = true;
   }
+
+  let vipEsMayor = false;
+
   if (Number(vip) > Number(comun)) {
-    return null;
+    vipEsMayor = true;
   }
-  return { vipMayorQueComun: MENSAJE_VIP_MAYOR };
+
+  let errores: ValidationErrors | null = { vipMayorQueComun: MENSAJE_VIP_MAYOR };
+
+  if (hayVacio || vipEsMayor) {
+    errores = null;
+  }
+
+  return errores;
 };
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function valorDeControl(grupo: AbstractControl, nombre: string): unknown {
+  let valor: unknown = undefined;
+
+  const control = grupo.get(nombre);
+
+  if (control !== null) {
+    valor = control.value;
+  }
+
+  return valor;
+}

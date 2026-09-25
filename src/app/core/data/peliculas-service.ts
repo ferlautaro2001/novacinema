@@ -11,16 +11,40 @@ export const ERROR_DESTACADAS = 'Podés destacar hasta 6 películas';
 
 // Traduce el error de la base a un mensaje para mostrar.
 export function errorPelicula(error: unknown): string {
-  const { message = '', code = '' } = (error ?? {}) as { message?: string; code?: string };
-  if (message.includes(ERROR_HISTORIAL)) return ERROR_HISTORIAL;
-  if (message.includes(ERROR_DURACION)) return ERROR_DURACION;
-  if (message.includes(ERROR_DESTACADAS)) return ERROR_DESTACADAS;
-  if (message.includes('modificada')) {
-    return 'La película fue modificada en otra sesión. Volvé al listado y abrila de nuevo.';
+  let datos: { message?: string; code?: string } = {};
+
+  if (error !== null && error !== undefined) {
+    datos = error as { message?: string; code?: string };
   }
-  // 23503: la película tiene funciones o ventas que la referencian.
-  if (code === '23503') return ERROR_HISTORIAL;
-  return 'No se pudo guardar el cambio. Revisá tu conexión y probá de nuevo.';
+
+  let message = '';
+
+  if (datos.message !== undefined) {
+    message = datos.message;
+  }
+
+  let code = '';
+
+  if (datos.code !== undefined) {
+    code = datos.code;
+  }
+
+  let mensaje = 'No se pudo guardar el cambio. Revisá tu conexión y probá de nuevo.';
+
+  if (message.includes(ERROR_HISTORIAL)) {
+    mensaje = ERROR_HISTORIAL;
+  } else if (message.includes(ERROR_DURACION)) {
+    mensaje = ERROR_DURACION;
+  } else if (message.includes(ERROR_DESTACADAS)) {
+    mensaje = ERROR_DESTACADAS;
+  } else if (message.includes('modificada')) {
+    mensaje = 'La película fue modificada en otra sesión. Volvé al listado y abrila de nuevo.';
+  } else if (code === '23503') {
+    // 23503: la película tiene funciones o ventas que la referencian.
+    mensaje = ERROR_HISTORIAL;
+  }
+
+  return mensaje;
 }
 
 @Service()
@@ -29,12 +53,19 @@ export class PeliculasService {
 
   async listar(soloDestacadas = false): Promise<PeliculaConCatalogo[]> {
     let consulta = this.supS.Sup.from('peliculas').select(SELECCION).order('titulo');
+
     if (soloDestacadas) {
       consulta = consulta.eq('destacada', true).eq('activo', true).neq('estado', 'archivada');
     }
+
     const { data, error } = await consulta;
-    if (error) throw error;
-    return data as PeliculaConCatalogo[];
+    if (error !== null) {
+      throw error;
+    }
+
+    const peliculas = data as PeliculaConCatalogo[];
+
+    return peliculas;
   }
 
   async buscar(id: string): Promise<PeliculaConCatalogo> {
@@ -42,18 +73,33 @@ export class PeliculasService {
       .select(SELECCION)
       .eq('id', id)
       .single();
-    if (error) throw error;
-    return data as PeliculaConCatalogo;
+    if (error !== null) {
+      throw error;
+    }
+
+    const pelicula = data as PeliculaConCatalogo;
+
+    return pelicula;
   }
 
   async tieneFuncionesFuturas(id: string): Promise<boolean> {
+    const ahora = new Date().toISOString();
     const { count, error } = await this.supS.Sup.from('funciones')
       .select('id', { count: 'exact', head: true })
       .eq('pelicula_id', id)
       .eq('estado', 'programada')
-      .gt('comienza_en', new Date().toISOString());
-    if (error) throw error;
-    return (count ?? 0) > 0;
+      .gt('comienza_en', ahora);
+    if (error !== null) {
+      throw error;
+    }
+
+    let tieneFunciones = false;
+
+    if (count !== null && count > 0) {
+      tieneFunciones = true;
+    }
+
+    return tieneFunciones;
   }
 
   async guardar(
@@ -61,26 +107,45 @@ export class PeliculasService {
     generos: number[],
     original: PeliculaConCatalogo | null,
   ): Promise<string> {
+    let id: string | null = null;
+    let version: string | null = null;
+
+    if (original !== null) {
+      id = original.id;
+      version = original.actualizado_en;
+    }
+
     // Uso RPC para guardar película y géneros en una sola transacción: si falla
     // una de las tablas se revierte todo y no quedan altas a medias.
     const { data, error } = await this.supS.Sup.rpc('guardar_pelicula', {
-      p_id: original?.id ?? null,
+      p_id: id,
       p_datos: { ...datos },
       p_generos: generos,
-      p_version: original?.actualizado_en ?? null,
+      p_version: version,
     });
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
   async destacar(pelicula: PeliculaConCatalogo): Promise<void> {
+    let destacada = true;
+
+    if (pelicula.destacada) {
+      destacada = false;
+    }
+
     const { error } = await this.supS.Sup.from('peliculas')
-      .update({ destacada: !pelicula.destacada })
+      .update({ destacada: destacada })
       .eq('id', pelicula.id)
       .eq('actualizado_en', pelicula.actualizado_en)
       .select('id')
       .single();
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
   }
 
   async finalizar(pelicula: PeliculaConCatalogo): Promise<void> {
@@ -90,22 +155,32 @@ export class PeliculasService {
       .eq('actualizado_en', pelicula.actualizado_en)
       .select('id')
       .single();
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
   }
 
   async eliminar(pelicula: PeliculaConCatalogo): Promise<void> {
     const { count, error: consultaError } = await this.supS.Sup.from('funciones')
       .select('id', { count: 'exact', head: true })
       .eq('pelicula_id', pelicula.id);
-    if (consultaError) throw consultaError;
+    if (consultaError !== null) {
+      throw consultaError;
+    }
+
     // Toda entrada referencia una función, así que con funciones ya no se puede borrar.
-    if (count) throw new Error(ERROR_HISTORIAL);
+    if (count !== null && count !== 0) {
+      throw new Error(ERROR_HISTORIAL);
+    }
+
     const { error } = await this.supS.Sup.from('peliculas')
       .delete()
       .eq('id', pelicula.id)
       .eq('actualizado_en', pelicula.actualizado_en)
       .select('id')
       .single();
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
   }
 }

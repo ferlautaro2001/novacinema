@@ -22,7 +22,8 @@ export class Cupones implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      this.cupones.set(await this.cuponesS.listar());
+      const lista = await this.cuponesS.listar();
+      this.cupones.set(lista);
     } catch {
       this.error.set('No se pudo cargar el listado de cupones. Probá de nuevo.');
     } finally {
@@ -32,34 +33,47 @@ export class Cupones implements OnInit {
 
   // Un cupón activo pero fuera de fecha tampoco se acepta, por eso lo muestro aparte.
   estado(cupon: Cupon): string {
-    if (!cupon.activo) {
-      return 'Desactivado';
+    const ahora = new Date();
+
+    let bandera = 'Activo';
+
+    if (cupon.activo === false) {
+      bandera = 'Desactivado';
+    } else if (cuponVigente(cupon, ahora) === false) {
+      bandera = 'Vencido';
     }
-    if (!cuponVigente(cupon, new Date())) {
-      return 'Vencido';
-    }
-    return 'Activo';
+
+    return bandera;
   }
 
   claseEstado(cupon: Cupon): string {
     const estado = this.estado(cupon);
+
+    let clase = 'nc-badge nc-badge--neutral';
+
     if (estado === 'Activo') {
-      return 'nc-badge nc-badge--success';
+      clase = 'nc-badge nc-badge--success';
+    } else if (estado === 'Vencido') {
+      clase = 'nc-badge nc-badge--warning';
     }
-    if (estado === 'Vencido') {
-      return 'nc-badge nc-badge--warning';
-    }
-    return 'nc-badge nc-badge--neutral';
+
+    return clase;
   }
 
   async cambiarActivo(cupon: Cupon): Promise<void> {
-    const activo = !cupon.activo;
+    let activo = false;
+
+    if (cupon.activo === false) {
+      activo = true;
+    }
+
     this.cambiando.set(cupon.id);
     this.aviso.set(null);
     this.error.set(null);
     try {
       await this.cuponesS.cambiarActivo(cupon.id, activo);
-      this.cupones.update((lista) => lista.map((c) => (c.id === cupon.id ? { ...c, activo } : c)));
+      const lista = cuponesConActivo(this.cupones(), cupon.id, activo);
+      this.cupones.set(lista);
       if (activo) {
         this.aviso.set(`${cupon.codigo} activado.`);
       } else {
@@ -71,4 +85,20 @@ export class Cupones implements OnInit {
       this.cambiando.set(null);
     }
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function cuponesConActivo(lista: Cupon[], id: string, activo: boolean): Cupon[] {
+  const cupones: Cupon[] = [];
+
+  for (const cupon of lista) {
+    if (cupon.id === id) {
+      cupones.push({ ...cupon, activo });
+    } else {
+      cupones.push(cupon);
+    }
+  }
+
+  return cupones;
 }

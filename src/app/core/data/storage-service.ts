@@ -5,11 +5,15 @@ export const TIPOS_PORTADA = ['image/jpeg', 'image/png', 'image/webp'];
 export const MAX_PORTADA = 10 * 1024 * 1024;
 
 export function validarPortada(archivo: File): string | null {
-  if (!TIPOS_PORTADA.includes(archivo.type)) return 'Elegí una imagen JPEG, PNG o WebP.';
-  if (!archivo.size || archivo.size > MAX_PORTADA) {
-    return 'La imagen debe pesar entre 1 byte y 10 MB.';
+  let mensaje: string | null = null;
+
+  if (TIPOS_PORTADA.includes(archivo.type) === false) {
+    mensaje = 'Elegí una imagen JPEG, PNG o WebP.';
+  } else if (archivo.size === 0 || archivo.size > MAX_PORTADA) {
+    mensaje = 'La imagen debe pesar entre 1 byte y 10 MB.';
   }
-  return null;
+
+  return mensaje;
 }
 
 @Service()
@@ -18,29 +22,55 @@ export class StorageService {
 
   urlPublica(ruta: string): string {
     // Las portadas importadas pueden ser URLs externas; las nuevas guardan su ruta.
-    if (ruta.startsWith('http://') || ruta.startsWith('https://')) {
-      return ruta;
+    let esExterna = false;
+
+    if (ruta.startsWith('http://')) {
+      esExterna = true;
+    } else if (ruta.startsWith('https://')) {
+      esExterna = true;
     }
-    return this.supS.Sup.storage.from('imagenes').getPublicUrl(ruta).data.publicUrl;
+
+    let url = ruta;
+
+    if (esExterna === false) {
+      const respuesta = this.supS.Sup.storage.from('imagenes').getPublicUrl(ruta);
+      url = respuesta.data.publicUrl;
+    }
+
+    return url;
   }
 
   async subirPortada(archivo: File): Promise<string> {
     const invalida = validarPortada(archivo);
-    if (invalida) throw new Error(invalida);
+
+    if (invalida !== null) {
+      throw new Error(invalida);
+    }
 
     let extension = archivo.type.split('/')[1];
-    if (extension === 'jpeg') extension = 'jpg';
-    const ruta = `peliculas/${crypto.randomUUID()}.${extension}`;
+
+    if (extension === 'jpeg') {
+      extension = 'jpg';
+    }
+
+    const nombreArchivo = crypto.randomUUID();
+    const ruta = `peliculas/${nombreArchivo}.${extension}`;
     const { error } = await this.supS.Sup.storage
       .from('imagenes')
       .upload(ruta, archivo, { upsert: false });
-    if (error) throw new Error('No se pudo subir la portada. Probá de nuevo.');
+    if (error !== null) {
+      throw new Error('No se pudo subir la portada. Probá de nuevo.');
+    }
+
     return ruta;
   }
 
   async eliminarPortada(ruta: string): Promise<void> {
-    if (!ruta.startsWith('peliculas/')) return;
-    const { error } = await this.supS.Sup.storage.from('imagenes').remove([ruta]);
-    if (error) throw error;
+    if (ruta.startsWith('peliculas/')) {
+      const { error } = await this.supS.Sup.storage.from('imagenes').remove([ruta]);
+      if (error !== null) {
+        throw error;
+      }
+    }
   }
 }

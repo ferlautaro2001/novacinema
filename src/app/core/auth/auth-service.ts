@@ -1,5 +1,5 @@
 import { inject, Service, signal } from '@angular/core';
-import type { AuthError, User } from '@supabase/supabase-js';
+import type { AuthError, Session, User } from '@supabase/supabase-js';
 import type { Rol } from '../models/enumerados';
 import { Supabase } from '../supabase/supabase-client';
 
@@ -23,14 +23,19 @@ export interface PerfilSesion {
 }
 
 export function inicioSegunRol(rol: Rol): string {
+  let ruta = '/inicio';
+
   switch (rol) {
     case 'administrador':
-      return '/admin';
+      ruta = '/admin';
+      break;
+
     case 'empleado':
-      return '/boleteria';
-    default:
-      return '/inicio';
+      ruta = '/boleteria';
+      break;
   }
+
+  return ruta;
 }
 
 const MENSAJES_ERROR: Record<string, string> = {
@@ -57,23 +62,12 @@ export class AuthService {
   // Los guards esperan esta promesa: si alguien abre /admin directo, el guard corre
   // antes de que Supabase haya leído la sesión guardada.
   private terminarCarga!: () => void;
-  private cargaTerminada = new Promise<void>((resolver) => (this.terminarCarga = resolver));
+  private cargaTerminada = new Promise<void>((resolver) => this.guardarResolver(resolver));
 
   constructor() {
     // El primer evento (INITIAL_SESSION) llega cuando Supabase terminó de leer la
     // sesión guardada; hasta ahí `cargando` queda en true.
-    this.supS.Sup.auth.onAuthStateChange((_evento, sesion) => {
-      const usuario = sesion?.user ?? null;
-      this.usuario.set(usuario);
-      if (!usuario) {
-        this.perfil.set(null);
-        this.marcarListo();
-        return;
-      }
-      // Supabase advierte que consultar adentro de este callback puede trabarse,
-      // por eso cargo el perfil en el turno siguiente.
-      setTimeout(() => this.cargarPerfil(usuario.id).finally(() => this.marcarListo()));
-    });
+    this.supS.Sup.auth.onAuthStateChange((_evento, sesion) => this.alCambiarSesion(sesion));
   }
 
   // El perfil lo crea el trigger crear_perfil con lo que viaja en options.data.
@@ -89,14 +83,34 @@ export class AuthService {
         },
       },
     });
-    if (error) throw new Error(this.mensajeDeError(error));
+    if (error !== null) {
+      const mensaje = this.mensajeDeError(error);
+      throw new Error(mensaje);
+    }
 
     // Con la confirmación de email activa, Supabase no avisa que el email ya existe:
     // devuelve un usuario sin identidades, y es la única forma de detectarlo.
-    if (data.user && data.user.identities?.length === 0) {
+    let emailYaRegistrado = false;
+
+    if (data.user !== null) {
+      const identidades = data.user.identities;
+
+      if (identidades !== undefined && identidades.length === 0) {
+        emailYaRegistrado = true;
+      }
+    }
+
+    if (emailYaRegistrado) {
       throw new Error(MENSAJES_ERROR['user_already_exists']);
     }
-    return data.session ? 'sesion_iniciada' : 'confirmar_email';
+
+    let resultado: ResultadoRegistro = 'confirmar_email';
+
+    if (data.session !== null) {
+      resultado = 'sesion_iniciada';
+    }
+
+    return resultado;
   }
 
   async iniciarSesion(email: string, clave: string): Promise<Rol> {
@@ -104,39 +118,94 @@ export class AuthService {
       email: email.trim(),
       password: clave,
     });
-    if (error) {
-      if (error.code === 'invalid_credentials' || error.code === 'email_not_confirmed') {
+    if (error !== null) {
+      let sonCredencialesIncorrectas = false;
+
+      if (error.code === 'invalid_credentials') {
+        sonCredencialesIncorrectas = true;
+      } else if (error.code === 'email_not_confirmed') {
+        sonCredencialesIncorrectas = true;
+      }
+
+      if (sonCredencialesIncorrectas) {
         throw new Error(CREDENCIALES_INCORRECTAS);
       }
-      throw new Error(this.mensajeDeError(error, 'No se pudo iniciar la sesión. Probá de nuevo.'));
+
+      const mensaje = this.mensajeDeError(error, 'No se pudo iniciar la sesión. Probá de nuevo.');
+      throw new Error(mensaje);
     }
+
     const perfil = await this.cargarPerfil(data.user.id);
-    if (!perfil) throw new Error('No se pudo leer tu perfil. Probá de nuevo.');
-    return perfil.rol;
+
+    if (perfil === null) {
+      throw new Error('No se pudo leer tu perfil. Probá de nuevo.');
+    }
+
+    const rol = perfil.rol;
+
+    return rol;
   }
 
   listo(): Promise<void> {
-    return this.cargaTerminada;
+    const carga = this.cargaTerminada;
+
+    return carga;
   }
 
   // Leo la sesión de nuevo en vez de confiar en la de memoria: si se cerró en otra
   // pestaña, acá me entero.
   async sesionVigente(): Promise<boolean> {
     const { data } = await this.supS.Sup.auth.getSession();
-    if (!data.session) {
+
+    let vigente = false;
+
+    if (data.session !== null) {
+      vigente = true;
+    } else {
       this.usuario.set(null);
       this.perfil.set(null);
-      return false;
     }
-    return true;
+
+    return vigente;
   }
 
   // SIGNED_OUT también limpia todo, pero lo hago acá para que la pantalla cambie en el acto.
   async cerrarSesion(): Promise<void> {
     const { error } = await this.supS.Sup.auth.signOut();
-    if (error) throw new Error('No se pudo cerrar la sesión. Probá de nuevo.');
+    if (error !== null) {
+      throw new Error('No se pudo cerrar la sesión. Probá de nuevo.');
+    }
+
     this.usuario.set(null);
     this.perfil.set(null);
+  }
+
+  private guardarResolver(resolver: () => void): void {
+    this.terminarCarga = resolver;
+  }
+
+  private alCambiarSesion(sesion: Session | null): void {
+    let usuario: User | null = null;
+
+    if (sesion !== null) {
+      usuario = sesion.user;
+    }
+
+    this.usuario.set(usuario);
+
+    if (usuario !== null) {
+      const id = usuario.id;
+      // Supabase advierte que consultar adentro de este callback puede trabarse,
+      // por eso cargo el perfil en el turno siguiente.
+      setTimeout(() => this.cargarPerfilYMarcarListo(id));
+    } else {
+      this.perfil.set(null);
+      this.marcarListo();
+    }
+  }
+
+  private cargarPerfilYMarcarListo(id: string): void {
+    this.cargarPerfil(id).finally(() => this.marcarListo());
   }
 
   private marcarListo(): void {
@@ -150,17 +219,20 @@ export class AuthService {
       .eq('id', id)
       .single();
 
-    if (error || !data?.rol) {
-      this.perfil.set(null);
-      return null;
+    let perfil: PerfilSesion | null = null;
+
+    if (error === null && data !== null && data.rol !== null && data.rol !== undefined) {
+      const rol = data.rol.codigo as Rol;
+
+      perfil = {
+        nombre: data.nombre,
+        apellido: data.apellido,
+        rol: rol,
+      };
     }
 
-    const perfil: PerfilSesion = {
-      nombre: data.nombre,
-      apellido: data.apellido,
-      rol: data.rol.codigo as Rol,
-    };
     this.perfil.set(perfil);
+
     return perfil;
   }
 
@@ -168,7 +240,16 @@ export class AuthService {
     error: AuthError,
     general = 'No se pudo crear la cuenta. Probá de nuevo en unos minutos.',
   ): string {
-    if (error.code && MENSAJES_ERROR[error.code]) return MENSAJES_ERROR[error.code];
-    return general;
+    let mensaje = general;
+
+    if (error.code !== undefined) {
+      const traducido = MENSAJES_ERROR[error.code];
+
+      if (traducido !== undefined) {
+        mensaje = traducido;
+      }
+    }
+
+    return mensaje;
   }
 }

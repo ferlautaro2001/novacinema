@@ -48,95 +48,182 @@ export class MapaButacasComponent {
 
   butacasLista(): ButacaMapa[] {
     const recibidas = this.butacas();
-    const base = recibidas && recibidas.length > 0 ? recibidas : generarDistribucionSala().butacas;
+
+    let base: ButacaMapa[];
+
+    if (recibidas !== null && recibidas.length > 0) {
+      base = recibidas;
+    } else {
+      const distribucion = generarDistribucionSala();
+      base = distribucion.butacas;
+    }
 
     // En modo 'ver' no se marca ninguna; en 'elegir' manda la selección interna
     // y, mientras esté vacía, la que llega por input.
     let elegidas: string[] = [];
+
     if (this.modo() === 'elegir') {
-      elegidas =
-        this.seleccionInterna().length > 0 ? this.seleccionInterna() : this.seleccionadas();
+      const internas = this.seleccionInterna();
+
+      if (internas.length > 0) {
+        elegidas = internas;
+      } else {
+        elegidas = this.seleccionadas();
+      }
     }
 
-    return base.map((b) => ({ ...b, seleccionada: elegidas.includes(b.id) }));
+    const lista: ButacaMapa[] = [];
+
+    for (const butaca of base) {
+      let seleccionada = false;
+
+      if (elegidas.includes(butaca.id)) {
+        seleccionada = true;
+      }
+
+      lista.push({ ...butaca, seleccionada });
+    }
+
+    return lista;
   }
 
   filasVisuales() {
     const porFila: Record<string, (ButacaMapa | null)[]> = {};
+
     for (const letra of FILAS) {
       porFila[letra] = Array(TOTAL_COLUMNAS).fill(null);
     }
-    for (const b of this.butacasLista()) {
-      if (porFila[b.fila]) porFila[b.fila][b.columna - 1] = b;
+
+    const lista = this.butacasLista();
+
+    for (const butaca of lista) {
+      const posiciones = porFila[butaca.fila];
+
+      if (posiciones !== undefined) {
+        posiciones[butaca.columna - 1] = butaca;
+      }
     }
 
-    return FILAS.map((letra, filaIndex) => ({
-      letra,
-      filaIndex,
-      esVip: FILAS_VIP.includes(letra),
-      esAccesible: letra === 'J',
-      esCirculacion: letra === 'K',
-      posiciones: porFila[letra],
-    }));
+    const filas = [];
+
+    for (let filaIndex = 0; filaIndex < FILAS.length; filaIndex++) {
+      const letra = FILAS[filaIndex];
+      const esVip = FILAS_VIP.includes(letra);
+
+      let esAccesible = false;
+      let esCirculacion = false;
+
+      if (letra === 'J') {
+        esAccesible = true;
+      }
+
+      if (letra === 'K') {
+        esCirculacion = true;
+      }
+
+      filas.push({
+        letra,
+        filaIndex,
+        esVip,
+        esAccesible,
+        esCirculacion,
+        posiciones: porFila[letra],
+      });
+    }
+
+    return filas;
   }
 
   zoomPorcentaje(): number {
-    return Math.round(this.zoom() * 100);
+    const porcentaje = Math.round(this.zoom() * 100);
+
+    return porcentaje;
   }
 
   seleccionDetalle(): ButacaMapa[] {
     const lista = this.butacasLista();
     const detalle: ButacaMapa[] = [];
+
     for (const id of this.seleccionInterna()) {
-      const butaca = lista.find((b) => b.id === id);
-      if (butaca) detalle.push(butaca);
+      const butaca = this.buscarButaca(lista, id);
+
+      if (butaca !== undefined) {
+        detalle.push(butaca);
+      }
     }
+
     return detalle;
   }
 
   totalPrecio(): number {
     const precios = this.precios();
+    const detalle = this.seleccionDetalle();
+
     let total = 0;
-    for (const b of this.seleccionDetalle()) {
-      total += precios[b.tipo] || 8500;
+
+    for (const butaca of detalle) {
+      total += this.precioDeTipo(precios, butaca.tipo);
     }
+
     return total;
   }
 
   nombreTipo(tipo: TipoButaca): string {
-    if (tipo === 'vip') return 'VIP';
-    if (tipo === 'accesible') return 'Accesible';
-    return 'Común';
+    let nombre = 'Común';
+
+    if (tipo === 'vip') {
+      nombre = 'VIP';
+    } else if (tipo === 'accesible') {
+      nombre = 'Accesible';
+    }
+
+    return nombre;
   }
 
   estadoTexto(estado: string, seleccionada?: boolean): string {
-    if (seleccionada) return 'Seleccionada';
-    if (estado === 'ocupada') return 'Ocupada';
-    if (estado === 'bloqueada') return 'Bloqueada';
-    return 'Disponible';
+    let texto = 'Disponible';
+
+    if (seleccionada === true) {
+      texto = 'Seleccionada';
+    } else if (estado === 'ocupada') {
+      texto = 'Ocupada';
+    } else if (estado === 'bloqueada') {
+      texto = 'Bloqueada';
+    }
+
+    return texto;
   }
 
   cambiarVista(nueva: '2d' | '3d'): void {
-    if (nueva === '3d' && !this.soporta) {
+    if (nueva === '3d' && this.soporta === false) {
       this.mostrarNotificacion('3D no disponible en este navegador');
-      return;
-    }
-    this.vista.set(nueva);
-    this.ocultarTooltip();
-    if (nueva === '2d') {
-      this.ajustarZoom();
     } else {
-      // Espero a que el contenedor deje de estar oculto para que el canvas tome su tamaño.
-      setTimeout(() => this.sala3d()?.onResize(), 50);
+      this.vista.set(nueva);
+      this.ocultarTooltip();
+
+      if (nueva === '2d') {
+        this.ajustarZoom();
+      } else {
+        // Espero a que el contenedor deje de estar oculto para que el canvas tome su tamaño.
+        setTimeout(() => this.redimensionarSala3d(), 50);
+      }
     }
   }
 
   acercarZoom(): void {
-    this.zoom.update((z) => Math.min(1.8, Math.round((z + 0.1) * 10) / 10));
+    const actual = this.zoom();
+    const redondeado = Math.round((actual + 0.1) * 10) / 10;
+    const nuevo = Math.min(1.8, redondeado);
+
+    this.zoom.set(nuevo);
   }
 
   alejarZoom(): void {
-    this.zoom.update((z) => Math.max(0.4, Math.round((z - 0.1) * 10) / 10));
+    const actual = this.zoom();
+    const redondeado = Math.round((actual - 0.1) * 10) / 10;
+    const nuevo = Math.max(0.4, redondeado);
+
+    this.zoom.set(nuevo);
   }
 
   ajustarZoom(): void {
@@ -145,64 +232,75 @@ export class MapaButacasComponent {
 
   cambiarCamara(camara: string): void {
     this.camaraActiva.set(camara);
-    this.sala3d()?.preset(camara);
+
+    const sala = this.sala3d();
+
+    if (sala !== undefined) {
+      sala.preset(camara);
+    }
   }
 
   alternarModoFuncion(): void {
     const activo = !this.modoFuncion();
+    const mensaje = activo ? 'Modo función: se apagan las luces…' : 'Luces de sala encendidas';
+
     this.modoFuncion.set(activo);
-    this.mostrarNotificacion(
-      activo ? 'Modo función: se apagan las luces…' : 'Luces de sala encendidas',
-    );
+    this.mostrarNotificacion(mensaje);
   }
 
-  tocarButaca(b: ButacaMapa, evento?: MouseEvent): void {
-    if (this.modo() === 'ver') {
-      this.mostrarTooltip(b, evento);
-      return;
-    }
-
-    if (b.estado === 'ocupada') {
-      this.mostrarNotificacion(`La butaca ${b.id} ya está ocupada`);
-      return;
-    }
-    if (b.estado !== 'disponible') {
-      this.mostrarNotificacion(`La butaca ${b.id} no está disponible`);
-      return;
-    }
-
+  tocarButaca(butaca: ButacaMapa, evento?: MouseEvent): void {
     const actuales = this.seleccionInterna();
-    const yaElegida = actuales.includes(b.id);
+    const yaElegida = actuales.includes(butaca.id);
 
-    if (!yaElegida && actuales.length >= 10) {
+    if (this.modo() === 'ver') {
+      this.mostrarTooltip(butaca, evento);
+    } else if (butaca.estado === 'ocupada') {
+      this.mostrarNotificacion(`La butaca ${butaca.id} ya está ocupada`);
+    } else if (butaca.estado !== 'disponible') {
+      this.mostrarNotificacion(`La butaca ${butaca.id} no está disponible`);
+    } else if (yaElegida === false && actuales.length >= 10) {
       this.mostrarNotificacion('Podés elegir hasta 10 butacas por compra');
-      return;
-    }
+    } else {
+      let nuevas: string[];
 
-    const nuevas = yaElegida ? actuales.filter((id) => id !== b.id) : [...actuales, b.id];
-    this.seleccionInterna.set(nuevas);
-    this.seleccionCambiada.emit(nuevas);
-    this.butacaTocada.emit(b);
+      if (yaElegida) {
+        nuevas = this.sinButaca(actuales, butaca.id);
+      } else {
+        nuevas = [...actuales, butaca.id];
+      }
+
+      this.seleccionInterna.set(nuevas);
+      this.seleccionCambiada.emit(nuevas);
+      this.butacaTocada.emit(butaca);
+    }
   }
 
   quitarButaca(id: string): void {
-    const nuevas = this.seleccionInterna().filter((x) => x !== id);
+    const actuales = this.seleccionInterna();
+    const nuevas = this.sinButaca(actuales, id);
+
     this.seleccionInterna.set(nuevas);
     this.seleccionCambiada.emit(nuevas);
   }
 
-  onHover3D(ev: { butaca: ButacaMapa | null; x: number; y: number }): void {
-    if (ev.butaca) {
-      this.tooltipData.set({ butaca: ev.butaca, x: ev.x, y: ev.y });
+  onHover3D(evento: { butaca: ButacaMapa | null; x: number; y: number }): void {
+    if (evento.butaca !== null) {
+      this.tooltipData.set({ butaca: evento.butaca, x: evento.x, y: evento.y });
     } else {
       this.ocultarTooltip();
     }
   }
 
-  mostrarTooltip(b: ButacaMapa, evento?: MouseEvent): void {
-    const x = evento ? evento.clientX + 10 : 200;
-    const y = evento ? evento.clientY + 10 : 200;
-    this.tooltipData.set({ butaca: b, x, y });
+  mostrarTooltip(butaca: ButacaMapa, evento?: MouseEvent): void {
+    let x = 200;
+    let y = 200;
+
+    if (evento !== undefined) {
+      x = evento.clientX + 10;
+      y = evento.clientY + 10;
+    }
+
+    this.tooltipData.set({ butaca, x, y });
   }
 
   ocultarTooltip(): void {
@@ -212,12 +310,14 @@ export class MapaButacasComponent {
   mostrarNotificacion(mensaje: string): void {
     this.mensajeNotificacion.set(mensaje);
     clearTimeout(this.temporizadorAviso);
-    this.temporizadorAviso = setTimeout(() => this.mensajeNotificacion.set(null), 2800);
+    this.temporizadorAviso = setTimeout(() => this.ocultarNotificacion(), 2800);
   }
 
   emitirContinuar(): void {
-    if (this.seleccionInterna().length > 0) {
-      this.continuar.emit(this.seleccionInterna());
+    const seleccion = this.seleccionInterna();
+
+    if (seleccion.length > 0) {
+      this.continuar.emit(seleccion);
     }
   }
 
@@ -230,22 +330,93 @@ export class MapaButacasComponent {
       ArrowLeft: [0, -1],
       ArrowRight: [0, 1],
     };
-    const dir = direcciones[event.key];
-    if (!dir) return;
+    const direccion = direcciones[event.key];
 
-    event.preventDefault();
-    const filas = this.filasVisuales();
-    let f = filaIndex + dir[0];
-    let c = colIndex + dir[1];
+    if (direccion !== undefined) {
+      event.preventDefault();
 
-    while (f >= 0 && f < filas.length && c >= 0 && c < TOTAL_COLUMNAS) {
-      const b = filas[f].posiciones[c];
-      if (b) {
-        document.querySelector<HTMLButtonElement>(`button[data-id="${b.id}"]`)?.focus();
-        return;
+      const filas = this.filasVisuales();
+
+      let fila = filaIndex + direccion[0];
+      let columna = colIndex + direccion[1];
+      let encontrada = false;
+
+      while (
+        encontrada === false &&
+        fila >= 0 &&
+        fila < filas.length &&
+        columna >= 0 &&
+        columna < TOTAL_COLUMNAS
+      ) {
+        const butaca = filas[fila].posiciones[columna];
+
+        if (butaca !== null) {
+          this.enfocarButaca(butaca.id);
+          encontrada = true;
+        } else {
+          fila += direccion[0];
+          columna += direccion[1];
+        }
       }
-      f += dir[0];
-      c += dir[1];
+    }
+  }
+
+  // ─── Auxiliares ─────────────────────────────────────────────────────
+
+  private buscarButaca(lista: ButacaMapa[], id: string): ButacaMapa | undefined {
+    let encontrada: ButacaMapa | undefined;
+
+    for (const butaca of lista) {
+      if (encontrada === undefined && butaca.id === id) {
+        encontrada = butaca;
+      }
+    }
+
+    return encontrada;
+  }
+
+  private precioDeTipo(precios: Record<string, number>, tipo: TipoButaca): number {
+    let precio = 8500;
+
+    const configurado = precios[tipo];
+
+    if (configurado !== undefined && configurado !== 0) {
+      precio = configurado;
+    }
+
+    return precio;
+  }
+
+  private sinButaca(ids: string[], id: string): string[] {
+    const restantes: string[] = [];
+
+    for (const actual of ids) {
+      if (actual !== id) {
+        restantes.push(actual);
+      }
+    }
+
+    return restantes;
+  }
+
+  private redimensionarSala3d(): void {
+    const sala = this.sala3d();
+
+    if (sala !== undefined) {
+      sala.onResize();
+    }
+  }
+
+  private ocultarNotificacion(): void {
+    this.mensajeNotificacion.set(null);
+  }
+
+  private enfocarButaca(id: string): void {
+    const selector = `button[data-id="${id}"]`;
+    const boton = document.querySelector<HTMLButtonElement>(selector);
+
+    if (boton !== null) {
+      boton.focus();
     }
   }
 }

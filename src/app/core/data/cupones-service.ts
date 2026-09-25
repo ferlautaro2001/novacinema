@@ -12,7 +12,10 @@ export class CuponesService {
       .select('*')
       .neq('tipo', 'primera_compra')
       .order('creado_en', { ascending: false });
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
@@ -21,7 +24,10 @@ export class CuponesService {
       .select('*')
       .eq('codigo', codigo)
       .maybeSingle();
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
@@ -30,24 +36,38 @@ export class CuponesService {
       .select('*')
       .eq('tipo', 'primera_compra')
       .single();
-    if (error) throw error;
+    if (error !== null) {
+      throw error;
+    }
+
     return data;
   }
 
   async cambiarPorcentaje(id: string, porcentaje: number): Promise<void> {
-    const { error } = await this.supS.Sup.from('cupones').update({ porcentaje }).eq('id', id);
-    if (error) throw error;
+    const { error } = await this.supS.Sup.from('cupones')
+      .update({ porcentaje: porcentaje })
+      .eq('id', id);
+    if (error !== null) {
+      throw error;
+    }
   }
 
   // El código es único en la base: si ya existe, Supabase devuelve el error 23505.
   async crear(cupon: CuponPorCrear): Promise<void> {
     const { error } = await this.supS.Sup.from('cupones').insert(cupon);
-    if (error?.code === '23505') throw new Error('Ese código ya existe');
-    if (error) throw error;
+    if (error !== null) {
+      if (error.code === '23505') {
+        throw new Error('Ese código ya existe');
+      }
+
+      throw error;
+    }
   }
 
   async cambiarActivo(id: string, activo: boolean): Promise<void> {
-    const { error } = await this.supS.Sup.from('cupones').update({ activo }).eq('id', id);
-    if (error) throw error;
+    const { error } = await this.supS.Sup.from('cupones').update({ activo: activo }).eq('id', id);
+    if (error !== null) {
+      throw error;
+    }
   }
 }

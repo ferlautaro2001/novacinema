@@ -20,23 +20,43 @@ export class SalaDetalle implements OnInit {
 
   async ngOnInit(): Promise<void> {
     const id = this.ruta.snapshot.paramMap.get('id');
-    if (!id) {
+
+    if (id !== null && id !== '') {
+      await this.cargarSala(id);
+    } else {
       this.error.set('No se especificó la sala');
       this.cargando.set(false);
-      return;
     }
+  }
 
+  private async cargarSala(id: string): Promise<void> {
     try {
       const sala = await this.salasService.buscar(id);
-      if (sala) {
+      if (sala !== null) {
         this.sala.set(sala);
       } else {
         this.error.set('No se encontró la sala');
       }
-    } catch (e: any) {
-      this.error.set(e?.message || 'Error al cargar la sala');
+    } catch (e) {
+      const mensaje = mensajeDeError(e);
+      this.error.set(mensaje);
     } finally {
       this.cargando.set(false);
     }
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function mensajeDeError(e: unknown): string {
+  let mensaje = 'Error al cargar la sala';
+  const error = e as { message?: string } | null | undefined;
+
+  if (error !== null && error !== undefined) {
+    if (error.message !== undefined && error.message !== '') {
+      mensaje = error.message;
+    }
+  }
+
+  return mensaje;
 }

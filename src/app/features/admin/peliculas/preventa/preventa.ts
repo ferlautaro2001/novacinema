@@ -46,41 +46,57 @@ export class Preventa implements OnInit, FormularioConCambios {
   error = signal('');
   aviso = signal('');
 
-  private id = this.ruta.snapshot.paramMap.get('id') ?? '';
+  private id = this.idDeRuta();
 
   ngOnInit(): void {
     this.cargar();
   }
 
   noGuardado(): boolean {
-    return this.form.dirty;
+    const bandera = this.form.dirty;
+
+    return bandera;
   }
 
   async cargar(): Promise<void> {
     this.cargando.set(true);
     this.error.set('');
+
     try {
-      const [pelicula, preventa, diasDefecto] = await Promise.all([
+      const resultados = await Promise.all([
         this.peliculas.buscar(this.id),
         this.preventas.buscar(this.id),
         this.configuracion.leer('dias_preventa_defecto'),
       ]);
+      const pelicula = resultados[0];
+      const preventa = resultados[1];
+      const diasDefecto = resultados[2];
+
       this.pelicula.set(pelicula);
 
       // Si la película no tiene preventa cargada, figura deshabilitada con los días por defecto.
-      if (preventa) {
+      if (preventa !== null) {
         this.form.setValue({
           habilitada: preventa.habilitada,
           porcentaje: preventa.porcentaje,
           dias_antes: preventa.dias_antes,
         });
       } else {
+        const diasConfigurados = Number(diasDefecto);
+
+        let diasAntes = 7;
+
+        if (diasConfigurados !== 0 && Number.isNaN(diasConfigurados) === false) {
+          diasAntes = diasConfigurados;
+        }
+
         this.form.setValue({
           habilitada: false,
           porcentaje: null,
-          dias_antes: Number(diasDefecto) || 7,
+          dias_antes: diasAntes,
         });
       }
+
       this.cambiarHabilitada();
       this.form.markAsPristine();
     } catch {
@@ -97,36 +113,80 @@ export class Preventa implements OnInit, FormularioConCambios {
     } else {
       this.form.controls.porcentaje.disable();
     }
+
     this.calcularApertura();
   }
 
   calcularApertura(): void {
     const pelicula = this.pelicula();
-    const { habilitada, dias_antes } = this.form.getRawValue();
-    if (!pelicula || this.form.controls.dias_antes.invalid) {
-      this.apertura.set(null);
-      return;
+    const valores = this.form.getRawValue();
+
+    let apertura: Date | null = null;
+
+    if (pelicula !== null && this.form.controls.dias_antes.invalid === false) {
+      let diasAntes = 0;
+
+      if (valores.dias_antes !== null) {
+        diasAntes = valores.dias_antes;
+      }
+
+      const ventana = { habilitada: valores.habilitada, dias_antes: diasAntes };
+
+      apertura = aperturaDeVenta(pelicula.fecha_estreno, ventana);
     }
-    this.apertura.set(
-      aperturaDeVenta(pelicula.fecha_estreno, { habilitada, dias_antes: dias_antes ?? 0 }),
-    );
+
+    this.apertura.set(apertura);
   }
 
   async guardar(): Promise<void> {
-    if (this.guardando()) return;
-    this.form.markAllAsTouched();
-    if (this.form.invalid) return;
+    if (this.guardando() === false) {
+      this.form.markAllAsTouched();
 
+      if (this.form.invalid === false) {
+        await this.guardarPreventa();
+      }
+    }
+  }
+
+  // ─── Auxiliares ─────────────────────────────────────────────────────
+
+  private idDeRuta(): string {
+    let id = '';
+
+    const encontrado = this.ruta.snapshot.paramMap.get('id');
+
+    if (encontrado !== null) {
+      id = encontrado;
+    }
+
+    return id;
+  }
+
+  private async guardarPreventa(): Promise<void> {
     this.guardando.set(true);
     this.error.set('');
     this.aviso.set('');
+
     try {
-      const { habilitada, porcentaje, dias_antes } = this.form.getRawValue();
+      const valores = this.form.getRawValue();
+
+      let porcentaje = 0;
+
+      if (valores.porcentaje !== null) {
+        porcentaje = valores.porcentaje;
+      }
+
+      let diasAntes = 7;
+
+      if (valores.dias_antes !== null) {
+        diasAntes = valores.dias_antes;
+      }
+
       await this.preventas.guardar({
         pelicula_id: this.id,
-        habilitada,
-        porcentaje: porcentaje ?? 0,
-        dias_antes: dias_antes ?? 7,
+        habilitada: valores.habilitada,
+        porcentaje: porcentaje,
+        dias_antes: diasAntes,
       });
       this.form.markAsPristine();
       this.aviso.set('Preventa guardada');

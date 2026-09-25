@@ -9,16 +9,43 @@ export interface OpcionesFecha {
 // Fecha escrita DD/MM/AAAA. El vacío lo dejo pasar: si es obligatorio, eso lo dice
 // Validators.required.
 export function fechaDDMMAAAA(opciones: OpcionesFecha = {}): ValidatorFn {
-  return (control: AbstractControl<string | null>): ValidationErrors | null => {
-    const texto = control.value?.trim();
-    if (!texto) return null;
+  const validador: ValidatorFn = (
+    control: AbstractControl<string | null>,
+  ): ValidationErrors | null => {
+    let errores: ValidationErrors | null = null;
 
-    const fecha = leerDDMMAAAA(texto);
-    if (!fecha) return { fechaInvalida: true };
+    const valor = control.value;
 
-    if (opciones.soloAnteriorAHoy && fecha >= inicioDelDia(new Date())) {
-      return { fechaNoAnterior: true };
+    if (valor !== null && valor !== undefined) {
+      const texto = valor.trim();
+
+      if (texto !== '') {
+        errores = erroresDeFecha(texto, opciones);
+      }
     }
-    return null;
+
+    return errores;
   };
+
+  return validador;
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function erroresDeFecha(texto: string, opciones: OpcionesFecha): ValidationErrors | null {
+  let errores: ValidationErrors | null = null;
+
+  const fecha = leerDDMMAAAA(texto);
+
+  if (fecha === null) {
+    errores = { fechaInvalida: true };
+  } else if (opciones.soloAnteriorAHoy === true) {
+    const hoy = inicioDelDia(new Date());
+
+    if (fecha >= hoy) {
+      errores = { fechaNoAnterior: true };
+    }
+  }
+
+  return errores;
 }

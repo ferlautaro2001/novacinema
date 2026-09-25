@@ -32,7 +32,8 @@ export class Empleados implements OnInit {
 
   async ngOnInit(): Promise<void> {
     try {
-      this.usuarios.set(await this.usuariosS.findAllConRol());
+      const lista = await this.usuariosS.findAllConRol();
+      this.usuarios.set(lista);
     } catch {
       this.error.set('No se pudo cargar el listado de usuarios. Probá de nuevo.');
     } finally {
@@ -41,29 +42,60 @@ export class Empleados implements OnInit {
   }
 
   nombreRol(rol: Rol): string {
-    return NOMBRES_ROL[rol];
+    const nombre = NOMBRES_ROL[rol];
+
+    return nombre;
   }
 
   // Pasa de cliente a empleado o al revés. El rol nuevo recién se nota cuando esa
   // persona vuelve a ingresar o recarga.
   async cambiarRol(usuario: UsuarioConRol): Promise<void> {
-    const nuevoRol: Rol = usuario.rol === 'empleado' ? 'cliente' : 'empleado';
+    let esEmpleado = false;
+
+    if (usuario.rol === 'empleado') {
+      esEmpleado = true;
+    }
+
+    const nuevoRol: Rol = esEmpleado ? 'cliente' : 'empleado';
+
+    let pasaAEmpleado = false;
+
+    if (nuevoRol === 'empleado') {
+      pasaAEmpleado = true;
+    }
+
     this.cambiando.set(usuario.id);
     this.aviso.set(null);
     this.error.set(null);
     try {
-      await this.usuariosS.asignarRolEmpleado(usuario.id, nuevoRol === 'empleado');
-      this.usuarios.update((lista) =>
-        lista.map((u) => (u.id === usuario.id ? { ...u, rol: nuevoRol } : u)),
-      );
+      await this.usuariosS.asignarRolEmpleado(usuario.id, pasaAEmpleado);
+      const lista = usuariosConRol(this.usuarios(), usuario.id, nuevoRol);
+      this.usuarios.set(lista);
       this.aviso.set(
         `${usuario.nombre} ${usuario.apellido} ahora es ${NOMBRES_ROL[nuevoRol]}. ` +
           'El cambio rige desde su próximo ingreso.',
       );
     } catch (e) {
-      this.error.set((e as Error).message);
+      const error = e as Error;
+      this.error.set(error.message);
     } finally {
       this.cambiando.set(null);
     }
   }
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+function usuariosConRol(lista: UsuarioConRol[], id: string, rol: Rol): UsuarioConRol[] {
+  const usuarios: UsuarioConRol[] = [];
+
+  for (const usuario of lista) {
+    if (usuario.id === id) {
+      usuarios.push({ ...usuario, rol: rol });
+    } else {
+      usuarios.push(usuario);
+    }
+  }
+
+  return usuarios;
 }

@@ -36,9 +36,13 @@ export class CampoFecha implements OnInit, OnDestroy {
     this.actualizar();
     // Escucho el grupo y también cada parte: una vez que el grupo quedó "touched",
     // tocar las otras partes ya no dispara eventos en el grupo.
-    const { dia, mes, anio } = this.grupo().controls;
-    for (const control of [this.grupo(), dia, mes, anio]) {
-      this.suscripciones.push(control.events.subscribe(() => this.actualizar()));
+    const grupo = this.grupo();
+    const controles = grupo.controls;
+    const escuchados = [grupo, controles.dia, controles.mes, controles.anio];
+
+    for (const control of escuchados) {
+      const suscripcion = control.events.subscribe(() => this.actualizar());
+      this.suscripciones.push(suscripcion);
     }
   }
 
@@ -51,7 +55,9 @@ export class CampoFecha implements OnInit, OnDestroy {
   // Si se escribe o se pega algo que no es número, lo descarto en el momento.
   soloNumeros(evento: Event, parte: 'dia' | 'anio', largo: number): void {
     const campo = evento.target as HTMLInputElement;
-    const limpio = campo.value.replace(/\D/g, '').slice(0, largo);
+    const soloDigitos = campo.value.replace(/\D/g, '');
+    const limpio = soloDigitos.slice(0, largo);
+
     if (limpio !== campo.value) {
       this.grupo().controls[parte].setValue(limpio);
     }
@@ -60,13 +66,24 @@ export class CampoFecha implements OnInit, OnDestroy {
   // Se puede escribir "1" y al salir del campo queda "01".
   completarDia(): void {
     const dia = this.grupo().controls.dia;
-    if (/^[1-9]$/.test(dia.value)) dia.setValue(`0${dia.value}`);
+
+    if (/^[1-9]$/.test(dia.value)) {
+      dia.setValue(`0${dia.value}`);
+    }
   }
 
   // Muestro los errores cuando pasó por las tres partes (o intentó enviar), no apenas
   // sale del día con el mes todavía sin elegir.
   private actualizar(): void {
-    const { dia, mes, anio } = this.grupo().controls;
-    this.mostrarErrores.set(dia.touched && mes.touched && anio.touched && this.grupo().invalid);
+    const grupo = this.grupo();
+    const controles = grupo.controls;
+
+    let hayQueMostrar = false;
+
+    if (controles.dia.touched && controles.mes.touched && controles.anio.touched && grupo.invalid) {
+      hayQueMostrar = true;
+    }
+
+    this.mostrarErrores.set(hayQueMostrar);
   }
 }

@@ -28,14 +28,27 @@ export class UsuariosService {
       .select('id, nombre, apellido, email, rol:roles(codigo)')
       .order('apellido')
       .order('nombre');
-    if (error) throw error;
-    return data.map((u) => ({
-      id: u.id,
-      nombre: u.nombre,
-      apellido: u.apellido,
-      email: u.email,
-      rol: u.rol.codigo as Rol,
-    }));
+    if (error !== null) {
+      throw error;
+    }
+
+    const usuarios: UsuarioConRol[] = [];
+
+    for (const fila of data) {
+      const rol = fila.rol.codigo as Rol;
+
+      const usuario: UsuarioConRol = {
+        id: fila.id,
+        nombre: fila.nombre,
+        apellido: fila.apellido,
+        email: fila.email,
+        rol: rol,
+      };
+
+      usuarios.push(usuario);
+    }
+
+    return usuarios;
   }
 
   // Uso RPC porque el cliente no tiene UPDATE sobre usuarios.rol_id: la función
@@ -45,8 +58,16 @@ export class UsuariosService {
       p_usuario_id: usuarioId,
       p_empleado: empleado,
     });
-    if (error) {
-      throw new Error(MENSAJES_RPC[error.message] ?? 'No se pudo cambiar el rol. Probá de nuevo.');
+    if (error !== null) {
+      const traducido = MENSAJES_RPC[error.message];
+
+      let mensaje = 'No se pudo cambiar el rol. Probá de nuevo.';
+
+      if (traducido !== undefined) {
+        mensaje = traducido;
+      }
+
+      throw new Error(mensaje);
     }
   }
 }
