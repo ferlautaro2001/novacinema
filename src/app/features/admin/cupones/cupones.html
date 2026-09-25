@@ -1,1 +1,82 @@
-<h1 class="marquee-lg">Cupones</h1>
+<section class="cupones">
+  <header class="cabecera">
+    <div>
+      <p class="overline">Descuentos</p>
+      <h1 class="marquee-lg">Cupones</h1>
+    </div>
+    <div class="links">
+      <a class="nc-btn nc-btn--secondary" routerLink="primera-compra">Cupón de primera compra</a>
+      <a class="nc-btn nc-btn--primary" routerLink="nuevo">Nuevo cupón</a>
+    </div>
+  </header>
+  <p class="body descripcion">
+    Desactivá un cupón cuando termina la promoción: deja de aceptarse en las compras.
+  </p>
+
+  @if (aviso()) {
+    <p class="aviso body" role="status">{{ aviso() }}</p>
+  }
+  @if (error()) {
+    <p class="error body" role="alert">{{ error() }}</p>
+  }
+
+  @if (cargando()) {
+    <p class="body estado" role="status">Cargando cupones…</p>
+  } @else if (cupones().length === 0) {
+    <div class="vacio">
+      <h2 class="body-strong">Todavía no hay cupones</h2>
+      <p class="body">Creá uno con “Nuevo cupón”.</p>
+    </div>
+  } @else {
+    <div class="tabla-contenedor">
+      <table class="tabla">
+        <thead>
+          <tr>
+            <th scope="col" class="caption">Código</th>
+            <th scope="col" class="caption">Descuento</th>
+            <th scope="col" class="caption">Vigencia</th>
+            <th scope="col" class="caption">Estado</th>
+            <th scope="col" class="caption"><span class="solo-lector">Acción</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (c of cupones(); track c.id) {
+            <tr>
+              <td class="body-strong codigo">{{ c.codigo }}</td>
+              <td class="body">{{ c.porcentaje }} %</td>
+              <td class="body">
+                {{ c.vigente_desde | date: 'dd/MM/yyyy' }}
+                @if (c.vigente_hasta) {
+                  al {{ c.vigente_hasta | date: 'dd/MM/yyyy' }}
+                } @else {
+                  sin vencimiento
+                }
+              </td>
+              <td>
+                <span [class]="claseEstado(c)">{{ estado(c) }}</span>
+              </td>
+              <td class="accion">
+                <button
+                  type="button"
+                  class="nc-btn nc-btn--sm"
+                  [class.nc-btn--danger]="c.activo"
+                  [class.nc-btn--secondary]="!c.activo"
+                  [disabled]="cambiando() === c.id"
+                  (click)="cambiarActivo(c)"
+                >
+                  @if (cambiando() === c.id) {
+                    Guardando…
+                  } @else if (c.activo) {
+                    Desactivar
+                  } @else {
+                    Activar
+                  }
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
