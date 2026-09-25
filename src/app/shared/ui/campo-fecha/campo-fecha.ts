@@ -9,9 +9,8 @@ export type GrupoFecha = FormGroup<{
   anio: FormControl<string>;
 }>;
 
-// Fecha en tres partes: día y año escritos a mano, mes en un desplegable. No es un
-// calendario (el enunciado los prohíbe): se escribe rápido y sin buscar.
-// Recibe el FormGroup y proyecta los mensajes de error, como nc-campo-texto.
+// Fecha en tres partes: día y año escritos, mes en un desplegable. No es un
+// calendario porque el enunciado los prohíbe.
 @Component({
   selector: 'nc-campo-fecha',
   imports: [ReactiveFormsModule],
@@ -23,11 +22,14 @@ export class CampoFecha implements OnInit, OnDestroy {
   id = input.required<string>();
   etiqueta = input.required<string>();
   grupo = input.required<GrupoFecha>();
-  // true cuando es la fecha de nacimiento: activa el autocompletado del navegador.
+  // Con true activa el autocompletado de fecha de nacimiento del navegador.
   nacimiento = input(false);
 
   meses = MESES_DEL_ANIO;
   mostrarErrores = signal(false);
+
+  // Igual que en nc-campo-texto: es OnPush, así que escucho los eventos y guardo el
+  // resultado en un signal.
   private suscripciones: Subscription[] = [];
 
   ngOnInit(): void {
@@ -35,16 +37,18 @@ export class CampoFecha implements OnInit, OnDestroy {
     // Escucho el grupo y también cada parte: una vez que el grupo quedó "touched",
     // tocar las otras partes ya no dispara eventos en el grupo.
     const { dia, mes, anio } = this.grupo().controls;
-    this.suscripciones = [this.grupo(), dia, mes, anio].map((control) =>
-      control.events.subscribe(() => this.actualizar()),
-    );
+    for (const control of [this.grupo(), dia, mes, anio]) {
+      this.suscripciones.push(control.events.subscribe(() => this.actualizar()));
+    }
   }
 
   ngOnDestroy(): void {
-    this.suscripciones.forEach((s) => s.unsubscribe());
+    for (const suscripcion of this.suscripciones) {
+      suscripcion.unsubscribe();
+    }
   }
 
-  // Solo números: si se escribe o se pega otra cosa, se descarta en el momento.
+  // Si se escribe o se pega algo que no es número, lo descarto en el momento.
   soloNumeros(evento: Event, parte: 'dia' | 'anio', largo: number): void {
     const campo = evento.target as HTMLInputElement;
     const limpio = campo.value.replace(/\D/g, '').slice(0, largo);
@@ -53,14 +57,14 @@ export class CampoFecha implements OnInit, OnDestroy {
     }
   }
 
-  // El día se puede escribir "1": al salir del campo se guarda como "01".
+  // Se puede escribir "1" y al salir del campo queda "01".
   completarDia(): void {
     const dia = this.grupo().controls.dia;
     if (/^[1-9]$/.test(dia.value)) dia.setValue(`0${dia.value}`);
   }
 
-  // Los errores aparecen cuando pasó por las tres partes (o intentó enviar), no
-  // apenas sale del día con el mes todavía sin elegir.
+  // Muestro los errores cuando pasó por las tres partes (o intentó enviar), no apenas
+  // sale del día con el mes todavía sin elegir.
   private actualizar(): void {
     const { dia, mes, anio } = this.grupo().controls;
     this.mostrarErrores.set(dia.touched && mes.touched && anio.touched && this.grupo().invalid);
