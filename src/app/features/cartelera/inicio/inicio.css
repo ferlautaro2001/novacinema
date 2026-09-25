@@ -9,13 +9,10 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
   gap: var(--space-6);
 }
-.metadatos {
+.aviso {
+  margin-top: var(--space-6);
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-3);
-  color: var(--ink-200);
-}
-.sinopsis {
-  margin-top: var(--space-4);
 }
