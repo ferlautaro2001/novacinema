@@ -1,6 +1,5 @@
-// Distribución de la sala de 518 butacas que dibuja el mapa. Vive en shared porque
-// la usa solo el mapa y shared no importa de core; los códigos de tipo son los de
-// tipos_butaca.codigo (TipoButacaCodigo en core/models/enumerados).
+// La sala de 518 butacas que dibuja el mapa. La dejo en shared porque shared no puede
+// importar de core; los códigos de tipo son los mismos de tipos_butaca.codigo.
 export type TipoButaca = 'comun' | 'vip' | 'accesible';
 export type EstadoButaca = 'disponible' | 'ocupada' | 'bloqueada';
 
@@ -11,7 +10,7 @@ export const COLUMNAS_ACCESIBLES: number[] = [2, 3, 11, 12, 13, 14, 15, 16, 17, 
 export const TOTAL_COLUMNAS = 30;
 
 export interface ButacaMapa {
-  id: string; // ej: 'H11'
+  id: string; // por ejemplo 'H11'
   fila: string;
   columna: number;
   filaIndex: number;
@@ -26,7 +25,7 @@ export interface FilaMapa {
   esVip: boolean;
   esAccesible: boolean;
   esCirculacion: boolean;
-  posiciones: (ButacaMapa | null)[]; // 1 a 30 (longitud 30): null si es pasillo o vacío
+  posiciones: (ButacaMapa | null)[]; // una por columna, null en pasillos y huecos
 }
 
 export interface LayoutSala {
@@ -46,9 +45,7 @@ export function esButacaValida(fila: string, columna: number): boolean {
   if (fila === 'K') return false;
   if (columna < 1 || columna > TOTAL_COLUMNAS) return false;
   if (esPasillo(columna)) return false;
-  if (fila === 'J') {
-    return COLUMNAS_ACCESIBLES.includes(columna);
-  }
+  if (fila === 'J') return COLUMNAS_ACCESIBLES.includes(columna);
   return true;
 }
 
@@ -64,55 +61,49 @@ export function generarDistribucionSala(
 ): LayoutSala {
   const butacas: ButacaMapa[] = [];
   const filas: FilaMapa[] = [];
-
   let totalComunes = 0;
   let totalVip = 0;
   let totalAccesibles = 0;
 
   FILAS.forEach((letra, filaIndex) => {
-    const esCirculacion = letra === 'K';
-    const esAccesible = letra === 'J';
-    const esVip = FILAS_VIP.includes(letra);
     const posiciones: (ButacaMapa | null)[] = [];
 
-    for (let c = 1; c <= TOTAL_COLUMNAS; c++) {
-      if (!esButacaValida(letra, c)) {
+    for (let columna = 1; columna <= TOTAL_COLUMNAS; columna++) {
+      if (!esButacaValida(letra, columna)) {
         posiciones.push(null);
         continue;
       }
 
-      const id = `${letra}${c}`;
+      const id = `${letra}${columna}`;
       const tipo = tipoDeButaca(letra);
-      const estado: EstadoButaca = ocupadas.includes(id)
-        ? 'ocupada'
-        : bloqueadas.includes(id)
-          ? 'bloqueada'
-          : 'disponible';
+
+      let estado: EstadoButaca = 'disponible';
+      if (ocupadas.includes(id)) estado = 'ocupada';
+      else if (bloqueadas.includes(id)) estado = 'bloqueada';
 
       if (tipo === 'comun') totalComunes++;
       else if (tipo === 'vip') totalVip++;
-      else if (tipo === 'accesible') totalAccesibles++;
+      else totalAccesibles++;
 
-      const b: ButacaMapa = {
+      const butaca: ButacaMapa = {
         id,
         fila: letra,
-        columna: c,
+        columna,
         filaIndex,
         tipo,
         estado,
         seleccionada: false,
       };
-
-      butacas.push(b);
-      posiciones.push(b);
+      butacas.push(butaca);
+      posiciones.push(butaca);
     }
 
     filas.push({
       letra,
       filaIndex,
-      esVip,
-      esAccesible,
-      esCirculacion,
+      esVip: FILAS_VIP.includes(letra),
+      esAccesible: letra === 'J',
+      esCirculacion: letra === 'K',
       posiciones,
     });
   });
