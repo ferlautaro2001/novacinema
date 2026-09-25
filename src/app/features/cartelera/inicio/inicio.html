@@ -1,27 +1,25 @@
 <h1 class="marquee-lg">Inicio</h1>
 <nc-mas-vendidas (verDetalle)="detalleId.set($event)" />
-<section class="destacadas" aria-labelledby="destacadas-titulo">
-  <h2 id="destacadas-titulo" class="marquee-md">Películas destacadas</h2>
-  @if (cargando()) {
-    <p class="body" role="status">Cargando películas…</p>
-  } @else if (error()) {
-    <p class="body" role="alert">No se pudieron cargar las destacadas.</p>
-    <button class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button>
-  } @else {
+@if (error()) {
+  <div class="aviso" role="alert">
+    <p class="body">No se pudieron cargar las películas destacadas.</p>
+    <button type="button" class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button>
+  </div>
+} @else if (hayDestacadas()) {
+  <section class="destacadas" aria-labelledby="destacadas-titulo">
+    <h2 id="destacadas-titulo" class="marquee-md">Destacadas</h2>
     <div class="grilla">
-      @for (p of destacadas(); track p.id) {
+      @for (pelicula of destacadas(); track pelicula.id) {
         <nc-pelicula-card
-          [pelicula]="p"
-          [imagenUrl]="storage.urlPublica(p.imagen_path)"
+          [pelicula]="pelicula"
+          [imagenUrl]="storage.urlPublica(pelicula.imagen_path)"
           leyenda="Destacada"
-          (verDetalle)="detalleId.set(p.id)"
+          (verDetalle)="detalleId.set(pelicula.id)"
         />
-      } @empty {
-        <p class="body">Pronto vas a encontrar nuestras películas destacadas acá.</p>
       }
     </div>
-  }
-</section>
+  </section>
+}
 @if (detalleId(); as id) {
   <nc-detalle-pelicula [peliculaId]="id" (cierre)="detalleId.set(null)" />
 }

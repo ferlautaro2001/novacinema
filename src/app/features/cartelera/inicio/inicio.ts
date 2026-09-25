@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { PeliculasService } from '../../../core/data/peliculas-service';
 import { StorageService } from '../../../core/data/storage-service';
 import { PeliculaConCatalogo } from '../../../core/models/pelicula';
@@ -22,6 +22,9 @@ export class Inicio implements OnInit {
   cargando = signal(true);
   error = signal(false);
 
+  // La sección se muestra solo cuando terminó de cargar y hay al menos una destacada.
+  hayDestacadas = computed(() => this.calcularHayDestacadas());
+
   ngOnInit(): void {
     this.cargar();
   }
@@ -38,5 +41,17 @@ export class Inicio implements OnInit {
     } finally {
       this.cargando.set(false);
     }
+  }
+
+  // ─── Auxiliares ─────────────────────────────────────────────────────────────
+
+  private calcularHayDestacadas(): boolean {
+    let hayDestacadas = false;
+    if (this.cargando() === false && this.error() === false) {
+      if (this.destacadas().length > 0) {
+        hayDestacadas = true;
+      }
+    }
+    return hayDestacadas;
   }
 }
