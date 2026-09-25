@@ -1,0 +1,66 @@
+.editor,
+.campos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+.editor {
+  max-width: 720px;
+}
+.volver,
+.nota {
+  color: var(--ink-200);
+}
+.overline {
+  color: var(--gold-600);
+}
+.campos {
+  border: 0;
+  padding: 0;
+  margin: 0 0 var(--space-6);
+  min-width: 0;
+}
+.casilla {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+input[type='checkbox'] {
+  accent-color: var(--brand-500);
+  width: 18px;
+  height: 18px;
+}
+.dos-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+.ventana {
+  padding: var(--space-3);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  background: var(--surface-200);
+}
+.aviso,
+.error {
+  padding: var(--space-2) var(--space-3);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-md);
+  background: var(--success-tint);
+  color: var(--ink-100);
+}
+.error {
+  border-left-color: var(--danger);
+  background: var(--danger-tint);
+}
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+@media (max-width: 480px) {
+  .dos-columnas {
+    grid-template-columns: 1fr;
+  }
+}
