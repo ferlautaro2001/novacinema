@@ -16,6 +16,8 @@ import { ResenasPelicula } from '../resenas-pelicula/resenas-pelicula';
 const MENSAJE_NO_EXISTE = 'La película no existe o ya no está en cartelera';
 const MENSAJE_ERROR = 'No pudimos cargar la película. Revisá tu conexión y probá de nuevo.';
 
+const FORMATO_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 type EstadoDetalle = 'cargando' | 'listo' | 'no-existe' | 'error';
 
 // Modal con el detalle de una película (US-06.06). Lo abren la cartelera, Inicio y
@@ -97,15 +99,12 @@ export class DetallePelicula {
   private async buscarPelicula(id: string): Promise<PeliculaConCatalogo | null> {
     let encontrada: PeliculaConCatalogo | null = null;
 
-    try {
-      const pelicula = await this.peliculasService.buscar(id);
+    // Con un id que no es uuid la base responde 400: ni la consulto.
+    if (FORMATO_UUID.test(id)) {
+      const pelicula = await this.peliculasService.buscarSiExiste(id);
 
-      if (pelicula.activo === true && pelicula.estado !== 'archivada') {
+      if (pelicula !== null && pelicula.activo === true && pelicula.estado !== 'archivada') {
         encontrada = pelicula;
-      }
-    } catch (error) {
-      if (esNoEncontrada(error) === false) {
-        throw error;
       }
     }
 
@@ -147,23 +146,6 @@ export class DetallePelicula {
 }
 
 // ─── Auxiliares ─────────────────────────────────────────────────────
-
-// PGRST116: .single() sin filas. 22P02: el id no es un uuid válido.
-function esNoEncontrada(error: unknown): boolean {
-  let noEncontrada = false;
-
-  if (error !== null && typeof error === 'object') {
-    const datos = error as { code?: string };
-
-    if (datos.code === 'PGRST116') {
-      noEncontrada = true;
-    } else if (datos.code === '22P02') {
-      noEncontrada = true;
-    }
-  }
-
-  return noEncontrada;
-}
 
 function tieneComentario(resena: ResenaConAutor): boolean {
   let tiene = false;
