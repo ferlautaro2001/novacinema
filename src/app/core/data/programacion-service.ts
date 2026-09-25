@@ -1,6 +1,7 @@
 import { inject, Service } from '@angular/core';
 import type { TablesInsert } from '../supabase/database.types';
 import { Supabase } from '../supabase/supabase-client';
+import { AlertasService } from './alertas-service';
 import { SalasService } from './salas-service';
 import type { Sala } from '../models/sala';
 import type { Funcion } from '../models/funcion';
@@ -58,6 +59,7 @@ export interface DetalleCancelacionFuncion {
 export class ProgramacionService {
   private supS = inject(Supabase);
   private salasService = inject(SalasService);
+  private alertas = inject(AlertasService);
 
   async obtenerSalasActivas(): Promise<Sala[]> {
     const salas = await this.salasService.listar();
@@ -230,6 +232,16 @@ export class ProgramacionService {
         } else {
           creadas++;
         }
+      }
+    }
+
+    // Con las primeras funciones puede abrirse la venta: aviso a los que tienen alerta
+    // (US-06.08). Si falla, las funciones ya están creadas y el aviso sale al ingresar.
+    if (creadas > 0) {
+      try {
+        await this.alertas.notificarAperturaDeVenta(peliculaId);
+      } catch {
+        // Sin aviso ahora; se revisa de nuevo cuando el usuario ingresa.
       }
     }
 
