@@ -1,0 +1,30 @@
+<div class="filtro-generos" role="group" aria-label="Filtrar por género">
+  <button
+    type="button"
+    class="nc-btn nc-btn--sm"
+    [class.nc-btn--primary]="genero() === ''"
+    [class.nc-btn--secondary]="genero() !== ''"
+    [attr.aria-pressed]="genero() === ''"
+    (click)="elegir('')"
+  >
+    @if (genero() === '') {
+      <span class="filtro-generos__marca" aria-hidden="true">✓</span>
+    }
+    Todos
+  </button>
+  @for (opcion of generos(); track opcion) {
+    <button
+      type="button"
+      class="nc-btn nc-btn--sm"
+      [class.nc-btn--primary]="genero() === opcion"
+      [class.nc-btn--secondary]="genero() !== opcion"
+      [attr.aria-pressed]="genero() === opcion"
+      (click)="elegir(opcion)"
+    >
+      @if (genero() === opcion) {
+        <span class="filtro-generos__marca" aria-hidden="true">✓</span>
+      }
+      {{ opcion }}
+    </button>
+  }
+</div>
