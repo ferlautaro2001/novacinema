@@ -1,1 +1,87 @@
-<h1 class="marquee-lg">Preventa</h1>
+<section class="editor">
+  <a routerLink="/admin/peliculas" class="volver caption">Volver a Películas</a>
+  <p class="overline">Preventa</p>
+  @if (pelicula(); as p) {
+    <h1 class="marquee-lg">{{ p.titulo }}</h1>
+    <p class="body nota">Se estrena el {{ p.fecha_estreno | date: 'dd/MM/yyyy' }}.</p>
+  } @else {
+    <h1 class="marquee-lg">Preventa</h1>
+  }
+  @if (cargando()) {
+    <p class="body" role="status">Cargando datos…</p>
+  }
+  @if (aviso()) {
+    <p class="aviso body" role="status">{{ aviso() }}</p>
+  }
+  @if (error()) {
+    <p class="error body" role="alert">{{ error() }}</p>
+  }
+  @if (!cargando() && !pelicula()) {
+    <button class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button>
+  }
+  @if (!cargando() && pelicula()) {
+    <form [formGroup]="form" (ngSubmit)="guardar()" (input)="calcularApertura()">
+      <fieldset class="campos" [disabled]="guardando()">
+        <legend class="solo-lector">Configuración de la preventa</legend>
+        <label class="casilla body-strong"
+          ><input type="checkbox" formControlName="habilitada" (change)="cambiarHabilitada()" />
+          Habilitar preventa</label
+        >
+        <div class="dos-columnas">
+          <nc-campo-texto
+            id="porcentaje"
+            etiqueta="Descuento (%)"
+            tipo="number"
+            [control]="form.controls.porcentaje"
+          >
+            <nc-error-campo [control]="form.controls.porcentaje" error="required"
+              >Ingresá el porcentaje de descuento.</nc-error-campo
+            >
+            <nc-error-campo [control]="form.controls.porcentaje" error="min"
+              >El descuento debe estar entre 1 y 100.</nc-error-campo
+            >
+            <nc-error-campo [control]="form.controls.porcentaje" error="max"
+              >El descuento debe estar entre 1 y 100.</nc-error-campo
+            >
+            <nc-error-campo [control]="form.controls.porcentaje" error="pattern"
+              >Usá un número entero.</nc-error-campo
+            >
+          </nc-campo-texto>
+          <nc-campo-texto
+            id="dias"
+            etiqueta="Días de anticipación"
+            tipo="number"
+            [control]="form.controls.dias_antes"
+          >
+            <nc-error-campo [control]="form.controls.dias_antes" error="required"
+              >Ingresá los días de anticipación.</nc-error-campo
+            >
+            <nc-error-campo [control]="form.controls.dias_antes" error="min"
+              >Tiene que ser al menos 1 día.</nc-error-campo
+            >
+            <nc-error-campo [control]="form.controls.dias_antes" error="pattern"
+              >Usá una cantidad entera de días.</nc-error-campo
+            >
+          </nc-campo-texto>
+        </div>
+        @if (apertura(); as fecha) {
+          <p class="ventana body" aria-live="polite">
+            @if (form.controls.habilitada.value) {
+              Con esta configuración, la venta se abre el {{ fecha | date: 'dd/MM/yyyy' }} a las
+              00:00, con el descuento hasta el día anterior al estreno.
+            } @else {
+              Sin preventa, la venta se abre el día del estreno ({{ fecha | date: 'dd/MM/yyyy' }}) a
+              la tarifa normal.
+            }
+          </p>
+        }
+      </fieldset>
+      <div class="acciones">
+        <a class="nc-btn nc-btn--secondary" routerLink="/admin/peliculas">Cancelar</a
+        ><button class="nc-btn nc-btn--primary" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardá la preventa' }}
+        </button>
+      </div>
+    </form>
+  }
+</section>

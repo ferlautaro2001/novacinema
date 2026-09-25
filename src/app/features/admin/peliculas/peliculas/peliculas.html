@@ -73,6 +73,7 @@
           {{ p.destacada ? 'Quitar de Inicio' : 'Destacar en Inicio' }}
         </button>
         <a class="nc-btn nc-btn--ghost nc-btn--sm" [routerLink]="[p.id]">Editar</a>
+        <a class="nc-btn nc-btn--ghost nc-btn--sm" [routerLink]="[p.id, 'preventa']">Preventa</a>
         @if (p.activo) {
           <button
             class="nc-btn nc-btn--ghost nc-btn--sm"
