@@ -1,9 +1,7 @@
 import type { Tables, TablesInsert, TablesUpdate } from '../supabase/database.types';
-import type { EstadoPelicula } from './enumerados';
-import type { ClasificacionCodigo } from './enumerados';
+import type { ClasificacionCodigo, EstadoPelicula } from './enumerados';
 
-export type Clasificacion = ClasificacionCodigo;
-export const EDADES_MINIMAS: Record<Clasificacion, number> = {
+export const EDADES_MINIMAS: Record<ClasificacionCodigo, number> = {
   ATP: 0,
   '+13': 13,
   '+16': 16,
@@ -34,7 +32,7 @@ export function nombreGenero(nombre: string): string {
   return equivalencias[nombre] ?? nombre;
 }
 export interface PeliculaConCatalogo extends Pelicula {
-  clasificacion: { codigo: Clasificacion; edad_minima: number };
+  clasificacion: { codigo: ClasificacionCodigo; edad_minima: number };
   pelicula_generos: { genero: { id: number; nombre: string } }[];
 }
 export interface DatosPelicula {

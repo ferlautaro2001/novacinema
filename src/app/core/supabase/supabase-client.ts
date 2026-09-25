@@ -15,7 +15,7 @@ export class Supabase {
     this.sup = createClient<Database>(environment.SUPABASE_URL, environment.SUPABASE_KEY);
   }
 
-  public get Sup() {
+  get Sup() {
     return this.sup;
   }
 }

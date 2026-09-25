@@ -332,7 +332,12 @@
     @if (butaca.seleccionada) {
       <span class="seat-icon seat-icon-check">✓</span>
     } @else if (butaca.tipo === 'accesible') {
-      <span class="seat-icon seat-icon-wc">♿</span>
+      <span class="seat-icon seat-icon-wc" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="10" height="10" class="seat-wc-svg" aria-hidden="true">
+          <circle cx="12.2" cy="4.6" r="1.8" fill="currentColor" />
+          <path d="M12 8.5v5h4.2l2 4.8M12 11h3.6M9.2 11.2a4.8 4.8 0 1 0 6.3 6.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </span>
     } @else if (butaca.tipo === 'vip') {
       <span class="seat-icon seat-icon-star">★</span>
     }

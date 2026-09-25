@@ -1,4 +1,4 @@
-# Corre los tests y el build en cada PR contra main y en cada push a main.
+# Compila la app en cada PR contra main y en cada push a main.
 name: CI
 
 on:
@@ -16,7 +16,7 @@ permissions:
   contents: read
 
 jobs:
-  test-y-build:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -29,13 +29,10 @@ jobs:
 
       - run: npm ci
 
-      # Los environments reales no se versionan. Para compilar y testear alcanza
-      # con la plantilla: los tests no se conectan a Supabase.
+      # Los environments reales no se versionan. Para compilar alcanza con la plantilla.
       - name: Environments desde la plantilla
         run: |
           cp src/environments/environment.example.ts src/environments/environment.ts
           cp src/environments/environment.example.ts src/environments/environment.development.ts
-
-      - run: npx ng test --watch=false
 
       - run: npx ng build

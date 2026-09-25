@@ -1,5 +1,4 @@
 import {
-  Component,
   Directive,
   inject,
   input,
@@ -7,21 +6,18 @@ import {
   TemplateRef,
   ViewContainerRef,
 } from '@angular/core';
+import { CargaConsulta } from '../ui/carga-consulta/carga-consulta';
 
 export type EstadoConsulta<T> =
   { tipo: 'cargando' } | { tipo: 'error'; mensaje: string } | { tipo: 'datos'; datos: T[] };
-
-@Component({
-  selector: 'nc-carga-consulta',
-  templateUrl: './carga-consulta.html',
-})
-class CargaConsulta {}
 
 @Directive({ selector: '[appCargando]' })
 export class Cargando<T> implements OnChanges {
   appCargando = input.required<EstadoConsulta<T>>();
   appCargandoVacio = input.required<TemplateRef<unknown>>();
   appCargandoError = input.required<TemplateRef<{ $implicit: string }>>();
+  appCargandoCarga = input<TemplateRef<unknown>>();
+
   private template = inject<TemplateRef<{ $implicit: T[] }>>(TemplateRef);
   private contenedor = inject(ViewContainerRef);
 
@@ -29,7 +25,12 @@ export class Cargando<T> implements OnChanges {
     this.contenedor.clear();
     const estado = this.appCargando();
     if (estado.tipo === 'cargando') {
-      this.contenedor.createComponent(CargaConsulta);
+      const cargaTpl = this.appCargandoCarga();
+      if (cargaTpl) {
+        this.contenedor.createEmbeddedView(cargaTpl);
+      } else {
+        this.contenedor.createComponent(CargaConsulta);
+      }
     } else if (estado.tipo === 'error') {
       this.contenedor.createEmbeddedView(this.appCargandoError(), { $implicit: estado.mensaje });
     } else if (estado.datos.length === 0) {
