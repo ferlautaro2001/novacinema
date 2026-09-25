@@ -1,6 +1,6 @@
 import { Routes } from '@angular/router';
 
-// Cuenta del cliente (EP-10 y EP-11). Queda protegida por sesionGuard en US-02.05.
+// Cuenta del cliente. Todo el grupo pide sesión (sesionGuard en app.routes.ts).
 export const cuentaRoutes: Routes = [
   { path: '', redirectTo: 'perfil', pathMatch: 'full' },
   {

@@ -9,7 +9,7 @@ import { Clasificacion } from '../../../shared/ui/clasificacion/clasificacion';
 import { DuracionPipe } from '../../../shared/pipes/duracion-pipe';
 import { FocoInicial } from '../../../shared/directivas/foco-inicial';
 
-// EP-03 conecta solo las destacadas. Búsqueda, funciones y ventas llegan en EP-06.
+// Por ahora Inicio muestra solo las películas destacadas.
 @Component({
   selector: 'nc-inicio',
   imports: [PeliculaCard, Modal, Clasificacion, DatePipe, DuracionPipe, FocoInicial],
@@ -19,13 +19,16 @@ import { FocoInicial } from '../../../shared/directivas/foco-inicial';
 export class Inicio implements OnInit {
   private peliculas = inject(PeliculasService);
   storage = inject(StorageService);
+
   destacadas = signal<PeliculaConCatalogo[]>([]);
   detalle = signal<PeliculaConCatalogo | null>(null);
   cargando = signal(true);
   error = signal(false);
+
   ngOnInit(): void {
-    void this.cargar();
+    this.cargar();
   }
+
   async cargar(): Promise<void> {
     this.cargando.set(true);
     this.error.set(false);

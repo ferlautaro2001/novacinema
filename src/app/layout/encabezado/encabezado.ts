@@ -16,7 +16,6 @@ export class Encabezado {
   cerrando = signal(false);
   error = signal<string | null>(null);
 
-  // Al salir se vuelve a Inicio como visitante.
   async cerrarSesion(): Promise<void> {
     this.cerrando.set(true);
     this.error.set(null);
