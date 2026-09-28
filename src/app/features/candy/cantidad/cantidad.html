@@ -1,0 +1,30 @@
+@if (cantidad() === 0) {
+  <button
+    class="nc-btn nc-btn--secondary nc-btn--sm agregar"
+    type="button"
+    [attr.aria-label]="'Agregar ' + producto() + ' al pedido'"
+    (click)="sumar.emit()"
+  >
+    Agregar
+  </button>
+} @else {
+  <div class="control" role="group" [attr.aria-label]="'Cantidad de ' + producto()">
+    <button
+      class="paso"
+      type="button"
+      [attr.aria-label]="'Restar ' + producto()"
+      (click)="restar.emit()"
+    >
+      −
+    </button>
+    <span class="numero" aria-live="polite">{{ cantidad() }}</span>
+    <button
+      class="paso"
+      type="button"
+      [attr.aria-label]="'Sumar ' + producto()"
+      (click)="sumar.emit()"
+    >
+      +
+    </button>
+  </div>
+}

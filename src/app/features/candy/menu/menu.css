@@ -47,6 +47,38 @@
   color: var(--gold-600);
 }
 
+/* La carta a la izquierda y el pedido al costado, siempre a la vista. */
+.carta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.menu {
+  min-width: 0;
+}
+
+.lateral {
+  position: sticky;
+  top: var(--space-5);
+}
+
+.aviso {
+  position: fixed;
+  left: 50%;
+  bottom: var(--space-6);
+  z-index: 10;
+  margin: 0;
+  padding: var(--space-3) var(--space-5);
+  transform: translateX(-50%);
+  background: var(--surface-300);
+  border: 1px solid var(--cine-edge, var(--border-200));
+  border-radius: var(--radius-pill);
+  box-shadow: var(--shadow-md);
+  color: var(--ink-100);
+}
+
 .categoria {
   scroll-margin-top: calc(var(--space-8) * 2);
 }
@@ -136,6 +168,16 @@
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+@media (max-width: 1000px) {
+  .carta {
+    grid-template-columns: 1fr;
+  }
+
+  .lateral {
+    position: static;
   }
 }
 

@@ -15,34 +15,57 @@
   <button class="nc-btn nc-btn--secondary" type="button" (click)="cargar()">Reintentá</button>
 </ng-template>
 
-<ng-container *appCargando="estado(); vacio: vacio; error: fallo; let categorias">
-  @if (categorias.length > 1) {
-    <nav class="atajos" aria-label="Categorías del Candy">
-      @for (categoria of categorias; track categoria.id) {
-        <button class="atajo caption" type="button" (click)="irA(categoria)">
-          {{ categoria.nombre }}
-        </button>
-      }
-    </nav>
-  }
+@if (aviso()) {
+  <p class="aviso body" role="status">{{ aviso() }}</p>
+}
 
-  @for (categoria of categorias; track categoria.id) {
-    <section
-      class="categoria"
-      [id]="ancla(categoria)"
-      [attr.aria-labelledby]="ancla(categoria) + '-titulo'"
-    >
-      <header class="categoria-cabecera">
-        <h2 class="marquee-md titulo-categoria" tabindex="-1" [id]="ancla(categoria) + '-titulo'">
-          {{ categoria.nombre }}
-        </h2>
-        <span class="caption cantidad">{{ cantidad(categoria) }}</span>
-      </header>
-      <ul class="grilla">
-        @for (producto of categoria.productos; track producto.id) {
-          <li><nc-producto-card [producto]="producto" /></li>
-        }
-      </ul>
-    </section>
-  }
+<ng-container *appCargando="estado(); vacio: vacio; error: fallo; let categorias">
+  <div class="carta">
+    <div class="menu">
+      @if (categorias.length > 1) {
+        <nav class="atajos" aria-label="Categorías del Candy">
+          @for (categoria of categorias; track categoria.id) {
+            <button class="atajo caption" type="button" (click)="irA(categoria)">
+              {{ categoria.nombre }}
+            </button>
+          }
+        </nav>
+      }
+
+      @for (categoria of categorias; track categoria.id) {
+        <section
+          class="categoria"
+          [id]="ancla(categoria)"
+          [attr.aria-labelledby]="ancla(categoria) + '-titulo'"
+        >
+          <header class="categoria-cabecera">
+            <h2
+              class="marquee-md titulo-categoria"
+              tabindex="-1"
+              [id]="ancla(categoria) + '-titulo'"
+            >
+              {{ categoria.nombre }}
+            </h2>
+            <span class="caption cantidad">{{ cantidad(categoria) }}</span>
+          </header>
+          <ul class="grilla">
+            @for (producto of categoria.productos; track producto.id) {
+              <li>
+                <nc-producto-card [producto]="producto">
+                  <nc-cantidad
+                    acciones
+                    [cantidad]="pedido.cantidadDe(producto.id)"
+                    [producto]="producto.nombre"
+                    (sumar)="sumar(producto)"
+                    (restar)="pedido.restar(producto)"
+                  />
+                </nc-producto-card>
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
+    <nc-resumen-pedido class="lateral" (maximo)="avisarMaximo()" />
+  </div>
 </ng-container>
