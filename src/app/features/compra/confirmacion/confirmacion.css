@@ -1,0 +1,62 @@
+.confirmacion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.cabecera .overline {
+  margin: 0;
+  color: var(--gold-600);
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  background: var(--surface-100);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+}
+
+.tarjeta p,
+.titulo {
+  margin: 0;
+  color: var(--ink-100);
+}
+
+.etiqueta {
+  color: var(--ink-200);
+}
+
+/* El código se dicta en boletería: letra de ancho fijo y separada. */
+.codigo {
+  font-family: var(--font-mono);
+  font-size: 1.75rem;
+  letter-spacing: 0.12em;
+  color: var(--gold-600);
+}
+
+.fila {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--ink-100);
+}
+
+.importe {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.total {
+  padding-top: var(--space-3);
+  margin-top: var(--space-2);
+  border-top: 1px solid var(--border-100);
+}
+
+.volver {
+  align-self: flex-start;
+}

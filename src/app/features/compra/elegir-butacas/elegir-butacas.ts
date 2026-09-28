@@ -4,8 +4,10 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 import { FuncionesService } from '../../../core/data/funciones-service';
 import { PreciosService } from '../../../core/data/precios-service';
+import { PreventasService } from '../../../core/data/preventas-service';
 import type { FuncionParaComprar } from '../../../core/models/funcion';
 import { butacasYaVendidas, mensajeNoDisponibles } from '../../../core/reglas/butacas';
+import { precioEntrada } from '../../../core/reglas/precios';
 import { RealtimeButacas, type MensajeSeleccion } from '../../../core/supabase/realtime-butacas';
 import { CargaConsulta } from '../../../shared/ui/carga-consulta/carga-consulta';
 import { FocoInicial } from '../../../shared/directivas/foco-inicial';
@@ -55,6 +57,7 @@ export class ElegirButacas implements OnInit, OnDestroy {
   private router = inject(Router);
   private funcionesService = inject(FuncionesService);
   private preciosService = inject(PreciosService);
+  private preventasService = inject(PreventasService);
   private compra = inject(CompraEstado);
   private realtime = inject(RealtimeButacas);
 
@@ -219,12 +222,15 @@ export class ElegirButacas implements OnInit, OnDestroy {
     const comun = valorDe(tarifas, TIPO_COMUN);
     const vip = valorDe(tarifas, TIPO_VIP);
     const adicional = valorDe(adicionales, funcion.formatoId);
+    const preventa = await this.porcentajePreventa(funcion);
+    const precioComun = precioEntrada(comun, adicional, preventa);
+    const precioVip = precioEntrada(vip, adicional, preventa);
 
     this.funcion.set(funcion);
     this.precios.set({
-      comun: comun + adicional,
-      vip: vip + adicional,
-      accesible: comun + adicional,
+      comun: precioComun,
+      vip: precioVip,
+      accesible: precioComun,
     });
 
     // Las bloqueadas ("En selección") arrancan vacías: las trae el canal.
@@ -260,6 +266,23 @@ export class ElegirButacas implements OnInit, OnDestroy {
       this.repintar();
       this.aviso.set(mensaje);
     }
+  }
+
+  // En preventa la base le descuenta el porcentaje a cada entrada: el mapa
+  // tiene que mostrar ese mismo precio. v_funciones_para_comprar ya dice si la
+  // función está en preventa con el reloj del servidor.
+  private async porcentajePreventa(funcion: FuncionParaComprar): Promise<number> {
+    let porcentaje = 0;
+
+    if (funcion.enPreventa) {
+      const preventa = await this.preventasService.buscar(funcion.peliculaId);
+
+      if (preventa !== null) {
+        porcentaje = Number(preventa.porcentaje);
+      }
+    }
+
+    return porcentaje;
   }
 
   private escucharCanal(funcionId: string): void {

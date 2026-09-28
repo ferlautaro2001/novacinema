@@ -1,4 +1,5 @@
 import { Service, signal } from '@angular/core';
+import type { CompraRegistrada } from '../../core/data/compras-service';
 import type { FuncionParaComprar } from '../../core/models/funcion';
 import type { DescuentoElegido } from '../../core/reglas/descuentos';
 import type { TipoButaca } from '../../shared/ui/mapa-butacas/distribucion';
@@ -15,7 +16,8 @@ export interface EntradaElegida {
 }
 
 // Lo que la compra lleva de una pantalla a la otra: la función elegida, las
-// entradas, si hizo falta el adulto responsable y el descuento que se aplicó.
+// entradas, si hizo falta el adulto responsable, el descuento que se aplicó y,
+// al final, cómo quedó pagada.
 // Vive en un servicio y no en la URL porque ninguno de esos datos es parte de
 // la dirección de una pantalla.
 @Service()
@@ -24,6 +26,7 @@ export class CompraEstado {
   entradas = signal<EntradaElegida[]>([]);
   adulto = signal<DatosAdulto | null>(null);
   descuento = signal<DescuentoElegido | null>(null);
+  confirmada = signal<CompraRegistrada | null>(null);
 
   // Una selección nueva descarta el descuento anterior: se calculó sobre otro
   // subtotal.
@@ -31,6 +34,7 @@ export class CompraEstado {
     this.funcion.set(funcion);
     this.entradas.set(entradas);
     this.descuento.set(null);
+    this.confirmada.set(null);
   }
 
   guardarAdulto(adulto: DatosAdulto): void {
@@ -41,10 +45,18 @@ export class CompraEstado {
     this.descuento.set(descuento);
   }
 
+  // La compra ya está pagada: se guarda para la confirmación y se olvida el
+  // adulto, que era de esta compra.
+  confirmar(registrada: CompraRegistrada): void {
+    this.confirmada.set(registrada);
+    this.adulto.set(null);
+  }
+
   limpiar(): void {
     this.funcion.set(null);
     this.entradas.set([]);
     this.adulto.set(null);
     this.descuento.set(null);
+    this.confirmada.set(null);
   }
 }

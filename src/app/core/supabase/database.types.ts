@@ -459,7 +459,7 @@ export type Database = {
           compra_id: string;
           creado_en: string;
           documento: string;
-          email: string;
+          email: string | null;
           fecha_nacimiento: string;
           nombre: string;
         };
@@ -468,7 +468,7 @@ export type Database = {
           compra_id: string;
           creado_en?: string;
           documento: string;
-          email: string;
+          email?: string | null;
           fecha_nacimiento: string;
           nombre: string;
         };
@@ -477,7 +477,7 @@ export type Database = {
           compra_id?: string;
           creado_en?: string;
           documento?: string;
-          email?: string;
+          email?: string | null;
           fecha_nacimiento?: string;
           nombre?: string;
         };

@@ -1,12 +1,13 @@
 import type { TipoButacaCodigo } from '../models/enumerados';
 
 // La entrada sale la tarifa de la butaca más el adicional del formato. Si hay
-// preventa le descuento el porcentaje al total y redondeo a pesos enteros.
+// preventa le descuento el porcentaje al total y redondeo a centavos, igual que
+// calcular_precio_entrada en la base: así lo que se muestra es lo que se cobra.
 export function precioEntrada(tarifa: number, adicional: number, porcentajePreventa = 0): number {
   const total = tarifa + adicional;
-  const descuento = (total * porcentajePreventa) / 100;
+  const centavos = Math.round(total * (100 - porcentajePreventa));
 
-  const precio = Math.round(total - descuento);
+  const precio = centavos / 100;
 
   return precio;
 }
