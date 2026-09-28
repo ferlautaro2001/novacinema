@@ -134,6 +134,25 @@ export function generarDistribucionSala(
   return layout;
 }
 
+// Las mismas butacas con el estado al día. Devuelve un array nuevo con copias, así
+// el mapa y la escena 3D ven el cambio por input sin que nadie mute el anterior
+// (US-07.05).
+export function aplicarEstados(
+  butacas: ButacaMapa[],
+  ocupadas: string[],
+  bloqueadas: string[],
+): ButacaMapa[] {
+  const nuevas: ButacaMapa[] = [];
+
+  for (const butaca of butacas) {
+    const estado = estadoDeButaca(butaca.id, ocupadas, bloqueadas);
+
+    nuevas.push({ ...butaca, estado });
+  }
+
+  return nuevas;
+}
+
 // ─── Auxiliares ─────────────────────────────────────────────────────
 
 function estadoDeButaca(id: string, ocupadas: string[], bloqueadas: string[]): EstadoButaca {

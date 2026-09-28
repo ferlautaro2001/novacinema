@@ -378,6 +378,22 @@
 
     @if (butaca.seleccionada) {
       <span class="seat-icon seat-icon-check">✓</span>
+    } @else if (butaca.estado === 'ocupada') {
+      <!-- Ocupada y En selección llevan su icono, como en la sala 3D: el color solo no alcanza. -->
+      <span class="seat-icon" aria-hidden="true">✕</span>
+    } @else if (butaca.estado === 'bloqueada') {
+      <span class="seat-icon seat-icon-wc" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="10" height="10" class="seat-wc-svg" aria-hidden="true">
+          <rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor" />
+          <path
+            d="M8 11V8a4 4 0 0 1 8 0v3"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.4"
+            stroke-linecap="round"
+          />
+        </svg>
+      </span>
     } @else if (butaca.tipo === 'accesible') {
       <span class="seat-icon seat-icon-wc" aria-hidden="true">
         <svg viewBox="0 0 24 24" width="10" height="10" class="seat-wc-svg" aria-hidden="true">

@@ -1,4 +1,14 @@
-import { Component, computed, input, output, signal, TemplateRef, viewChild } from '@angular/core';
+import {
+  Component,
+  computed,
+  effect,
+  input,
+  output,
+  signal,
+  TemplateRef,
+  untracked,
+  viewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ButacaMapa,
@@ -48,6 +58,16 @@ export class MapaButacasComponent {
   sala3d = viewChild(Sala3dDirective);
 
   private temporizadorAviso?: ReturnType<typeof setTimeout>;
+
+  // Si una butaca de la selección llega ocupada por input, otra compra la vendió
+  // mientras el cliente elegía: se saca de la selección y se avisa (AC-07.05.01).
+  // La selección se lee sin seguirla para que el efecto corra solo cuando cambian
+  // las butacas.
+  private quitarVendidas = effect(() => {
+    const recibidas = this.butacas();
+
+    untracked(() => this.soltarOcupadas(recibidas));
+  });
 
   // Es un computed y no un método para que el array sea siempre el mismo mientras
   // no cambien las entradas: la escena 3D recibe el array por input y lo recorre
@@ -194,7 +214,7 @@ export class MapaButacasComponent {
     } else if (estado === 'ocupada') {
       texto = 'Ocupada';
     } else if (estado === 'bloqueada') {
-      texto = 'Bloqueada';
+      texto = 'En selección';
     }
 
     return texto;
@@ -276,6 +296,8 @@ export class MapaButacasComponent {
       this.mostrarTooltip(butaca, evento);
     } else if (butaca.estado === 'ocupada') {
       this.mostrarNotificacion(`La butaca ${butaca.id} ya está ocupada`);
+    } else if (butaca.estado === 'bloqueada') {
+      this.mostrarNotificacion(`Otra persona está eligiendo la butaca ${butaca.id}`);
     } else if (butaca.estado !== 'disponible') {
       this.mostrarNotificacion(`La butaca ${butaca.id} no está disponible`);
     } else if (yaElegida === false && actuales.length >= 10) {
@@ -404,6 +426,33 @@ export class MapaButacasComponent {
     return encontrada;
   }
 
+  private soltarOcupadas(recibidas: ButacaMapa[] | null): void {
+    const actuales = this.seleccionInterna();
+
+    if (recibidas !== null && actuales.length !== 0) {
+      const vendidas: string[] = [];
+      const restantes: string[] = [];
+
+      for (const id of actuales) {
+        const butaca = this.buscarButaca(recibidas, id);
+
+        if (butaca !== undefined && butaca.estado === 'ocupada') {
+          vendidas.push(id);
+        } else {
+          restantes.push(id);
+        }
+      }
+
+      if (vendidas.length !== 0) {
+        const mensaje = mensajeVendidas(vendidas);
+
+        this.seleccionInterna.set(restantes);
+        this.seleccionCambiada.emit(restantes);
+        this.mostrarNotificacion(mensaje);
+      }
+    }
+  }
+
   private precioDeTipo(precios: Record<string, number>, tipo: TipoButaca): number {
     let precio = 8500;
 
@@ -448,4 +497,19 @@ export class MapaButacasComponent {
       boton.focus();
     }
   }
+}
+
+// ─── Auxiliares del módulo ──────────────────────────────────────────
+
+// "La butaca G9 acaba de ser vendida" (AC-07.05.01), en plural si fueron varias.
+function mensajeVendidas(ids: string[]): string {
+  let mensaje = `La butaca ${ids[0]} acaba de ser vendida`;
+
+  if (ids.length > 1) {
+    const lista = ids.join(', ');
+
+    mensaje = `Las butacas ${lista} acaban de ser vendidas`;
+  }
+
+  return mensaje;
 }

@@ -17,11 +17,16 @@
       {{ elegida.formato }} · {{ elegida.idioma }} · {{ elegida.sala }}
     </p>
 
+    @if (aviso() !== '') {
+      <p class="error body" role="alert">{{ aviso() }}</p>
+    }
+
     <app-mapa-butacas
       [modo]="'elegir'"
       [butacas]="butacasMapa()"
       [precios]="precios()"
       [tooltipTemplate]="tooltipPrecio"
+      (seleccionCambiada)="alCambiarSeleccion($event)"
       (continuar)="confirmar()"
     />
 
