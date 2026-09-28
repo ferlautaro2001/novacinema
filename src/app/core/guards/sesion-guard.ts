@@ -3,7 +3,11 @@ import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { AuthService } from '../auth/auth-service';
 
 // Protege la navegación, no los datos: eso lo hace RLS en la base.
-export const sesionGuard: CanActivateFn = async () => {
+//
+// Sin sesión manda a ingresar con la dirección pedida en ?volver=, así el login
+// lo devuelve adonde iba: por ejemplo, a la compra que empezó desde el detalle
+// de una película (AC-07.01.03).
+export const sesionGuard: CanActivateFn = async (_ruta, state) => {
   // inject() solo funciona antes del primer await.
   const auth = inject(AuthService);
   const router = inject(Router);
@@ -16,7 +20,7 @@ export const sesionGuard: CanActivateFn = async () => {
   if (usuario !== null) {
     resultado = true;
   } else {
-    resultado = router.createUrlTree(['/auth/login']);
+    resultado = router.createUrlTree(['/auth/login'], { queryParams: { volver: state.url } });
   }
 
   return resultado;

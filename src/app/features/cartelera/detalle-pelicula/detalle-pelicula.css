@@ -75,6 +75,14 @@
   padding: var(--space-2) var(--space-3);
   border: 1px solid var(--border-100);
   border-radius: var(--radius-md);
+  color: var(--ink-100);
+  text-decoration: none;
+}
+
+/* Cada horario lleva a comprar esa función. */
+.horario:hover,
+.horario:focus-visible {
+  border-color: var(--gold-600);
 }
 
 .estado {
