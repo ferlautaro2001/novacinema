@@ -2,6 +2,12 @@ import { inject, Service } from '@angular/core';
 import { Supabase } from '../supabase/supabase-client';
 import type { DatosProducto, ProductoConPrecio } from '../models/candy';
 
+// El error de Postgres cuando una FK impide borrar: el producto ya se usó.
+const CODIGO_EN_USO = '23503';
+
+// Un rechazo que el administrador tiene que leer tal cual (AC-08.02.03).
+export class ProductoRechazado extends Error {}
+
 // La fila del listado tal como la devuelve PostgREST, con la categoría y los
 // precios embebidos.
 interface FilaProducto {
@@ -83,6 +89,97 @@ export class CandyService {
       await this.supS.Sup.from('productos').delete().eq('id', data.id);
       throw errorPrecio;
     }
+  }
+
+  // Guarda los cambios del producto (US-08.02). Si el precio cambió, se agrega
+  // una fila nueva en precios_producto en vez de pisar la anterior: así el
+  // registro de actividad muestra "$6.500 → $7.000" (AC-08.02.01).
+  async actualizar(id: string, datos: DatosProducto, precioActual: number | null): Promise<void> {
+    // UPDATE productos SET nombre, descripcion, categoria_id, imagen_path WHERE id = id
+    const { error } = await this.supS.Sup.from('productos')
+      .update({
+        nombre: datos.nombre,
+        descripcion: datos.descripcion,
+        categoria_id: datos.categoriaId,
+        imagen_path: datos.imagenPath,
+      })
+      .eq('id', id);
+    if (error !== null) {
+      throw error;
+    }
+
+    if (datos.precio !== precioActual) {
+      const ahora = new Date().toISOString();
+      // INSERT INTO precios_producto (producto_id, precio, vigente_desde) VALUES (...)
+      const { error: errorPrecio } = await this.supS.Sup.from('precios_producto').insert({
+        producto_id: id,
+        precio: datos.precio,
+        vigente_desde: ahora,
+      });
+      if (errorPrecio !== null) {
+        throw errorPrecio;
+      }
+    }
+  }
+
+  // Baja lógica (AC-08.02.02): un producto no disponible deja de salir en el
+  // menú pero conserva sus pedidos y su historial de precios.
+  async cambiarDisponibilidad(id: string, activo: boolean): Promise<void> {
+    // UPDATE productos SET activo = activo WHERE id = id
+    const { error } = await this.supS.Sup.from('productos').update({ activo: activo }).eq('id', id);
+    if (error !== null) {
+      throw error;
+    }
+  }
+
+  // Solo se borra un producto que nunca se usó (AC-08.02.03). Sus precios se van
+  // en cascada; si tiene pedidos o es parte de una recompensa, la FK lo impide y
+  // se sugiere marcarlo no disponible. Se pregunta antes para poder decir cuál de
+  // las dos cosas lo frena.
+  async eliminar(id: string): Promise<void> {
+    const pedidos = await this.contar('pedido_items', id);
+    const recompensas = await this.contar('recompensa_items', id);
+
+    if (pedidos > 0) {
+      throw new ProductoRechazado('El producto tiene pedidos. Marcalo como no disponible');
+    }
+
+    if (recompensas > 0) {
+      throw new ProductoRechazado(
+        'El producto es parte de una recompensa. Marcalo como no disponible',
+      );
+    }
+
+    // DELETE FROM productos WHERE id = id (precios_producto en cascada)
+    const { error } = await this.supS.Sup.from('productos').delete().eq('id', id);
+    if (error !== null) {
+      if (error.code === CODIGO_EN_USO) {
+        throw new ProductoRechazado('El producto tiene pedidos. Marcalo como no disponible');
+      }
+
+      throw error;
+    }
+  }
+
+  private async contar(
+    tabla: 'pedido_items' | 'recompensa_items',
+    productoId: string,
+  ): Promise<number> {
+    // SELECT count(*) FROM <tabla> WHERE producto_id = productoId
+    const { count, error } = await this.supS.Sup.from(tabla)
+      .select('producto_id', { count: 'exact', head: true })
+      .eq('producto_id', productoId);
+    if (error !== null) {
+      throw error;
+    }
+
+    let cantidad = 0;
+
+    if (count !== null) {
+      cantidad = count;
+    }
+
+    return cantidad;
   }
 }
 

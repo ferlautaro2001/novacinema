@@ -5,7 +5,7 @@
       <h1 class="marquee-lg">Productos</h1>
     </div>
     @if (!formularioAbierto()) {
-      <button class="nc-btn nc-btn--primary" type="button" (click)="abrirFormulario()">
+      <button class="nc-btn nc-btn--primary" type="button" (click)="abrirAlta()">
         Cargá un producto
       </button>
     }
@@ -17,10 +17,19 @@
   @if (aviso()) {
     <p class="aviso body" role="status">{{ aviso() }}</p>
   }
+  @if (errorAccion()) {
+    <p class="error body" role="alert">{{ errorAccion() }}</p>
+  }
 
   @if (formularioAbierto()) {
     <form class="panel-alta" [formGroup]="form" (ngSubmit)="guardar()">
-      <h2 class="body-strong titulo-panel">Nuevo producto</h2>
+      <h2 class="body-strong titulo-panel">
+        @if (editando(); as original) {
+          Editar “{{ original.nombre }}”
+        } @else {
+          Nuevo producto
+        }
+      </h2>
 
       @if (error()) {
         <p class="error body" role="alert">{{ error() }}</p>
@@ -89,6 +98,11 @@
               >
             </nc-campo-texto>
           </div>
+          @if (editando()) {
+            <p class="caption nota">
+              Un precio nuevo rige desde que guardás y queda en el registro de actividad.
+            </p>
+          }
         </div>
 
         <aside class="imagen">
@@ -105,7 +119,12 @@
             (change)="elegirArchivo($event)"
             aria-describedby="ayuda-imagen"
           />
-          <p id="ayuda-imagen" class="caption nota">JPEG, PNG o WebP, hasta 10 MB.</p>
+          <p id="ayuda-imagen" class="caption nota">
+            JPEG, PNG o WebP, hasta 10 MB.
+            @if (editando()) {
+              Elegí otra solo si querés cambiarla.
+            }
+          </p>
           @if (errorArchivo()) {
             <p class="error-texto caption" role="alert">{{ errorArchivo() }}</p>
           }
@@ -125,7 +144,13 @@
           Cancelar
         </button>
         <button class="nc-btn nc-btn--primary" type="submit" [disabled]="guardando()">
-          {{ guardando() ? 'Guardando…' : 'Guardá el producto' }}
+          @if (guardando()) {
+            Guardando…
+          } @else if (editando()) {
+            Guardá los cambios
+          } @else {
+            Guardá el producto
+          }
         </button>
       </div>
     </form>
@@ -143,34 +168,103 @@
   </ng-template>
 
   <ng-container *appCargando="estado(); vacio: vacio; error: fallo; let productos">
-    <ul class="grilla" aria-label="Productos del Candy">
-      @for (p of productos; track p.id) {
-        <li class="producto" [class.no-disponible]="!p.activo">
-          <img
-            class="foto"
-            [src]="storage.urlPublica(p.imagenPath)"
-            [alt]="p.nombre"
-            loading="lazy"
-          />
-          <div class="cuerpo">
-            <p class="caption categoria">{{ p.categoria }}</p>
-            <h2 class="body-strong nombre">{{ p.nombre }}</h2>
-            <p class="caption descripcion-producto">{{ p.descripcion }}</p>
-            <div class="pie">
-              <span class="precio">
-                @if (p.precio !== null) {
-                  {{ p.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
-                } @else {
-                  Sin precio
-                }
-              </span>
-              <span class="estado caption" [class.activo]="p.activo">
-                <span class="punto" aria-hidden="true"></span>{{ nombreEstado(p) }}
-              </span>
-            </div>
-          </div>
-        </li>
-      }
-    </ul>
+    <nc-tabla-datos [filas]="productos" [plantillaFila]="fila" titulo="Productos del Candy">
+      <tr encabezado>
+        <th scope="col">Producto</th>
+        <th scope="col">Categoría</th>
+        <th scope="col">Precio</th>
+        <th scope="col">Estado</th>
+        <th scope="col">Acciones</th>
+      </tr>
+    </nc-tabla-datos>
   </ng-container>
+
+  <ng-template #fila let-p>
+    <td>
+      <div class="identidad" [class.no-disponible]="!p.activo">
+        <img
+          class="foto"
+          [src]="storage.urlPublica(p.imagenPath)"
+          [alt]="p.nombre"
+          width="64"
+          height="64"
+          loading="lazy"
+        />
+        <div>
+          <p class="body-strong nombre">{{ p.nombre }}</p>
+          <p class="caption descripcion-producto">{{ p.descripcion }}</p>
+        </div>
+      </div>
+    </td>
+    <td>
+      <span class="categoria caption">{{ p.categoria }}</span>
+    </td>
+    <td class="precio">
+      @if (p.precio !== null) {
+        {{ p.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
+      } @else {
+        Sin precio
+      }
+    </td>
+    <td>
+      <span class="estado caption" [class.activo]="p.activo">
+        <span class="punto" aria-hidden="true"></span>{{ nombreEstado(p) }}
+      </span>
+    </td>
+    <td>
+      <div class="acciones-fila">
+        <button
+          type="button"
+          class="nc-btn nc-btn--ghost nc-btn--sm"
+          [disabled]="trabajando()"
+          (click)="abrirEdicion(p)"
+        >
+          Editar
+        </button>
+        <button
+          type="button"
+          class="nc-btn nc-btn--secondary nc-btn--sm disponibilidad"
+          [disabled]="trabajando()"
+          (click)="accion('disponibilidad', p)"
+        >
+          {{ p.activo ? 'Marcar no disponible' : 'Marcar disponible' }}
+        </button>
+        <button
+          type="button"
+          class="nc-btn nc-btn--danger nc-btn--sm"
+          [disabled]="trabajando()"
+          (click)="confirmacion.set(p)"
+        >
+          Eliminar
+        </button>
+      </div>
+    </td>
+  </ng-template>
+
+  @if (confirmacion(); as p) {
+    <nc-modal [ocupado]="trabajando()" (cierre)="confirmacion.set(null)">
+      <h2 titulo class="marquee-md">Eliminar producto</h2>
+      <p>
+        ¿Querés eliminar “{{ p.nombre }}”? Solo se puede si nunca se pidió; si no, marcalo como no
+        disponible.
+      </p>
+      <button
+        acciones
+        class="nc-btn nc-btn--secondary"
+        [disabled]="trabajando()"
+        (click)="confirmacion.set(null)"
+      >
+        Cancelar
+      </button>
+      <button
+        acciones
+        appFocoInicial
+        class="nc-btn nc-btn--danger"
+        [disabled]="trabajando()"
+        (click)="accion('eliminar', p)"
+      >
+        {{ trabajando() ? 'Eliminando…' : 'Confirmar eliminación' }}
+      </button>
+    </nc-modal>
+  }
 </section>
