@@ -1,4 +1,4 @@
-import { Component, input, output, signal, TemplateRef, viewChild } from '@angular/core';
+import { Component, computed, input, output, signal, TemplateRef, viewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   ButacaMapa,
@@ -46,7 +46,10 @@ export class MapaButacasComponent {
 
   private temporizadorAviso?: ReturnType<typeof setTimeout>;
 
-  butacasLista(): ButacaMapa[] {
+  // Es un computed y no un método para que el array sea siempre el mismo mientras
+  // no cambien las entradas: la escena 3D recibe el array por input y lo recorre
+  // entero en cada cambio.
+  butacasLista = computed(() => {
     const recibidas = this.butacas();
 
     let base: ButacaMapa[];
@@ -85,9 +88,9 @@ export class MapaButacasComponent {
     }
 
     return lista;
-  }
+  });
 
-  filasVisuales() {
+  filasVisuales = computed(() => {
     const porFila: Record<string, (ButacaMapa | null)[]> = {};
 
     for (const letra of FILAS) {
@@ -132,7 +135,7 @@ export class MapaButacasComponent {
     }
 
     return filas;
-  }
+  });
 
   zoomPorcentaje(): number {
     const porcentaje = Math.round(this.zoom() * 100);

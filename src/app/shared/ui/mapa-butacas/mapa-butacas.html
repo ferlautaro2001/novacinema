@@ -162,6 +162,7 @@
         [camaraActiva]="camaraActiva()"
         [modo]="modo()"
         [modoFuncion]="modoFuncion()"
+        [activo]="vista() === '3d'"
         (butacaClick)="tocarButaca($event)"
         (butacaHover)="onHover3D($event)"
         (cambioCamara)="camaraActiva.set($event)"
