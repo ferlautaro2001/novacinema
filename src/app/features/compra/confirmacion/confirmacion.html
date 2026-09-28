@@ -31,6 +31,9 @@
           {{ funcion.idioma }} · {{ funcion.sala }}
         </p>
         <p class="body">Butacas: {{ butacas() }}</p>
+        @if (compra.candy().length !== 0) {
+          <p class="body">Candy · Pendiente de retiro: {{ compra.candy().join(', ') }}</p>
+        }
 
         <div class="fila total">
           <span class="body-strong">Total</span>
@@ -57,6 +60,14 @@
       </div>
     }
 
+    @if (compra.candy().length === 0) {
+      <a
+        class="nc-btn nc-btn--secondary volver"
+        routerLink="/candy"
+        [queryParams]="{ compra: registrada.id }"
+        >Sumá algo del Candy</a
+      >
+    }
     <a class="nc-btn nc-btn--secondary volver" routerLink="/cartelera">Volver a la cartelera</a>
   } @else {
     <div class="tarjeta">

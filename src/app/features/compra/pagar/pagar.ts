@@ -19,16 +19,20 @@ import { edadEn } from '../../../core/reglas/edad';
 import { CampoTexto } from '../../../shared/ui/campo-texto/campo-texto';
 import { CargaConsulta } from '../../../shared/ui/carga-consulta/carga-consulta';
 import { ErrorCampo } from '../../../shared/ui/error-campo/error-campo';
-import { PATRON_VENCIMIENTO, tarjetaNoVencida } from '../../../shared/validadores/tarjeta';
+import { PedidoEstado, subtotalDe } from '../../candy/pedido-estado';
 import { CompraEstado } from '../compra-estado';
+import { FormularioPago } from '../formulario-pago/formulario-pago';
 
 // El resumen de la compra y el pago. Muestra las entradas elegidas y aplica el
 // descuento que corresponde (US-07.06): el de primera compra solo, o el cupón
 // que ingrese el cliente si es mayor. Nunca los dos (AC-07.06.03).
 //
-// Después se paga (US-07.07): primero con el crédito de la cuenta, si el
-// cliente lo elige, y el resto con tarjeta. Los datos de la tarjeta se validan
-// acá y no se mandan a ningún lado: no hay procesador de pagos.
+// Si el cliente armó un pedido del Candy, va en el mismo resumen y queda
+// vinculado a esta compra (AC-08.05.01): suma al subtotal, el descuento lo
+// alcanza y se paga junto con las entradas.
+//
+// Después se paga (US-07.07) con nc-formulario-pago: primero con el crédito de
+// la cuenta, si el cliente lo elige, y el resto con tarjeta.
 type EstadoPantalla = 'cargando' | 'listo' | 'sin-seleccion' | 'error';
 
 @Component({
@@ -41,6 +45,7 @@ type EstadoPantalla = 'cargando' | 'listo' | 'sin-seleccion' | 'error';
     CampoTexto,
     CargaConsulta,
     ErrorCampo,
+    FormularioPago,
   ],
   templateUrl: './pagar.html',
   styleUrl: './pagar.css',
@@ -54,6 +59,7 @@ export class Pagar implements OnInit {
   private comprasService = inject(ComprasService);
   private router = inject(Router);
   compra = inject(CompraEstado);
+  pedido = inject(PedidoEstado);
 
   estado = signal<EstadoPantalla>('cargando');
   mensaje = signal('');
@@ -64,7 +70,6 @@ export class Pagar implements OnInit {
   aplicando = signal(false);
 
   saldo = signal(0);
-  usarCredito = signal(false);
   pagando = signal(false);
   errorPago = signal('');
   // Si una butaca se vendió mientras pagaba, se ofrece volver al mapa.
@@ -76,30 +81,9 @@ export class Pagar implements OnInit {
     codigo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
   });
 
-  // Los datos de la tarjeta (AC-07.07.02). El número admite espacios cada
-  // cuatro dígitos, que es como viene impreso.
-  tarjeta = new FormGroup({
-    numero: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.pattern(/^\d{4} ?\d{4} ?\d{4} ?\d{4}$/)],
-    }),
-    titular: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
-    vencimiento: new FormControl('', {
-      nonNullable: true,
-      validators: [
-        Validators.required,
-        Validators.pattern(PATRON_VENCIMIENTO),
-        tarjetaNoVencida(() => new Date()),
-      ],
-    }),
-    codigo: new FormControl('', {
-      nonNullable: true,
-      validators: [Validators.required, Validators.pattern(/^\d{3}$/)],
-    }),
-  });
-
+  // Entradas más el pedido del Candy, si lo hay.
   subtotal = computed(() => {
-    let suma = 0;
+    let suma = this.pedido.total();
 
     for (const entrada of this.compra.entradas()) {
       suma = suma + entrada.precio;
@@ -107,6 +91,8 @@ export class Pagar implements OnInit {
 
     return suma;
   });
+
+  subtotalCandy = subtotalDe;
 
   descuento = computed(() => {
     const cupon = elegirCupon(this.primeraCompra(), this.ingresado());
@@ -130,34 +116,6 @@ export class Pagar implements OnInit {
     }
 
     return total;
-  });
-
-  // El crédito cubre hasta el total, nunca más (AC-07.07.01).
-  credito = computed(() => {
-    let credito = 0;
-
-    if (this.usarCredito()) {
-      credito = Math.min(this.saldo(), this.total());
-    }
-
-    return credito;
-  });
-
-  aTarjeta = computed(() => {
-    const resto = this.total() - this.credito();
-
-    return resto;
-  });
-
-  // Si el crédito cubre todo no se piden datos de tarjeta.
-  pideTarjeta = computed(() => {
-    let pide = false;
-
-    if (this.aTarjeta() > 0) {
-      pide = true;
-    }
-
-    return pide;
   });
 
   // Aclara por qué se aplica uno solo cuando hay dos en juego (AC-07.06.03).
@@ -237,33 +195,34 @@ export class Pagar implements OnInit {
     this.form.reset();
   }
 
-  alternarCredito(): void {
-    const usar = !this.usarCredito();
-
-    this.usarCredito.set(usar);
-  }
-
-  async pagar(): Promise<void> {
+  // nc-formulario-pago ya validó la tarjeta y avisa cuánto crédito usar.
+  async pagar(credito: number): Promise<void> {
     const funcion = this.compra.funcion();
     const usuario = this.auth.usuario();
 
     this.errorPago.set('');
     this.butacaPerdida.set(false);
 
-    if (this.pideTarjeta() && this.tarjeta.invalid) {
-      this.tarjeta.markAllAsTouched();
-    } else if (funcion !== null && usuario !== null) {
+    if (funcion !== null && usuario !== null) {
       this.pagando.set(true);
-      await this.registrar(funcion.id, usuario.id);
+      await this.registrar(funcion.id, usuario.id, credito);
       this.pagando.set(false);
     }
   }
 
-  private async registrar(funcionId: string, usuarioId: string): Promise<void> {
+  private async registrar(funcionId: string, usuarioId: string, credito: number): Promise<void> {
     const butacas: string[] = [];
 
     for (const entrada of this.compra.entradas()) {
       butacas.push(entrada.id);
+    }
+
+    const candy: { productoId: string; cantidad: number }[] = [];
+    const lineasCandy: string[] = [];
+
+    for (const item of this.pedido.items()) {
+      candy.push({ productoId: item.producto.id, cantidad: item.cantidad });
+      lineasCandy.push(`${item.cantidad} × ${item.producto.nombre}`);
     }
 
     let cuponId: string | null = null;
@@ -280,12 +239,14 @@ export class Pagar implements OnInit {
         butacas,
         adulto: this.compra.adulto(),
         cuponId,
-        creditoDisponible: this.credito(),
+        candy,
+        creditoDisponible: credito,
       });
 
       const titular = this.titular();
 
-      this.compra.confirmar(registrada, titular);
+      this.compra.confirmar(registrada, titular, lineasCandy);
+      this.pedido.limpiar();
       this.router.navigate(['/comprar', funcionId, 'confirmacion']);
     } catch (e) {
       this.mostrarRechazo(e);

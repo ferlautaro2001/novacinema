@@ -1,4 +1,5 @@
 import { inject, Service } from '@angular/core';
+import type { ComprobanteCompra } from '../models/compra';
 import { Supabase } from '../supabase/supabase-client';
 import { FuncionesService } from './funciones-service';
 import { butacasYaVendidas, esButacaYaVendida, mensajeNoDisponibles } from '../reglas/butacas';
@@ -32,6 +33,8 @@ export interface PedidoDeCompra {
   butacas: string[];
   adulto: AdultoDeLaCompra | null;
   cuponId: string | null;
+  // El pedido del Candy que va con la compra (AC-08.05.01); vacío si no hay.
+  candy: { productoId: string; cantidad: number }[];
   // Cuánto crédito quiere usar el cliente como máximo. Se usa lo que haga
   // falta hasta cubrir el total, nunca más.
   creditoDisponible: number;
@@ -75,6 +78,12 @@ export class ComprasService {
         await this.agregarAdulto(compra.id, pedido.adulto);
       }
 
+      // El pedido va antes que el cupón: calcular_descuento toma el Candy en el
+      // bruto, así el descuento lo alcanza igual que en el resumen.
+      if (pedido.candy.length !== 0) {
+        await this.agregarCandy(compra.id, pedido.candy);
+      }
+
       if (pedido.cuponId !== null) {
         await this.agregarCupon(compra.id, pedido.cuponId);
       }
@@ -86,6 +95,36 @@ export class ComprasService {
     }
 
     return registrada;
+  }
+
+  // Los datos del comprobante de una compra propia (US-07.08), con el pedido del
+  // Candy si lo tiene (AC-08.06.02). Se leen de la base y no de la pantalla, así
+  // el PDF es el mismo recién comprado o después de sumar el Candy.
+  async comprobante(compraId: string): Promise<ComprobanteCompra> {
+    // SELECT c.codigo, u.nombre, u.apellido, ar.nombre, ar.apellido,
+    //   e.anulada_en, f.letra, b.numero, fu.comienza_en, s.nombre, fm.codigo,
+    //   vi.nombre, p.titulo, cl.codigo, pi.cantidad, pr.nombre
+    //   FROM compras c JOIN usuarios u ... LEFT JOIN compras_adulto_responsable ar ...
+    //   JOIN entradas e ... LEFT JOIN pedidos_candy pc ... WHERE c.id = compraId
+    const { data, error } = await this.supS.Sup.from('compras')
+      .select(
+        `codigo,
+        usuarios!compras_usuario_id_fkey(nombre, apellido),
+        compras_adulto_responsable(nombre, apellido),
+        entradas(anulada_en, butacas(numero, filas(letra)), funciones(comienza_en, salas(nombre), formatos(codigo), versiones_idioma(nombre), peliculas(titulo, clasificaciones(codigo)))),
+        pedidos_candy(estado, pedido_items(cantidad, productos(nombre)))`,
+      )
+      .eq('id', compraId)
+      .single();
+    if (error !== null) {
+      throw error;
+    }
+
+    const total = await this.totalDe(compraId);
+    const fila = data as unknown as FilaComprobante;
+    const comprobante = aComprobante(fila, total);
+
+    return comprobante;
   }
 
   // Del id del mapa ("F10") al uuid de la butaca en la sala de la función.
@@ -254,6 +293,44 @@ export class ComprasService {
     }
   }
 
+  // El pedido del Candy vinculado a la compra (US-08.05). Los precios los pone
+  // calcular_precio_item; se cobra junto con las entradas en pagar().
+  private async agregarCandy(
+    compraId: string,
+    candy: { productoId: string; cantidad: number }[],
+  ): Promise<void> {
+    // INSERT INTO pedidos_candy (compra_id) VALUES (compraId) RETURNING id
+    const { data, error } = await this.supS.Sup.from('pedidos_candy')
+      .insert({ compra_id: compraId })
+      .select('id')
+      .single();
+    if (error !== null) {
+      throw error;
+    }
+
+    const items: {
+      pedido_id: string;
+      producto_id: string;
+      cantidad: number;
+      precio_unitario: number;
+    }[] = [];
+
+    for (const item of candy) {
+      items.push({
+        pedido_id: data.id,
+        producto_id: item.productoId,
+        cantidad: item.cantidad,
+        precio_unitario: 0,
+      });
+    }
+
+    // INSERT INTO pedido_items (pedido_id, producto_id, cantidad, precio_unitario) VALUES (...)
+    const { error: errorItems } = await this.supS.Sup.from('pedido_items').insert(items);
+    if (errorItems !== null) {
+      throw errorItems;
+    }
+  }
+
   // El monto lo calcula calcular_descuento, que también vuelve a validar el
   // cupón. Si ya no vale, se avisa en vez de cobrar sin descuento.
   private async agregarCupon(compraId: string, cuponId: string): Promise<void> {
@@ -342,6 +419,83 @@ export class ComprasService {
 }
 
 // ─── Auxiliares ─────────────────────────────────────────────────────
+
+// La compra con todo lo embebido, tal como la devuelve PostgREST en comprobante().
+interface FilaComprobante {
+  codigo: string;
+  usuarios: { nombre: string; apellido: string } | null;
+  compras_adulto_responsable: { nombre: string; apellido: string } | null;
+  entradas: {
+    anulada_en: string | null;
+    butacas: { numero: number; filas: { letra: string } };
+    funciones: {
+      comienza_en: string;
+      salas: { nombre: string };
+      formatos: { codigo: string };
+      versiones_idioma: { nombre: string };
+      peliculas: { titulo: string; clasificaciones: { codigo: string } };
+    };
+  }[];
+  pedidos_candy: {
+    estado: string;
+    pedido_items: { cantidad: number; productos: { nombre: string } }[];
+  } | null;
+}
+
+// Solo cuentan las entradas vivas; la función es la de la primera (una compra
+// es de una sola función). El titular es el adulto responsable si lo hubo.
+function aComprobante(fila: FilaComprobante, total: number): ComprobanteCompra {
+  const vivas: FilaComprobante['entradas'] = [];
+
+  for (const entrada of fila.entradas) {
+    if (entrada.anulada_en === null) {
+      vivas.push(entrada);
+    }
+  }
+
+  if (vivas.length === 0) {
+    throw new Error('La compra no tiene entradas vigentes');
+  }
+
+  const funcion = vivas[0].funciones;
+  const butacas: string[] = [];
+
+  for (const entrada of vivas) {
+    butacas.push(`${entrada.butacas.filas.letra}${entrada.butacas.numero}`);
+  }
+
+  let titular = '';
+
+  if (fila.compras_adulto_responsable !== null) {
+    titular = `${fila.compras_adulto_responsable.nombre} ${fila.compras_adulto_responsable.apellido}`;
+  } else if (fila.usuarios !== null) {
+    titular = `${fila.usuarios.nombre} ${fila.usuarios.apellido}`;
+  }
+
+  const candy: string[] = [];
+
+  if (fila.pedidos_candy !== null && fila.pedidos_candy.estado !== 'cancelado') {
+    for (const item of fila.pedidos_candy.pedido_items) {
+      candy.push(`${item.cantidad} × ${item.productos.nombre}`);
+    }
+  }
+
+  const comprobante: ComprobanteCompra = {
+    codigo: fila.codigo,
+    pelicula: funcion.peliculas.titulo,
+    clasificacion: funcion.peliculas.clasificaciones.codigo,
+    comienzaEn: new Date(funcion.comienza_en),
+    sala: funcion.salas.nombre,
+    formato: funcion.formatos.codigo,
+    idioma: funcion.versiones_idioma.nombre,
+    butacas: butacas.join(', '),
+    titular,
+    total,
+    candy,
+  };
+
+  return comprobante;
+}
 
 // El crédito cubre hasta el total; la tarjeta, lo que falta. Se trabaja en
 // centavos para que la suma dé exacta.

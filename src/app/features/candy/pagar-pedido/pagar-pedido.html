@@ -1,0 +1,144 @@
+<section class="pedido-candy">
+  <header class="cabecera">
+    <p class="overline">Candy</p>
+    <h1 class="marquee-lg">
+      @if (estado() === 'pagado') {
+        ¡Pedido confirmado!
+      } @else {
+        Tu pedido del Candy
+      }
+    </h1>
+  </header>
+
+  @switch (estado()) {
+    @case ('cargando') {
+      <nc-carga-consulta />
+    }
+
+    @case ('error') {
+      <p class="error body" role="alert">No se pudo preparar el pedido. Probá de nuevo.</p>
+      <a class="nc-btn nc-btn--secondary volver" routerLink="/candy">Volver al Candy</a>
+    }
+
+    @case ('sin-compra') {
+      <div class="tarjeta">
+        <h2 class="body-strong titulo">Para comprar en el Candy necesitás una entrada vigente</h2>
+        <p class="body">
+          El pedido se retira con el código de tu compra de entradas. Sacá una entrada para una
+          función que todavía no terminó y sumá el Candy.
+        </p>
+        <a class="nc-btn nc-btn--primary volver" routerLink="/cartelera">Ver la cartelera</a>
+      </div>
+    }
+
+    @case ('listo') {
+      @if (pedido.items().length === 0) {
+        <div class="tarjeta">
+          <h2 class="body-strong titulo">Tu pedido está vacío</h2>
+          <p class="body">Elegí en el menú lo que quieras y volvé a confirmar.</p>
+          <a class="nc-btn nc-btn--secondary volver" routerLink="/candy">Ir al menú</a>
+        </div>
+      } @else {
+        <fieldset class="tarjeta compras">
+          <legend class="body-strong titulo">¿A qué compra lo sumás?</legend>
+          <p class="caption nota">Lo retirás en el cine con el mismo código de esa compra.</p>
+          @for (compra of vigentes(); track compra.id) {
+            <label class="compra" [class.elegida]="elegida() === compra.id">
+              <input
+                type="radio"
+                name="compra"
+                [checked]="elegida() === compra.id"
+                (change)="elegir(compra.id)"
+              />
+              <span class="compra-datos">
+                <span class="body-strong">{{ compra.pelicula }}</span>
+                <span class="caption"
+                  >{{ compra.comienzaEn | date: 'EEEE d/MM HH:mm' }} · {{ compra.sala }}</span
+                >
+              </span>
+              <span class="codigo-compra">{{ compra.codigo }}</span>
+            </label>
+          }
+        </fieldset>
+
+        <nc-resumen-pedido />
+
+        <div class="tarjeta">
+          <h2 class="body-strong titulo">Pago</h2>
+          <nc-formulario-pago
+            [total]="pedido.total()"
+            [saldo]="saldo()"
+            [pagando]="pagando()"
+            (pagar)="pagar($event)"
+          >
+            @if (error() !== '') {
+              <p aviso class="error body" role="alert">{{ error() }}</p>
+            }
+          </nc-formulario-pago>
+        </div>
+
+        <a class="nc-btn nc-btn--ghost volver" routerLink="/candy">Seguir eligiendo</a>
+      }
+    }
+
+    @case ('pagado') {
+      @if (confirmado(); as confirmado) {
+        <div class="tarjeta">
+          <p class="caption etiqueta">Código de retiro</p>
+          <p class="estado-retiro body-strong">
+            <span class="punto" aria-hidden="true"></span>Pendiente de retiro
+          </p>
+          <p class="body">
+            Mostrá este código en el Candy del cine. Es el mismo de tu compra de
+            {{ confirmado.compra.pelicula }}.
+          </p>
+          <nc-codigo-qr [codigo]="confirmado.compra.codigo" [tamanio]="180" />
+          <button
+            class="nc-btn nc-btn--primary volver"
+            type="button"
+            [disabled]="descargando()"
+            (click)="descargar()"
+          >
+            {{ descargando() ? 'Armando el PDF…' : 'Descargar comprobante' }}
+          </button>
+          @if (error() !== '') {
+            <p class="error body" role="alert">{{ error() }}</p>
+          }
+        </div>
+
+        <div class="tarjeta">
+          <h2 class="body-strong titulo">Tu pedido</h2>
+          <ul class="lista">
+            @for (linea of confirmado.lineas; track linea) {
+              <li class="body">{{ linea }}</li>
+            }
+          </ul>
+          <div class="fila total">
+            <span class="body-strong">Total</span>
+            <span class="importe">{{
+              confirmado.pago.total | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+            }}</span>
+          </div>
+          @if (confirmado.pago.credito > 0) {
+            <div class="fila">
+              <span class="body">Con crédito</span>
+              <span class="body importe-chico">{{
+                confirmado.pago.credito | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+              }}</span>
+            </div>
+          }
+          @if (confirmado.pago.tarjeta > 0) {
+            <div class="fila">
+              <span class="body">Con tarjeta</span>
+              <span class="body importe-chico">{{
+                confirmado.pago.tarjeta | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+              }}</span>
+            </div>
+          }
+        </div>
+
+        <a class="nc-btn nc-btn--secondary volver" routerLink="/cartelera">Volver a la cartelera</a>
+      }
+    }
+  }
+</section>
