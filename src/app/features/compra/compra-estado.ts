@@ -30,6 +30,9 @@ export class CompraEstado {
   // A nombre de quién quedó la entrada: el adulto responsable si lo hubo
   // (AC-07.03.02), si no quien compró. Va en el PDF (US-07.08).
   titular = signal('');
+  // El pedido del Candy que se pagó con la compra ("2 × Coca-Cola"), para la
+  // confirmación y el PDF (AC-08.06.02).
+  candy = signal<string[]>([]);
 
   // Una selección nueva descarta el descuento anterior: se calculó sobre otro
   // subtotal.
@@ -38,6 +41,7 @@ export class CompraEstado {
     this.entradas.set(entradas);
     this.descuento.set(null);
     this.confirmada.set(null);
+    this.candy.set([]);
   }
 
   guardarAdulto(adulto: DatosAdulto): void {
@@ -50,9 +54,10 @@ export class CompraEstado {
 
   // La compra ya está pagada: se guarda para la confirmación, con su titular, y
   // se olvida el adulto, que era de esta compra.
-  confirmar(registrada: CompraRegistrada, titular: string): void {
+  confirmar(registrada: CompraRegistrada, titular: string, candy: string[]): void {
     this.confirmada.set(registrada);
     this.titular.set(titular);
+    this.candy.set(candy);
     this.adulto.set(null);
   }
 
@@ -63,5 +68,6 @@ export class CompraEstado {
     this.descuento.set(null);
     this.confirmada.set(null);
     this.titular.set('');
+    this.candy.set([]);
   }
 }

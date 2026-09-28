@@ -66,6 +66,20 @@
         </section>
       }
     </div>
-    <nc-resumen-pedido class="lateral" (maximo)="avisarMaximo()" />
+    <nc-resumen-pedido class="lateral" (maximo)="avisarMaximo()">
+      @if (funcionCompra(); as funcionId) {
+        <a acciones class="nc-btn nc-btn--primary" [routerLink]="['/comprar', funcionId, 'pagar']">
+          Volver al resumen de la compra
+        </a>
+      } @else if (pedido.items().length !== 0) {
+        <a
+          acciones
+          class="nc-btn nc-btn--primary"
+          routerLink="/candy/pedido"
+          queryParamsHandling="preserve"
+          >Confirmar pedido</a
+        >
+      }
+    </nc-resumen-pedido>
   </div>
 </ng-container>

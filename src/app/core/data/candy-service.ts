@@ -1,12 +1,32 @@
 import { inject, Service } from '@angular/core';
 import { Supabase } from '../supabase/supabase-client';
-import type { CategoriaDelMenu, DatosProducto, ProductoConPrecio } from '../models/candy';
+import type {
+  CategoriaDelMenu,
+  CompraVigente,
+  DatosProducto,
+  PedidoPagado,
+  ProductoConPrecio,
+} from '../models/candy';
 
 // El error de Postgres cuando una FK impide borrar: el producto ya se usó.
 const CODIGO_EN_USO = '23503';
 
 // Un rechazo que el administrador tiene que leer tal cual (AC-08.02.03).
 export class ProductoRechazado extends Error {}
+
+// Un rechazo del pedido que el cliente tiene que leer tal cual, como "Para
+// comprar en el Candy necesitás una entrada vigente" (AC-08.05.01).
+export class PedidoRechazado extends Error {}
+
+// Los mensajes de pagar_pedido_candy que se muestran tal cual; cualquier otro
+// error se muestra genérico.
+const MENSAJES_PEDIDO = [
+  'Para comprar en el Candy necesitás una entrada vigente',
+  'Esta compra ya tiene un pedido del Candy',
+  'Máximo 10 unidades por producto',
+  'El pedido está vacío',
+  'Producto inactivo o inexistente',
+];
 
 // La fila del listado tal como la devuelve PostgREST, con la categoría y los
 // precios embebidos.
@@ -90,6 +110,78 @@ export class CandyService {
     }
 
     return categorias;
+  }
+
+  // Las compras a las que el cliente puede sumar un pedido (AC-08.05.01):
+  // propias, pagadas, con la función sin terminar y todavía sin pedido. La base
+  // lo vuelve a revisar en pagar_pedido_candy.
+  async comprasVigentes(usuarioId: string): Promise<CompraVigente[]> {
+    // SELECT c.id, c.codigo, e.anulada_en, f.comienza_en, f.termina_en, s.nombre, p.titulo, pc.id
+    //   FROM compras c JOIN entradas e ... JOIN funciones f ... LEFT JOIN pedidos_candy pc ...
+    //   WHERE c.usuario_id = usuarioId AND c.estado = 'pagada'
+    const { data, error } = await this.supS.Sup.from('compras')
+      .select(
+        'id, codigo, entradas(anulada_en, funciones(comienza_en, termina_en, salas(nombre), peliculas(titulo))), pedidos_candy(id)',
+      )
+      .eq('usuario_id', usuarioId)
+      .eq('estado', 'pagada')
+      .order('creada_en', { ascending: false });
+    if (error !== null) {
+      throw error;
+    }
+
+    const ahora = new Date();
+    const vigentes: CompraVigente[] = [];
+
+    for (const compra of data) {
+      const vigente = compraVigente(compra, ahora);
+
+      if (vigente !== null) {
+        vigentes.push(vigente);
+      }
+    }
+
+    return vigentes;
+  }
+
+  // Crea el pedido sobre una compra ya pagada y lo cobra (US-08.06). Es RPC
+  // porque pedido, pagos, uso del crédito y puntos van en una sola transacción:
+  // ver la migración 20260928162733_novacinema_pedido_candy_despues.
+  async pagarPedido(
+    compraId: string,
+    items: { productoId: string; cantidad: number }[],
+    usarCredito: boolean,
+  ): Promise<PedidoPagado> {
+    const lineas: { producto_id: string; cantidad: number }[] = [];
+
+    for (const item of items) {
+      lineas.push({ producto_id: item.productoId, cantidad: item.cantidad });
+    }
+
+    // SELECT pagar_pedido_candy(compraId, lineas, usarCredito)
+    const { data, error } = await this.supS.Sup.rpc('pagar_pedido_candy', {
+      p_compra_id: compraId,
+      p_items: lineas,
+      p_usar_credito: usarCredito,
+    });
+    if (error !== null) {
+      throw new PedidoRechazado(mensajeDelPedido(error.message));
+    }
+
+    const respuesta = data as {
+      pedido_id: string;
+      total: number;
+      credito: number;
+      tarjeta: number;
+    };
+    const pagado: PedidoPagado = {
+      pedidoId: respuesta.pedido_id,
+      total: Number(respuesta.total),
+      credito: Number(respuesta.credito),
+      tarjeta: Number(respuesta.tarjeta),
+    };
+
+    return pagado;
   }
 
   // Da de alta el producto disponible y su primer precio (AC-08.01.01). El
@@ -269,6 +361,58 @@ function agregarAlMenu(categorias: CategoriaDelMenu[], producto: ProductoConPrec
       productos: [producto],
     });
   }
+}
+
+// La fila de la compra tal como la devuelve PostgREST en comprasVigentes.
+interface FilaCompraVigente {
+  id: string;
+  codigo: string;
+  entradas: {
+    anulada_en: string | null;
+    funciones: {
+      comienza_en: string;
+      termina_en: string;
+      salas: { nombre: string };
+      peliculas: { titulo: string };
+    };
+  }[];
+  // Un pedido por compra (unique compra_id): PostgREST lo trae como objeto.
+  pedidos_candy: { id: string } | null;
+}
+
+// null si la compra ya tiene pedido, si todas sus entradas están anuladas o si
+// la función ya terminó.
+function compraVigente(compra: FilaCompraVigente, ahora: Date): CompraVigente | null {
+  let vigente: CompraVigente | null = null;
+
+  if (compra.pedidos_candy === null) {
+    for (const entrada of compra.entradas) {
+      const funcion = entrada.funciones;
+      const fin = new Date(funcion.termina_en);
+
+      if (vigente === null && entrada.anulada_en === null && fin > ahora) {
+        vigente = {
+          id: compra.id,
+          codigo: compra.codigo,
+          pelicula: funcion.peliculas.titulo,
+          sala: funcion.salas.nombre,
+          comienzaEn: new Date(funcion.comienza_en),
+        };
+      }
+    }
+  }
+
+  return vigente;
+}
+
+function mensajeDelPedido(mensaje: string): string {
+  let texto = 'No se pudo completar el pedido. No se cobró nada: probá de nuevo.';
+
+  if (MENSAJES_PEDIDO.includes(mensaje)) {
+    texto = mensaje;
+  }
+
+  return texto;
 }
 
 function porOrdenDeCategoria(a: FilaProducto, b: FilaProducto): number {

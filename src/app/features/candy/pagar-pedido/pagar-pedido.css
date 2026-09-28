@@ -1,0 +1,171 @@
+.pedido-candy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.cabecera .overline {
+  margin: 0;
+  color: var(--gold-600);
+}
+
+.tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--space-6);
+  background: var(--cine-panel, var(--surface-200));
+  border: 1px solid var(--cine-edge, var(--border-100));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.titulo {
+  margin: 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-100);
+  font-size: 18px;
+  color: var(--ink-100);
+}
+
+/* La leyenda del fieldset se comporta como el título de las otras tarjetas. */
+.compras .titulo {
+  float: left;
+  width: 100%;
+  padding-inline: 0;
+}
+
+.compras .titulo + * {
+  clear: both;
+}
+
+.tarjeta p {
+  margin: 0;
+  color: var(--ink-100);
+}
+
+.nota,
+.etiqueta {
+  color: var(--ink-200);
+}
+
+.compra {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-md);
+  background: var(--surface-100);
+  color: var(--ink-100);
+  cursor: pointer;
+  transition: border-color var(--cine-fast, 180ms) ease;
+}
+
+.compra.elegida {
+  border-color: var(--gold-600);
+}
+
+.compra input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--brand-500);
+}
+
+.compra-datos {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.compra-datos .caption {
+  color: var(--ink-200);
+}
+
+.compra-datos .caption::first-letter {
+  text-transform: uppercase;
+}
+
+.codigo-compra {
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--gold-600);
+  white-space: nowrap;
+}
+
+.estado-retiro {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--success) !important;
+}
+
+.punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--success) 60%, transparent);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-100);
+}
+
+.fila {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  color: var(--ink-100);
+}
+
+.total {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-100);
+}
+
+.importe {
+  font-family: var(--font-mono);
+  font-size: clamp(19px, 3vw, 22px);
+  color: var(--gold-600);
+}
+
+.importe-chico {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.error {
+  margin: 0;
+  padding: var(--space-3);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius-md);
+  background: var(--danger-tint);
+  color: var(--ink-100);
+}
+
+.volver {
+  align-self: flex-start;
+}
+
+@media (max-width: 480px) {
+  .tarjeta {
+    padding: var(--space-5);
+  }
+
+  .compra {
+    flex-wrap: wrap;
+  }
+}

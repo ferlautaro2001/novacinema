@@ -43,3 +43,21 @@ export interface CategoriaDelMenu {
   nombre: string;
   productos: ProductoConPrecio[];
 }
+
+// Una compra a la que se le puede sumar un pedido del Candy (AC-08.05.01):
+// propia, pagada, con la función sin terminar y todavía sin pedido.
+export interface CompraVigente {
+  id: string;
+  codigo: string;
+  pelicula: string;
+  sala: string;
+  comienzaEn: Date;
+}
+
+// Cómo quedó pagado un pedido del Candy (US-08.06), con los montos de la base.
+export interface PedidoPagado {
+  pedidoId: string;
+  total: number;
+  credito: number;
+  tarjeta: number;
+}

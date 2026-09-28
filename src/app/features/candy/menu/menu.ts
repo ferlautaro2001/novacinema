@@ -1,4 +1,5 @@
-import { Component, inject, OnDestroy, OnInit, signal } from '@angular/core';
+import { Component, inject, input, OnDestroy, OnInit, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { CandyService } from '../../../core/data/candy-service';
 import type { CategoriaDelMenu, ProductoConPrecio } from '../../../core/models/candy';
 import { Cargando, EstadoConsulta } from '../../../shared/directivas/cargando';
@@ -14,13 +15,17 @@ import { ResumenPedido } from '../resumen-pedido/resumen-pedido';
 // muestra subtotales y total. Vincularlo a una compra llega con US-08.05.
 @Component({
   selector: 'nc-menu',
-  imports: [Cargando, Cantidad, ProductoCard, ResumenPedido],
+  imports: [RouterLink, Cargando, Cantidad, ProductoCard, ResumenPedido],
   templateUrl: './menu.html',
   styleUrl: './menu.css',
 })
 export class Menu implements OnInit, OnDestroy {
   private candy = inject(CandyService);
   pedido = inject(PedidoEstado);
+
+  // Dentro de la compra de entradas (compra/sumar-candy) el pedido vuelve al
+  // resumen de esa compra; en el Candy suelto se confirma aparte (US-08.05).
+  funcionCompra = input<string | null>(null);
 
   estado = signal<EstadoConsulta<CategoriaDelMenu>>({ tipo: 'cargando' });
   aviso = signal('');

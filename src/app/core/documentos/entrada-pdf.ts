@@ -1,4 +1,8 @@
+import { formatCurrency, formatDate } from '@angular/common';
 import { jsPDF } from 'jspdf';
+import type { ComprobanteCompra } from '../models/compra';
+
+const LOCALE = 'es-AR';
 
 // Lo que va impreso en la entrada (AC-07.08.01). Los textos llegan ya
 // formateados: este archivo solo los ubica en la hoja.
@@ -17,6 +21,30 @@ export interface DatosEntradaPdf {
   // El pedido del Candy de la compra, si tiene ("2 × Gaseosa mediana").
   // Lo usa US-08.06; sin pedido la lista va vacía.
   candy: string[];
+}
+
+// Del comprobante de la base a los textos del PDF, con fechas y montos en es-AR
+// como se ven en pantalla.
+export function datosDelComprobante(comprobante: ComprobanteCompra): DatosEntradaPdf {
+  const fecha = formatDate(comprobante.comienzaEn, 'EEEE d/MM/yyyy', LOCALE);
+  const hora = formatDate(comprobante.comienzaEn, 'HH:mm', LOCALE);
+  const total = formatCurrency(comprobante.total, LOCALE, '$', 'ARS', '1.0-2');
+  const datos: DatosEntradaPdf = {
+    codigo: comprobante.codigo,
+    pelicula: comprobante.pelicula,
+    clasificacion: comprobante.clasificacion,
+    fecha,
+    hora,
+    sala: comprobante.sala,
+    formato: comprobante.formato,
+    idioma: comprobante.idioma,
+    butacas: comprobante.butacas,
+    titular: comprobante.titular,
+    total,
+    candy: comprobante.candy,
+  };
+
+  return datos;
 }
 
 // Colores de la marca, en RGB porque jsPDF no lee variables CSS.

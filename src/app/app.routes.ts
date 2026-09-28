@@ -28,8 +28,7 @@ export const routes: Routes = [
   },
   {
     path: 'candy',
-    title: 'Candy · NovaCinema',
-    loadComponent: () => import('./features/candy/menu/menu').then((m) => m.Menu),
+    loadChildren: () => import('./features/candy/candy.routes').then((m) => m.candyRoutes),
   },
   {
     path: 'cuenta',

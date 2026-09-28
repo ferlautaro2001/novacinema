@@ -1,0 +1,87 @@
+/* Los mismos estilos del pago de la compra (pagar.css), para que el pago del
+   Candy se vea igual. */
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.credito {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-100);
+  cursor: pointer;
+  padding: var(--space-3);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-md);
+  background: var(--surface-100);
+}
+
+.credito input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--brand-500);
+}
+
+.fila {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--ink-100);
+  min-width: 0;
+  flex-wrap: wrap;
+  row-gap: var(--space-1);
+}
+
+.importe {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.total {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-100);
+}
+
+.total .importe {
+  font-family: var(--font-mono);
+  font-size: clamp(19px, 3vw, 24px);
+  line-height: 1.3;
+}
+
+.datos-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-3);
+}
+
+.dos-columnas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+.nota {
+  margin: 0;
+  color: var(--ink-200);
+}
+
+.pagar {
+  align-self: flex-end;
+  min-width: 160px;
+  margin-top: var(--space-3);
+}
+
+@media (max-width: 480px) {
+  .dos-columnas {
+    grid-template-columns: 1fr;
+  }
+
+  .pagar {
+    width: 100%;
+  }
+}

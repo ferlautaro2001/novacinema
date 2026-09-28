@@ -1973,6 +1973,10 @@ export type Database = {
         };
         Returns: string;
       };
+      pagar_pedido_candy: {
+        Args: { p_compra_id: string; p_items: Json; p_usar_credito?: boolean };
+        Returns: Json;
+      };
       registro_actividad_legible: {
         Args: { p_grupo?: string; p_limite?: number };
         Returns: {

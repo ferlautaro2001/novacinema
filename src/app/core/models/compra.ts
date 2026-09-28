@@ -31,3 +31,21 @@ export type MovimientoCreditoPorCrear = TablesInsert<'movimientos_credito'>;
 
 export type CompraTotal = Tables<'v_compra_total'>;
 export type SaldoCredito = Tables<'v_saldo_credito'>;
+
+// Todo lo que va en el comprobante de una compra (US-07.08), leído de la base:
+// sirve igual para la confirmación de la compra y para el pedido del Candy que
+// se suma después (AC-08.06.02).
+export interface ComprobanteCompra {
+  codigo: string;
+  pelicula: string;
+  clasificacion: string;
+  comienzaEn: Date;
+  sala: string;
+  formato: string;
+  idioma: string;
+  butacas: string;
+  titular: string;
+  total: number;
+  // "2 × Coca-Cola", o vacío si la compra no tiene pedido.
+  candy: string[];
+}

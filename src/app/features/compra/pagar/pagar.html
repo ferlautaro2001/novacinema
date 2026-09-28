@@ -35,6 +35,31 @@
         }
       </ul>
 
+      @if (pedido.items().length !== 0) {
+        <h3 class="caption nota">Candy</h3>
+        <ul class="lista">
+          @for (item of pedido.items(); track item.producto.id) {
+            <li class="fila">
+              <span class="body-strong">{{ item.cantidad }} ×</span>
+              <span class="body">{{ item.producto.nombre }}</span>
+              <span class="body importe">{{
+                subtotalCandy(item) | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+              }}</span>
+            </li>
+          }
+        </ul>
+      }
+      <a
+        class="nc-btn nc-btn--ghost nc-btn--sm volver"
+        [routerLink]="['/comprar', funcion.id, 'candy']"
+      >
+        @if (pedido.items().length === 0) {
+          Sumá algo del Candy
+        } @else {
+          Cambiar el pedido del Candy
+        }
+      </a>
+
       <div class="fila subtotal">
         <span class="body">Subtotal</span>
         <span class="body importe">{{
@@ -92,115 +117,21 @@
     <div class="tarjeta">
       <h2 class="body-strong titulo">Pago</h2>
 
-      @if (saldo() > 0) {
-        <label class="credito">
-          <input type="checkbox" [checked]="usarCredito()" (change)="alternarCredito()" />
-          <span class="body"
-            >Usar mi crédito ({{
-              saldo() | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
-            }}
-            disponible)</span
-          >
-        </label>
-      }
-
-      @if (credito() > 0) {
-        <div class="fila">
-          <span class="body">Crédito</span>
-          <span class="body importe"
-            >−{{ credito() | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span
-          >
-        </div>
-      }
-
-      <div class="fila total">
-        <span class="body-strong">A pagar con tarjeta</span>
-        <span class="body-strong importe">{{
-          aTarjeta() | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
-        }}</span>
-      </div>
-
-      @if (pideTarjeta()) {
-        <form class="datos-tarjeta" [formGroup]="tarjeta" (ngSubmit)="pagar()">
-          <nc-campo-texto
-            id="numero"
-            etiqueta="Número de tarjeta"
-            autocompletar="cc-number"
-            [control]="tarjeta.controls.numero"
-          >
-            <nc-error-campo [control]="tarjeta.controls.numero" error="required"
-              >Ingresá el número de la tarjeta.</nc-error-campo
-            >
-            <nc-error-campo [control]="tarjeta.controls.numero" error="pattern"
-              >El número tiene que tener 16 dígitos.</nc-error-campo
-            >
-          </nc-campo-texto>
-          <nc-campo-texto
-            id="titular"
-            etiqueta="Titular"
-            autocompletar="cc-name"
-            [control]="tarjeta.controls.titular"
-          >
-            <nc-error-campo [control]="tarjeta.controls.titular" error="required"
-              >Ingresá el nombre como figura en la tarjeta.</nc-error-campo
-            >
-          </nc-campo-texto>
-          <div class="dos-columnas">
-            <nc-campo-texto
-              id="vencimiento"
-              etiqueta="Vencimiento (MM/AA)"
-              autocompletar="cc-exp"
-              [control]="tarjeta.controls.vencimiento"
-            >
-              <nc-error-campo [control]="tarjeta.controls.vencimiento" error="required"
-                >Ingresá el vencimiento.</nc-error-campo
-              >
-              <nc-error-campo [control]="tarjeta.controls.vencimiento" error="pattern"
-                >Usá el formato MM/AA, por ejemplo 09/28.</nc-error-campo
-              >
-              <nc-error-campo [control]="tarjeta.controls.vencimiento" error="vencida"
-                >La tarjeta está vencida</nc-error-campo
-              >
-            </nc-campo-texto>
-            <nc-campo-texto
-              id="codigo-seguridad"
-              etiqueta="Código de seguridad"
-              autocompletar="cc-csc"
-              [control]="tarjeta.controls.codigo"
-            >
-              <nc-error-campo [control]="tarjeta.controls.codigo" error="required"
-                >Ingresá el código de seguridad.</nc-error-campo
-              >
-              <nc-error-campo [control]="tarjeta.controls.codigo" error="pattern"
-                >El código tiene 3 dígitos.</nc-error-campo
-              >
-            </nc-campo-texto>
-          </div>
-          <p class="caption nota">Los datos de la tarjeta no se guardan.</p>
-        </form>
-      }
-
-      @if (errorPago() !== '') {
-        <p class="error body" role="alert">{{ errorPago() }}</p>
+      <nc-formulario-pago
+        [total]="total()"
+        [saldo]="saldo()"
+        [pagando]="pagando()"
+        (pagar)="pagar($event)"
+      >
+        @if (errorPago() !== '') {
+          <p aviso class="error body" role="alert">{{ errorPago() }}</p>
+        }
         @if (butacaPerdida()) {
-          <a class="nc-btn nc-btn--secondary volver" [routerLink]="['/comprar', funcion.id]"
+          <a aviso class="nc-btn nc-btn--secondary volver" [routerLink]="['/comprar', funcion.id]"
             >Elegir otras butacas</a
           >
         }
-      }
-
-      <button
-        class="nc-btn nc-btn--primary pagar"
-        type="button"
-        [disabled]="pagando()"
-        (click)="pagar()"
-      >
-        @if (pagando()) {
-          Pagando…
-        } @else {
-          Pagar
-        }
-      </button>
+      </nc-formulario-pago>
     </div>
 
     <a class="nc-btn nc-btn--ghost volver" [routerLink]="['/comprar', funcion.id]"
