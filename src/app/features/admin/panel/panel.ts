@@ -16,6 +16,7 @@ export class Panel {
     { ruta: 'precios', texto: 'Precios' },
     { ruta: 'cupones', texto: 'Cupones' },
     { ruta: 'facturacion', texto: 'Facturación' },
+    { ruta: 'actividad', texto: 'Actividad' },
     { ruta: 'empleados', texto: 'Empleados' },
   ];
 }

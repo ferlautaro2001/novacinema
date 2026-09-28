@@ -1,83 +1,53 @@
 import { inject, Service } from '@angular/core';
 import { Supabase } from '../supabase/supabase-client';
 import { nombreGenero } from '../models/pelicula';
-import type { PeliculaConCatalogo, PeliculaEnCartelera } from '../models/pelicula';
-import type { Preventa } from '../models/precio';
-import { estaEnPreventa, ventaAbierta } from '../reglas/preventa';
-import { puntuacionPromedio } from '../reglas/puntuacion';
-
-const SELECCION =
-  '*, clasificacion:clasificaciones(codigo, edad_minima), pelicula_generos(genero:generos(id, nombre))';
-
-type Ventana = Pick<Preventa, 'pelicula_id' | 'habilitada' | 'dias_antes'>;
+import type { PeliculaEnCartelera } from '../models/pelicula';
+import type { ClasificacionCodigo, EstadoPelicula } from '../models/enumerados';
 
 // Películas que el público puede comprar ahora (US-06.03).
+//
+// La ventana de preventa, la existencia de una función futura y el promedio de
+// las reseñas los decide la vista v_cartelera, que es donde están los datos.
+// Antes esta clase hacía cuatro consultas y después armaba en el navegador el
+// filtro, la preventa y el promedio.
 @Service()
 export class CarteleraService {
   private supS = inject(Supabase);
 
-  // Películas activas con al menos una función futura cuya venta ya abrió.
+  // La vista ya devuelve solo las películas con venta abierta.
   async listarEnCartelera(): Promise<PeliculaEnCartelera[]> {
-    const ahora = new Date();
-    const ahoraIso = ahora.toISOString();
-
-    const { data: peliculas, error: errorPeliculas } = await this.supS.Sup.from('peliculas')
-      .select(SELECCION)
-      .eq('activo', true)
-      .order('titulo');
-    if (errorPeliculas !== null) {
-      throw errorPeliculas;
+    // SELECT * FROM v_cartelera ORDER BY titulo
+    const { data, error } = await this.supS.Sup.from('v_cartelera').select('*').order('titulo');
+    if (error !== null) {
+      throw error;
     }
 
-    const { data: funciones, error: errorFunciones } = await this.supS.Sup.from('funciones')
-      .select('pelicula_id')
-      .gt('comienza_en', ahoraIso)
-      .neq('estado', 'cancelada');
-    if (errorFunciones !== null) {
-      throw errorFunciones;
-    }
-
-    const { data: preventas, error: errorPreventas } = await this.supS.Sup.from('preventas').select(
-      'pelicula_id, habilitada, dias_antes',
-    );
-    if (errorPreventas !== null) {
-      throw errorPreventas;
-    }
-
-    const { data: resenas, error: errorResenas } =
-      await this.supS.Sup.from('resenas').select('pelicula_id, estrellas');
-    if (errorResenas !== null) {
-      throw errorResenas;
-    }
-
-    const conFunciones = new Set<string>();
-
-    for (const funcion of funciones) {
-      conFunciones.add(funcion.pelicula_id);
-    }
-
-    const catalogo = peliculas as PeliculaConCatalogo[];
     const enCartelera: PeliculaEnCartelera[] = [];
 
-    for (const pelicula of catalogo) {
-      const preventa = buscarPreventa(preventas, pelicula.id);
-      const abierta = ventaAbierta(pelicula.fecha_estreno, preventa, ahora);
+    for (const fila of data) {
+      const pelicula: PeliculaEnCartelera = {
+        id: fila.id,
+        titulo: fila.titulo,
+        sinopsis: fila.sinopsis,
+        duracion_min: fila.duracion_min,
+        clasificacion_id: fila.clasificacion_id,
+        imagen_path: fila.imagen_path,
+        fecha_estreno: fila.fecha_estreno,
+        estado: fila.estado as EstadoPelicula,
+        destacada: fila.destacada,
+        activo: fila.activo,
+        creado_en: fila.creado_en,
+        actualizado_en: fila.actualizado_en,
+        clasificacion: {
+          codigo: fila.clasificacion_codigo as ClasificacionCodigo,
+          edad_minima: fila.clasificacion_edad_minima,
+        },
+        generos: generosLegibles(fila.generos),
+        puntuacion: fila.puntuacion,
+        enPreventa: fila.en_preventa,
+      };
 
-      if (conFunciones.has(pelicula.id) && abierta) {
-        const estrellas = estrellasDe(resenas, pelicula.id);
-        const generos = nombresDeGeneros(pelicula);
-        const puntuacion = puntuacionPromedio(estrellas);
-        const enPreventa = estaEnPreventa(pelicula.fecha_estreno, preventa, ahora);
-
-        const peliculaEnCartelera: PeliculaEnCartelera = {
-          ...pelicula,
-          generos: generos,
-          puntuacion: puntuacion,
-          enPreventa: enPreventa,
-        };
-
-        enCartelera.push(peliculaEnCartelera);
-      }
+      enCartelera.push(pelicula);
     }
 
     return enCartelera;
@@ -86,43 +56,19 @@ export class CarteleraService {
 
 // ─── Auxiliares ─────────────────────────────────────────────────────
 
-function buscarPreventa(preventas: Ventana[], peliculaId: string): Ventana | null {
-  let encontrada: Ventana | null = null;
+// La vista devuelve los nombres como los guarda el catálogo. El catálogo de
+// TMDB tiene tres que no coinciden con los del enunciado ("Suspense" en vez de
+// "Suspenso"), así que el arreglo se pasa por nombreGenero.
+function generosLegibles(nombres: string[]): string[] {
+  const generos: string[] = [];
 
-  for (const preventa of preventas) {
-    if (preventa.pelicula_id === peliculaId) {
-      encontrada = preventa;
+  for (const nombre of nombres) {
+    const legible = nombreGenero(nombre);
+
+    if (generos.includes(legible) === false) {
+      generos.push(legible);
     }
   }
 
-  return encontrada;
-}
-
-function estrellasDe(
-  resenas: { pelicula_id: string; estrellas: number }[],
-  peliculaId: string,
-): number[] {
-  const estrellas: number[] = [];
-
-  for (const resena of resenas) {
-    if (resena.pelicula_id === peliculaId) {
-      estrellas.push(resena.estrellas);
-    }
-  }
-
-  return estrellas;
-}
-
-function nombresDeGeneros(pelicula: PeliculaConCatalogo): string[] {
-  const nombres: string[] = [];
-
-  for (const relacion of pelicula.pelicula_generos) {
-    const nombre = nombreGenero(relacion.genero.nombre);
-
-    if (nombres.includes(nombre) === false) {
-      nombres.push(nombre);
-    }
-  }
-
-  return nombres;
+  return generos;
 }

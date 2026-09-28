@@ -5,11 +5,6 @@ import type { PeliculaConCatalogo } from '../models/pelicula';
 const SELECCION_CATALOGO =
   '*, clasificacion:clasificaciones(codigo, edad_minima), pelicula_generos(genero:generos(id, nombre))';
 
-interface PeliculaConVentas {
-  pelicula: PeliculaConCatalogo;
-  vendidas: number;
-}
-
 // Ranking de películas por entradas vendidas (US-06.01).
 //
 // Una entrada "vendida no cancelada" es la que no fue anulada (entradas.anulada_en
@@ -17,8 +12,10 @@ interface PeliculaConVentas {
 // todavía no son una venta y las canceladas ya no lo son.
 //
 // El visitante no puede leer entradas ni compras por RLS, así que los conteos salen
-// de la vista pública v_ranking_peliculas, que aplica justo esa regla. El filtro de
-// cartelera, el orden, el empate alfabético y el recorte a 3 se hacen acá.
+// de la vista pública v_ranking_peliculas, que aplica justo esa regla. Sobre ella
+// viene v_ranking_cartelera, que ya devuelve solo las películas en cartelera, ordenadas
+// de más a menos ventas y recortadas a 3. El emparejamiento con la fila de cada
+// película se hace acá porque la consulta por ids no conserva el orden.
 @Service()
 export class RankingService {
   private supS = inject(Supabase);
@@ -27,26 +24,23 @@ export class RankingService {
   async masVendidas(): Promise<PeliculaConCatalogo[]> {
     const cliente = this.supS.Sup;
 
+    // SELECT pelicula_id FROM v_ranking_cartelera
+    // La vista ya viene ordenada y recortada a 3.
     const { data: conteos, error: errorConteos } = await cliente
-      .from('v_ranking_peliculas')
-      .select('pelicula_id, entradas_vendidas')
-      .gt('entradas_vendidas', 0);
+      .from('v_ranking_cartelera')
+      .select('pelicula_id');
     if (errorConteos !== null) {
       throw errorConteos;
     }
 
-    const vendidasPorPelicula = new Map<string, number>();
-
-    for (const conteo of conteos) {
-      if (conteo.pelicula_id !== null && conteo.entradas_vendidas !== null) {
-        vendidasPorPelicula.set(conteo.pelicula_id, conteo.entradas_vendidas);
-      }
-    }
-
     const peliculas: PeliculaConCatalogo[] = [];
 
-    if (vendidasPorPelicula.size !== 0) {
-      const ids = [...vendidasPorPelicula.keys()];
+    if (conteos.length !== 0) {
+      const ids = idsDe(conteos);
+
+      // SELECT *, clasificacion:clasificaciones(...), pelicula_generos:generos(...)
+      //   FROM peliculas
+      //   WHERE id IN (...) AND activo AND estado = 'en_cartelera'
       const { data, error } = await cliente
         .from('peliculas')
         .select(SELECCION_CATALOGO)
@@ -57,21 +51,19 @@ export class RankingService {
         throw error;
       }
 
-      const enCartelera = data as unknown as PeliculaConCatalogo[];
-      const ranking: PeliculaConVentas[] = [];
+      const porId = new Map<string, PeliculaConCatalogo>();
+      const ordenadas = data as unknown as PeliculaConCatalogo[];
 
-      for (const pelicula of enCartelera) {
-        const vendidas = buscarVendidas(vendidasPorPelicula, pelicula.id);
-        const puesto: PeliculaConVentas = { pelicula: pelicula, vendidas: vendidas };
-        ranking.push(puesto);
+      for (const pelicula of ordenadas) {
+        porId.set(pelicula.id, pelicula);
       }
 
-      ranking.sort(compararPorVentas);
+      for (const id of ids) {
+        const pelicula = porId.get(id);
 
-      const primeras = ranking.slice(0, 3);
-
-      for (const puesto of primeras) {
-        peliculas.push(puesto.pelicula);
+        if (pelicula !== undefined) {
+          peliculas.push(pelicula);
+        }
       }
     }
 
@@ -81,24 +73,15 @@ export class RankingService {
 
 // ─── Auxiliares ─────────────────────────────────────────────────────
 
-function buscarVendidas(vendidasPorPelicula: Map<string, number>, id: string): number {
-  let vendidas = 0;
-  const encontrado = vendidasPorPelicula.get(id);
+// Los ids del ranking, en el orden en que los trajo la vista.
+function idsDe(conteos: { pelicula_id: string | null }[]): string[] {
+  const ids: string[] = [];
 
-  if (encontrado !== undefined) {
-    vendidas = encontrado;
+  for (const conteo of conteos) {
+    if (conteo.pelicula_id !== null) {
+      ids.push(conteo.pelicula_id);
+    }
   }
 
-  return vendidas;
-}
-
-// Mayor cantidad primero; ante empate, orden alfabético por título.
-function compararPorVentas(primera: PeliculaConVentas, segunda: PeliculaConVentas): number {
-  let orden = segunda.vendidas - primera.vendidas;
-
-  if (orden === 0) {
-    orden = primera.pelicula.titulo.localeCompare(segunda.pelicula.titulo, 'es');
-  }
-
-  return orden;
+  return ids;
 }

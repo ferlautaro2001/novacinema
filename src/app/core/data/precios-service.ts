@@ -8,36 +8,34 @@ import type { AdicionalFormatoPorCrear, PrecioButacaPorCrear } from '../models/p
 export class PreciosService {
   private supS = inject(Supabase);
 
-  // Tarifa vigente por id de tipo de butaca.
+  // Tarifa vigente por id de tipo de butaca. La vista ya trae una sola fila por
+  // tipo: la del vigente_desde más nuevo que todavía no venció. Antes se traían
+  // todas y se descartaban en el código.
   async tarifasVigentes(): Promise<Map<number, number>> {
-    const ahora = new Date().toISOString();
-    const { data, error } = await this.supS.Sup.from('precios_butaca')
-      .select('tipo_butaca_id, precio')
-      .lte('vigente_desde', ahora)
-      .order('vigente_desde', { ascending: false });
+    // SELECT tipo_butaca_id, precio FROM v_precios_vigentes
+    const { data, error } = await this.supS.Sup.from('v_precios_vigentes').select(
+      'tipo_butaca_id, precio',
+    );
     if (error !== null) {
       throw error;
     }
 
-    // Vienen de la más nueva a la más vieja: me quedo con la primera de cada tipo.
     const tarifas = new Map<number, number>();
 
     for (const fila of data) {
-      if (tarifas.has(fila.tipo_butaca_id) === false) {
-        tarifas.set(fila.tipo_butaca_id, fila.precio);
-      }
+      tarifas.set(fila.tipo_butaca_id, fila.precio);
     }
 
     return tarifas;
   }
 
-  // Adicional vigente por id de formato.
+  // Adicional vigente por id de formato. Misma idea que las tarifas: la vista
+  // deja una sola fila por formato.
   async adicionalesVigentes(): Promise<Map<number, number>> {
-    const ahora = new Date().toISOString();
-    const { data, error } = await this.supS.Sup.from('adicionales_formato')
-      .select('formato_id, adicional')
-      .lte('vigente_desde', ahora)
-      .order('vigente_desde', { ascending: false });
+    // SELECT formato_id, adicional FROM v_adicionales_vigentes
+    const { data, error } = await this.supS.Sup.from('v_adicionales_vigentes').select(
+      'formato_id, adicional',
+    );
     if (error !== null) {
       throw error;
     }
@@ -45,9 +43,7 @@ export class PreciosService {
     const adicionales = new Map<number, number>();
 
     for (const fila of data) {
-      if (adicionales.has(fila.formato_id) === false) {
-        adicionales.set(fila.formato_id, fila.adicional);
-      }
+      adicionales.set(fila.formato_id, fila.adicional);
     }
 
     return adicionales;
@@ -90,6 +86,7 @@ export class PreciosService {
     }
 
     if (preciosNuevos.length > 0) {
+      // INSERT INTO precios_butaca (tipo_butaca_id, precio, vigente_desde) VALUES (...)
       const { error } = await this.supS.Sup.from('precios_butaca').insert(preciosNuevos);
       if (error !== null) {
         throw error;
@@ -97,6 +94,7 @@ export class PreciosService {
     }
 
     if (adicionalesNuevos.length > 0) {
+      // INSERT INTO adicionales_formato (formato_id, adicional, vigente_desde) VALUES (...)
       const { error } = await this.supS.Sup.from('adicionales_formato').insert(adicionalesNuevos);
       if (error !== null) {
         throw error;

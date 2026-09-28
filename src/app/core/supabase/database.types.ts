@@ -1632,6 +1632,24 @@ export type Database = {
       };
     };
     Views: {
+      v_adicionales_vigentes: {
+        Row: {
+          adicional: number;
+          formato_id: number;
+          vigente_desde: string;
+        };
+        Insert: {
+          adicional: number;
+          formato_id: number;
+          vigente_desde: string;
+        };
+        Update: {
+          adicional?: number;
+          formato_id?: number;
+          vigente_desde?: string;
+        };
+        Relationships: [];
+      };
       v_butacas_ocupadas: {
         Row: {
           butaca_id: string | null;
@@ -1668,6 +1686,66 @@ export type Database = {
             referencedColumns: ['funcion_id'];
           },
         ];
+      };
+      v_cartelera: {
+        Row: {
+          activo: boolean;
+          actualizado_en: string;
+          clasificacion_codigo: string;
+          clasificacion_edad_minima: number;
+          clasificacion_id: number;
+          creado_en: string;
+          destacada: boolean;
+          duracion_min: number;
+          en_preventa: boolean;
+          estado: string;
+          fecha_estreno: string;
+          generos: string[];
+          id: string;
+          imagen_path: string;
+          puntuacion: number | null;
+          sinopsis: string;
+          titulo: string;
+        };
+        Insert: {
+          activo: boolean;
+          actualizado_en: string;
+          clasificacion_codigo: string;
+          clasificacion_edad_minima: number;
+          clasificacion_id: number;
+          creado_en: string;
+          destacada: boolean;
+          duracion_min: number;
+          en_preventa: boolean;
+          estado: string;
+          fecha_estreno: string;
+          generos: string[];
+          id: string;
+          imagen_path: string;
+          puntuacion: number | null;
+          sinopsis: string;
+          titulo: string;
+        };
+        Update: {
+          activo?: boolean;
+          actualizado_en?: string;
+          clasificacion_codigo?: string;
+          clasificacion_edad_minima?: number;
+          clasificacion_id?: number;
+          creado_en?: string;
+          destacada?: boolean;
+          duracion_min?: number;
+          en_preventa?: boolean;
+          estado?: string;
+          fecha_estreno?: string;
+          generos?: string[];
+          id?: string;
+          imagen_path?: string;
+          puntuacion?: number | null;
+          sinopsis?: string;
+          titulo?: string;
+        };
+        Relationships: [];
       };
       v_compra_total: {
         Row: {
@@ -1738,6 +1816,42 @@ export type Database = {
         };
         Relationships: [];
       };
+      v_precios_vigentes: {
+        Row: {
+          precio: number;
+          tipo_butaca_id: number;
+          vigente_desde: string;
+        };
+        Insert: {
+          precio: number;
+          tipo_butaca_id: number;
+          vigente_desde: string;
+        };
+        Update: {
+          precio?: number;
+          tipo_butaca_id?: number;
+          vigente_desde?: string;
+        };
+        Relationships: [];
+      };
+      v_ranking_cartelera: {
+        Row: {
+          entradas_vendidas: number | null;
+          pelicula_id: string | null;
+          titulo: string | null;
+        };
+        Insert: {
+          entradas_vendidas?: number | null;
+          pelicula_id?: string | null;
+          titulo?: string | null;
+        };
+        Update: {
+          entradas_vendidas?: number | null;
+          pelicula_id?: string | null;
+          titulo?: string | null;
+        };
+        Relationships: [];
+      };
       v_ranking_peliculas: {
         Row: {
           entradas_vendidas: number | null;
@@ -1801,6 +1915,19 @@ export type Database = {
           p_recompensa_id: string;
         };
         Returns: string;
+      };
+      registro_actividad_legible: {
+        Args: { p_grupo?: string; p_limite?: number };
+        Returns: {
+          accion: string;
+          autor: string;
+          codigo: string;
+          creado_en: string;
+          detalle: string;
+          entidad: string;
+          grupo: string;
+          id: string;
+        }[];
       };
     };
     Enums: {

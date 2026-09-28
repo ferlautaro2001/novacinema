@@ -1,0 +1,69 @@
+<section class="registro">
+  <header class="cabecera">
+    <div>
+      <p class="overline">Auditoría del Panel</p>
+      <h1 class="marquee-lg">Registro de actividad</h1>
+    </div>
+  </header>
+
+  <p class="body descripcion">
+    Quién creó cada función, quién tocó un precio y quién validó un código. El registro lo
+    escribe la base y no se puede editar desde la aplicación.
+  </p>
+
+  <div class="filtros" role="group" aria-label="Filtrar el registro por tipo">
+    @for (opcion of grupos; track opcion.clave) {
+      <button
+        type="button"
+        class="nc-btn nc-btn--sm"
+        [class.nc-btn--primary]="grupo() === opcion.clave"
+        [class.nc-btn--secondary]="grupo() !== opcion.clave"
+        [attr.aria-pressed]="grupo() === opcion.clave"
+        (click)="elegirGrupo(opcion.clave)"
+      >
+        @if (grupo() === opcion.clave) {
+          <span class="filtros__marca" aria-hidden="true">✓</span>
+        }
+        {{ opcion.texto }}
+      </button>
+    }
+  </div>
+
+  <ng-template #vacio>
+    <div class="vacio">
+      <h2 class="body-strong">Todavía no hay nada registrado</h2>
+      <p class="body">
+        Cuando se cree una función o se cambie un precio, el evento aparece acá solo.
+      </p>
+    </div>
+  </ng-template>
+
+  <ng-template #fallo let-mensaje>
+    <p class="error body" role="alert">{{ mensaje }}</p>
+    <button class="nc-btn nc-btn--secondary" (click)="cargar()">Reintentá</button>
+  </ng-template>
+
+  <ng-container *appCargando="estado(); vacio: vacio; error: fallo; let registros">
+    <nc-tabla-datos [filas]="registros" [plantillaFila]="fila" titulo="Registro de actividad">
+      <tr encabezado>
+        <th scope="col">Fecha y hora</th>
+        <th scope="col">Autor</th>
+        <th scope="col">Acción</th>
+        <th scope="col">Detalle</th>
+      </tr>
+    </nc-tabla-datos>
+
+    <p class="caption aviso">Se muestran los 200 eventos más recientes.</p>
+  </ng-container>
+
+  <ng-template #fila let-registro>
+    <td class="fecha">
+      {{ registro.fecha | date: 'dd/MM/yyyy HH:mm:ss' }}
+    </td>
+    <td class="body-strong autor">{{ registro.autor }}</td>
+    <td>
+      <span [class]="varianteDe(registro)">{{ registro.accion }}</span>
+    </td>
+    <td class="body detalle">{{ registro.detalle }}</td>
+  </ng-template>
+</section>

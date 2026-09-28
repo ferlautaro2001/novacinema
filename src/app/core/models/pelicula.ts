@@ -51,7 +51,10 @@ export interface PeliculaConCatalogo extends Pelicula {
 }
 
 // Una película lista para mostrar en la cartelera pública (US-06.03).
-export interface PeliculaEnCartelera extends PeliculaConCatalogo {
+// La cartelera no trae la tabla de unión de géneros: la vista v_cartelera ya los
+// devuelve como nombres, y el listado no necesita otra cosa.
+export interface PeliculaEnCartelera extends Pelicula {
+  clasificacion: { codigo: ClasificacionCodigo; edad_minima: number };
   generos: string[];
   // De 0 a 10 con un decimal; null si todavía no tiene reseñas.
   puntuacion: number | null;

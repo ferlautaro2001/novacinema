@@ -15,7 +15,11 @@ export interface RegistroActividad {
   accion: string;
   entidad: string;
   detalle: string;
+  grupo: GrupoActividad;
 }
+
+// Los tres filtros de AC-12.06.02, más los eventos que el enunciado no enumera.
+export type GrupoActividad = 'funciones' | 'precios' | 'validaciones' | 'otros';
 
 export type Configuracion = Tables<'configuracion'>;
 export type ConfiguracionPorModificar = TablesUpdate<'configuracion'>;
