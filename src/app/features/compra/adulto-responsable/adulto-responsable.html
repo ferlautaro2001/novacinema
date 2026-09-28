@@ -1,0 +1,60 @@
+<form class="formulario" [formGroup]="form" (ngSubmit)="confirmar()">
+  <nc-campo-texto
+    id="adulto-nombre"
+    etiqueta="Nombre"
+    appFocoInicial
+    [control]="form.controls.nombre"
+    autocompletar="given-name"
+  >
+    <nc-error-campo [control]="form.controls.nombre" error="required"
+      >Contanos el nombre del adulto.</nc-error-campo
+    >
+  </nc-campo-texto>
+
+  <nc-campo-texto
+    id="adulto-apellido"
+    etiqueta="Apellido"
+    [control]="form.controls.apellido"
+    autocompletar="family-name"
+  >
+    <nc-error-campo [control]="form.controls.apellido" error="required"
+      >Contanos el apellido del adulto.</nc-error-campo
+    >
+  </nc-campo-texto>
+
+  <nc-campo-texto
+    id="adulto-documento"
+    etiqueta="DNI"
+    tipo="tel"
+    [control]="form.controls.documento"
+    autocompletar="off"
+  >
+    <nc-error-campo [control]="form.controls.documento" error="required"
+      >El DNI es obligatorio.</nc-error-campo
+    >
+    <nc-error-campo [control]="form.controls.documento" error="pattern"
+      >El DNI lleva 7 u 8 dígitos, sin puntos.</nc-error-campo
+    >
+  </nc-campo-texto>
+
+  <nc-campo-fecha
+    id="adulto-nacimiento"
+    etiqueta="Fecha de nacimiento"
+    [grupo]="form.controls.nacimiento"
+    [nacimiento]="true"
+  >
+    <nc-error-campo [control]="form.controls.nacimiento" error="fechaIncompleta"
+      >Completá el día, el mes y el año.</nc-error-campo
+    >
+    <nc-error-campo [control]="form.controls.nacimiento" error="fechaInvalida"
+      >Esa fecha no existe.</nc-error-campo
+    >
+    <nc-error-campo [control]="form.controls.nacimiento" error="menorDeEdad"
+      >El adulto responsable debe ser mayor de 18 años.</nc-error-campo
+    >
+  </nc-campo-fecha>
+
+  <div class="acciones">
+    <button class="nc-btn nc-btn--primary" type="submit">Confirmar adulto responsable</button>
+  </div>
+</form>

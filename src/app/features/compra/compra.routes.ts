@@ -4,14 +4,19 @@ import { Routes } from '@angular/router';
 // comprar es para clientes registrados, así que sesionGuard está puesto en
 // app.routes.ts sobre el grupo entero y no se repite en cada ruta.
 //
-// La de la película va antes que la de la función porque tiene dos segmentos y
-// la otra uno: si invirtieran el orden, "pelicula" se leería como un id.
+// El orden importa: las rutas de dos segmentos van antes que la de uno, porque
+// si no "edad" o "descuentos" se leerían como un id de función.
 export const compraRoutes: Routes = [
   {
     path: 'pelicula/:peliculaId',
     title: 'Elegí la función · NovaCinema',
     loadComponent: () =>
       import('./elegir-funcion/elegir-funcion').then((m) => m.ElegirFuncion),
+  },
+  {
+    path: ':funcionId/edad',
+    title: 'Antes de seguir · NovaCinema',
+    loadComponent: () => import('./control-edad/control-edad').then((m) => m.ControlEdad),
   },
   {
     path: ':funcionId',

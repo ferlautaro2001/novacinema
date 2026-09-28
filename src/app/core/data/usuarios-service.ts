@@ -53,6 +53,28 @@ export class UsuariosService {
     return usuarios;
   }
 
+  // La fecha de nacimiento propia, para la puerta de edad de la compra. La RLS
+  // deja leer solo la fila propia (usuarios_propia), así que el id tiene que
+  // ser el de quien está comprando.
+  async miNacimiento(usuarioId: string): Promise<string | null> {
+    // SELECT fecha_nacimiento FROM usuarios WHERE id = usuarioId
+    const { data, error } = await this.supS.Sup.from('usuarios')
+      .select('fecha_nacimiento')
+      .eq('id', usuarioId)
+      .maybeSingle();
+    if (error !== null) {
+      throw error;
+    }
+
+    let nacimiento: string | null = null;
+
+    if (data !== null) {
+      nacimiento = data.fecha_nacimiento;
+    }
+
+    return nacimiento;
+  }
+
   // Uso RPC porque el cliente no tiene UPDATE sobre usuarios.rol_id: la función
   // verifica que quien llama sea administrador y que no cambie su propio rol.
   async asignarRolEmpleado(usuarioId: string, empleado: boolean): Promise<void> {

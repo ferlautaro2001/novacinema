@@ -1,0 +1,58 @@
+<section class="puerta">
+  <header class="cabecera">
+    <div>
+      <p class="overline">Comprar entradas</p>
+      <h1 class="marquee-lg">Antes de seguir</h1>
+    </div>
+  </header>
+
+  @if (estado() === 'cargando') {
+    <nc-carga-consulta />
+  } @else if (estado() === 'error') {
+    <p class="error body" role="alert">{{ mensaje() }}</p>
+    <a class="nc-btn nc-btn--secondary" routerLink="/cartelera">Volver a la cartelera</a>
+  } @else if (funcion(); as elegida) {
+    @if (pasa()) {
+      <div class="pasa">
+        <h2 class="body-strong">Cumplís la edad para esta película</h2>
+        <p class="body">Ya podés elegir tus butacas para la función.</p>
+        <button class="nc-btn nc-btn--primary" type="button" (click)="continuar()">
+          Continuar
+        </button>
+      </div>
+    } @else {
+      <div class="bloqueo" role="alert">
+        <h2 class="body-strong">Esta película es para mayores de {{ edadMinima() }} años</h2>
+        <p class="body">Tenés que asistir con un adulto responsable.</p>
+        @if (ofreceAdulto()) {
+          <button class="nc-btn nc-btn--primary" type="button" (click)="abrirAdulto()">
+            Ingresar adulto responsable
+          </button>
+        }
+        <a class="nc-btn nc-btn--ghost" [routerLink]="['/cartelera', elegida.peliculaId]"
+          >Volver a la película</a
+        >
+      </div>
+    }
+
+    @if (modalAdulto()) {
+      <nc-modal (cierre)="cerrarAdulto()">
+        <h2 titulo class="marquee-md">¿No te querés perder la película?</h2>
+        <p>Ingresá los datos de tu adulto responsable:</p>
+        <nc-adulto-responsable
+          [fechaFuncion]="elegida.comienzaEn"
+          (confirmado)="guardarAdulto($event)"
+        />
+        <button acciones class="nc-btn nc-btn--ghost" type="button" (click)="cerrarAdulto()">
+          Cancelar
+        </button>
+      </nc-modal>
+    }
+  } @else {
+    <div class="vacio">
+      <h2 class="body-strong">Esa función ya no está disponible</h2>
+      <p class="body">Puede que haya empezado o que ya no quede nada.</p>
+      <a class="nc-btn nc-btn--secondary" routerLink="/cartelera">Volver a la cartelera</a>
+    </div>
+  }
+</section>

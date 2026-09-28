@@ -82,7 +82,7 @@ export class ElegirFuncion implements OnInit {
   }
 
   elegirHorario(opcion: OpcionHora): void {
-    this.router.navigate(['/comprar', opcion.id]);
+    this.router.navigate(['/comprar', opcion.id, 'edad']);
   }
 
   // El día elegido arriba de los horarios. Usa fechaLarga y no el date pipe
