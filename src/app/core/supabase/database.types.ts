@@ -1324,9 +1324,9 @@ export type Database = {
           actualizado_en: string;
           categoria_id: number;
           creado_en: string;
-          descripcion: string | null;
+          descripcion: string;
           id: string;
-          imagen_path: string | null;
+          imagen_path: string;
           nombre: string;
         };
         Insert: {
@@ -1334,9 +1334,9 @@ export type Database = {
           actualizado_en?: string;
           categoria_id: number;
           creado_en?: string;
-          descripcion?: string | null;
+          descripcion: string;
           id?: string;
-          imagen_path?: string | null;
+          imagen_path: string;
           nombre: string;
         };
         Update: {
@@ -1344,9 +1344,9 @@ export type Database = {
           actualizado_en?: string;
           categoria_id?: number;
           creado_en?: string;
-          descripcion?: string | null;
+          descripcion?: string;
           id?: string;
-          imagen_path?: string | null;
+          imagen_path?: string;
           nombre?: string;
         };
         Relationships: [

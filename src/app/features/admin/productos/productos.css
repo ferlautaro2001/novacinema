@@ -1,0 +1,295 @@
+.productos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.cabecera {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.overline {
+  margin: 0;
+  color: var(--gold-600);
+}
+
+.descripcion {
+  margin: 0;
+  color: var(--ink-200);
+}
+
+.aviso,
+.error {
+  margin: 0;
+  padding: var(--space-3);
+  border-left: 3px solid var(--success);
+  border-radius: var(--radius-md);
+  background: var(--success-tint);
+  color: var(--ink-100);
+}
+
+.error {
+  border-left-color: var(--danger);
+  background: var(--danger-tint);
+}
+
+/* ─── Alta ─────────────────────────────────────────────────────── */
+
+.panel-alta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: var(--cine-panel, var(--surface-200));
+  border: 1px solid var(--cine-edge, var(--border-100));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.titulo-panel {
+  margin: 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-100);
+  font-size: 18px;
+  color: var(--ink-100);
+}
+
+.contenido {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.datos,
+.campo,
+.imagen {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.datos {
+  gap: var(--space-4);
+}
+
+.campo,
+.imagen {
+  gap: var(--space-2);
+}
+
+.dos-columnas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+textarea,
+select,
+input[type='file'] {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  background: var(--surface-300);
+  color: var(--ink-100);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-md);
+  font: inherit;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.imagen img,
+.placeholder {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+  background: var(--surface-300);
+}
+
+.placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--ink-300);
+  border: 1px dashed var(--border-200);
+}
+
+.nota {
+  margin: 0;
+  color: var(--ink-200);
+}
+
+.error-texto {
+  margin: 0;
+  color: var(--danger);
+}
+
+.acciones {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+/* ─── Catálogo ─────────────────────────────────────────────────── */
+
+.grilla {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.producto {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--cine-panel, var(--surface-200));
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  transition:
+    border-color var(--cine-medium, 320ms) ease,
+    transform var(--cine-fast, 180ms) var(--cine-ease, ease);
+}
+
+.foto {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--surface-300);
+}
+
+.cuerpo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+}
+
+.categoria {
+  margin: 0;
+  color: var(--gold-600);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.nombre {
+  margin: 0;
+  color: var(--ink-100);
+}
+
+.descripcion-producto {
+  display: -webkit-box;
+  margin: 0;
+  overflow: hidden;
+  color: var(--ink-200);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+}
+
+.pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-100);
+}
+
+.precio {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-100);
+}
+
+/* El estado va con palabra; el punto solo lo acompaña. */
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-200);
+}
+
+.punto {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-300);
+}
+
+.estado.activo {
+  color: var(--success);
+}
+
+.estado.activo .punto {
+  background: var(--success);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--success) 60%, transparent);
+}
+
+.no-disponible .foto {
+  filter: grayscale(0.8);
+  opacity: 0.7;
+}
+
+.vacio {
+  padding: var(--space-6);
+  background: var(--cine-panel, var(--surface-200));
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-xl);
+}
+
+.vacio h2,
+.vacio p {
+  margin: 0;
+  color: var(--ink-100);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .producto:hover {
+    border-color: var(--cine-edge, var(--border-200));
+    transform: translateY(-2px);
+  }
+}
+
+@media (max-width: 800px) {
+  .contenido {
+    grid-template-columns: 1fr;
+  }
+
+  .imagen {
+    max-width: 280px;
+  }
+}
+
+@media (max-width: 480px) {
+  .dos-columnas {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-alta {
+    padding: var(--space-5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .producto {
+    transition: none;
+  }
+}

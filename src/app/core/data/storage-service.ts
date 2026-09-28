@@ -4,6 +4,10 @@ import { Supabase } from '../supabase/supabase-client';
 export const TIPOS_PORTADA = ['image/jpeg', 'image/png', 'image/webp'];
 export const MAX_PORTADA = 10 * 1024 * 1024;
 
+// Las carpetas del bucket donde el administrador sube imágenes (la política
+// imagenes_catalogo_admin solo le deja estas dos).
+export type CarpetaImagenes = 'peliculas' | 'productos';
+
 export function validarPortada(archivo: File): string | null {
   let mensaje: string | null = null;
 
@@ -41,8 +45,9 @@ export class StorageService {
   }
 
   // Sube el archivo al bucket "imagenes" y devuelve la ruta, no la URL: la URL
-  // pública la arma urlPublica() en el momento de mostrarla.
-  async subirPortada(archivo: File): Promise<string> {
+  // pública la arma urlPublica() en el momento de mostrarla. Las películas van a
+  // peliculas/ y los productos del Candy a productos/ (US-08.01).
+  async subirPortada(archivo: File, carpeta: CarpetaImagenes = 'peliculas'): Promise<string> {
     const invalida = validarPortada(archivo);
 
     if (invalida !== null) {
@@ -56,20 +61,20 @@ export class StorageService {
     }
 
     const nombreArchivo = crypto.randomUUID();
-    const ruta = `peliculas/${nombreArchivo}.${extension}`;
-    // Storage: INSERT en el bucket "imagenes", clave peliculas/<uuid>.<ext>
+    const ruta = `${carpeta}/${nombreArchivo}.${extension}`;
+    // Storage: INSERT en el bucket "imagenes", clave <carpeta>/<uuid>.<ext>
     const { error } = await this.supS.Sup.storage
       .from('imagenes')
       .upload(ruta, archivo, { upsert: false });
     if (error !== null) {
-      throw new Error('No se pudo subir la portada. Probá de nuevo.');
+      throw new Error('No se pudo subir la imagen. Probá de nuevo.');
     }
 
     return ruta;
   }
 
   async eliminarPortada(ruta: string): Promise<void> {
-    if (ruta.startsWith('peliculas/')) {
+    if (ruta.startsWith('peliculas/') || ruta.startsWith('productos/')) {
       // Storage: DELETE del bucket "imagenes". Las importadas de TMDB están fuera
       // del bucket, así que no se tocan.
       const { error } = await this.supS.Sup.storage.from('imagenes').remove([ruta]);

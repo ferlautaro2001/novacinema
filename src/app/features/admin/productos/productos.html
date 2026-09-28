@@ -1,0 +1,176 @@
+<section class="productos">
+  <header class="cabecera">
+    <div>
+      <p class="overline">Candy</p>
+      <h1 class="marquee-lg">Productos</h1>
+    </div>
+    @if (!formularioAbierto()) {
+      <button class="nc-btn nc-btn--primary" type="button" (click)="abrirFormulario()">
+        Cargá un producto
+      </button>
+    }
+  </header>
+  <p class="body descripcion">
+    Lo que el público puede sumar a su compra: pochoclos, bebidas y más.
+  </p>
+
+  @if (aviso()) {
+    <p class="aviso body" role="status">{{ aviso() }}</p>
+  }
+
+  @if (formularioAbierto()) {
+    <form class="panel-alta" [formGroup]="form" (ngSubmit)="guardar()">
+      <h2 class="body-strong titulo-panel">Nuevo producto</h2>
+
+      @if (error()) {
+        <p class="error body" role="alert">{{ error() }}</p>
+      }
+
+      <fieldset class="contenido" [disabled]="guardando()">
+        <legend class="solo-lector">Datos del producto</legend>
+        <div class="datos">
+          <nc-campo-texto id="nombre" etiqueta="Nombre" [control]="form.controls.nombre">
+            <nc-error-campo [control]="form.controls.nombre" error="required"
+              >Ingresá el nombre del producto.</nc-error-campo
+            >
+          </nc-campo-texto>
+
+          <div class="campo">
+            <label for="descripcion" class="body-strong">Descripción</label>
+            <textarea
+              id="descripcion"
+              rows="3"
+              class="entrada"
+              formControlName="descripcion"
+              [attr.aria-invalid]="invalido('descripcion')"
+              aria-describedby="error-descripcion"
+            ></textarea>
+            @if (invalido('descripcion')) {
+              <p id="error-descripcion" class="error-texto caption">
+                Ingresá una descripción para el menú.
+              </p>
+            }
+          </div>
+
+          <div class="dos-columnas">
+            <div class="campo">
+              <label for="categoria" class="body-strong">Categoría</label>
+              <select
+                id="categoria"
+                class="entrada"
+                formControlName="categoriaId"
+                [attr.aria-invalid]="invalido('categoriaId')"
+                aria-describedby="error-categoria"
+              >
+                <option [ngValue]="0" disabled>Elegí una categoría</option>
+                @for (c of categorias(); track c.id) {
+                  <option [ngValue]="c.id">{{ c.nombre }}</option>
+                }
+              </select>
+              @if (invalido('categoriaId')) {
+                <p id="error-categoria" class="error-texto caption">Elegí una categoría.</p>
+              }
+            </div>
+
+            <nc-campo-texto
+              id="precio"
+              etiqueta="Precio ($)"
+              tipo="number"
+              [control]="form.controls.precio"
+            >
+              <nc-error-campo [control]="form.controls.precio" error="required"
+                >Ingresá el precio.</nc-error-campo
+              >
+              <nc-error-campo [control]="form.controls.precio" error="min"
+                >El precio debe ser mayor que 0</nc-error-campo
+              >
+              <nc-error-campo [control]="form.controls.precio" error="pattern"
+                >Usá un número con hasta dos decimales.</nc-error-campo
+              >
+            </nc-campo-texto>
+          </div>
+        </div>
+
+        <aside class="imagen">
+          <label for="imagen" class="body-strong">Imagen</label>
+          @if (preview()) {
+            <img [src]="preview()" alt="Vista previa del producto" />
+          } @else {
+            <div class="placeholder caption">La foto aparece acá</div>
+          }
+          <input
+            id="imagen"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="elegirArchivo($event)"
+            aria-describedby="ayuda-imagen"
+          />
+          <p id="ayuda-imagen" class="caption nota">JPEG, PNG o WebP, hasta 10 MB.</p>
+          @if (errorArchivo()) {
+            <p class="error-texto caption" role="alert">{{ errorArchivo() }}</p>
+          }
+          @if (invalido('imagen')) {
+            <p class="error-texto caption" role="alert">Elegí una imagen del producto.</p>
+          }
+        </aside>
+      </fieldset>
+
+      <div class="acciones">
+        <button
+          class="nc-btn nc-btn--secondary"
+          type="button"
+          [disabled]="guardando()"
+          (click)="cancelar()"
+        >
+          Cancelar
+        </button>
+        <button class="nc-btn nc-btn--primary" type="submit" [disabled]="guardando()">
+          {{ guardando() ? 'Guardando…' : 'Guardá el producto' }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <ng-template #vacio>
+    <div class="vacio">
+      <h2 class="body-strong">Todavía no hay productos</h2>
+      <p class="body">Cargá el primero con su foto, su categoría y su precio.</p>
+    </div>
+  </ng-template>
+  <ng-template #fallo let-mensaje>
+    <p class="error body" role="alert">{{ mensaje }}</p>
+    <button class="nc-btn nc-btn--secondary" type="button" (click)="cargar()">Reintentá</button>
+  </ng-template>
+
+  <ng-container *appCargando="estado(); vacio: vacio; error: fallo; let productos">
+    <ul class="grilla" aria-label="Productos del Candy">
+      @for (p of productos; track p.id) {
+        <li class="producto" [class.no-disponible]="!p.activo">
+          <img
+            class="foto"
+            [src]="storage.urlPublica(p.imagenPath)"
+            [alt]="p.nombre"
+            loading="lazy"
+          />
+          <div class="cuerpo">
+            <p class="caption categoria">{{ p.categoria }}</p>
+            <h2 class="body-strong nombre">{{ p.nombre }}</h2>
+            <p class="caption descripcion-producto">{{ p.descripcion }}</p>
+            <div class="pie">
+              <span class="precio">
+                @if (p.precio !== null) {
+                  {{ p.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}
+                } @else {
+                  Sin precio
+                }
+              </span>
+              <span class="estado caption" [class.activo]="p.activo">
+                <span class="punto" aria-hidden="true"></span>{{ nombreEstado(p) }}
+              </span>
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  </ng-container>
+</section>
