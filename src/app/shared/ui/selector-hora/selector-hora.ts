@@ -48,7 +48,13 @@ export class SelectorHora implements OnChanges {
   estaElegida(opcion: OpcionHora): boolean {
     const elegida = this.elegida();
 
-    return elegida !== null && elegida === opcion.id;
+    let bandera = false;
+
+    if (elegida !== null && elegida === opcion.id) {
+      bandera = true;
+    }
+
+    return bandera;
   }
 }
 

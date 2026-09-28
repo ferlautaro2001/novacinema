@@ -1,4 +1,4 @@
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FuncionesService, type DiaDeFunciones } from '../../../core/data/funciones-service';
 import { PeliculasService } from '../../../core/data/peliculas-service';
@@ -34,31 +34,11 @@ export class ElegirFuncion implements OnInit {
   funcionesDelDia = signal<FuncionParaComprar[]>([]);
 
   // Los días que tienen funciones, como ISO, para que el selector de fechas no
-  // ofrezca los que no sirven.
-  diasDisponibles = computed(() => {
-    const fechas: string[] = [];
+  // ofrezca los que no sirven. Se arma en actualizarDiasDisponibles().
+  diasDisponibles = signal<string[]>([]);
 
-    for (const dia of this.dias()) {
-      fechas.push(aISO(dia.dia));
-    }
-
-    return fechas;
-  });
-
-  // Las opciones del selector de horarios, con la etiqueta que se ve:
-  // "21:00 · 2D · Castellano". Las agotadas entran con su bandera.
-  opciones = computed(() => {
-    const lista: OpcionHora[] = [];
-
-    for (const funcion of this.funcionesDelDia()) {
-      const etiqueta = `${horaDe(funcion.comienzaEn)} · ${funcion.formato} · ${funcion.idioma}`;
-      const opcion: OpcionHora = { id: funcion.id, etiqueta: etiqueta, agotada: funcion.agotada };
-
-      lista.push(opcion);
-    }
-
-    return lista;
-  });
+  // Las opciones del selector de horarios. Se arman en actualizarOpciones().
+  opciones = signal<OpcionHora[]>([]);
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('peliculaId');
@@ -78,6 +58,7 @@ export class ElegirFuncion implements OnInit {
       this.pelicula.set(pelicula);
       this.dias.set(dias);
       this.estado.set({ tipo: 'datos', datos: dias });
+      this.actualizarDiasDisponibles();
 
       if (dias.length !== 0) {
         this.elegirDia(dias[0].dia);
@@ -99,6 +80,7 @@ export class ElegirFuncion implements OnInit {
     }
 
     this.funcionesDelDia.set(funciones);
+    this.actualizarOpciones();
   }
 
   elegirHorario(opcion: OpcionHora): void {
@@ -122,5 +104,35 @@ export class ElegirFuncion implements OnInit {
       tipo: 'error',
       mensaje: 'No se pudieron cargar las funciones de la película. Probá de nuevo.',
     });
+  }
+
+  // Los días con funciones van al selector de fechas como ISO. Se recalcula cada
+  // vez que llegan días nuevos, no se deriva solo, para que quede a la vista en qué
+  // momento se arma.
+  private actualizarDiasDisponibles(): void {
+    const fechas: string[] = [];
+
+    for (const dia of this.dias()) {
+      const iso = aISO(dia.dia);
+
+      fechas.push(iso);
+    }
+
+    this.diasDisponibles.set(fechas);
+  }
+
+  // Las opciones del selector de horarios, con la etiqueta que se ve:
+  // "21:00 · 2D · Castellano". Las agotadas entran con su bandera.
+  private actualizarOpciones(): void {
+    const lista: OpcionHora[] = [];
+
+    for (const funcion of this.funcionesDelDia()) {
+      const etiqueta = `${horaDe(funcion.comienzaEn)} · ${funcion.formato} · ${funcion.idioma}`;
+      const opcion: OpcionHora = { id: funcion.id, etiqueta: etiqueta, agotada: funcion.agotada };
+
+      lista.push(opcion);
+    }
+
+    this.opciones.set(lista);
   }
 }

@@ -191,7 +191,18 @@ function filaAFuncion(fila: FilaFuncionParaComprar): FuncionParaComprar | null {
   if (id !== null) {
     const butacasLibres = numeroDe(fila.butacas_libres);
     const totalButacas = numeroDe(fila.total_butacas);
-    const agotada = butacasLibres === 0;
+
+    let agotada = false;
+
+    if (butacasLibres === 0) {
+      agotada = true;
+    }
+
+    let enPreventa = false;
+
+    if (fila.en_preventa === true) {
+      enPreventa = true;
+    }
 
     const funcion: FuncionParaComprar = {
       id: id,
@@ -204,7 +215,7 @@ function filaAFuncion(fila: FilaFuncionParaComprar): FuncionParaComprar | null {
       totalButacas: totalButacas,
       butacasLibres: butacasLibres,
       agotada: agotada,
-      enPreventa: fila.en_preventa === true,
+      enPreventa: enPreventa,
     };
 
     resultado = funcion;
