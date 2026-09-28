@@ -24,6 +24,9 @@ export class NotificacionesService {
       // Si la revisión falla, igual muestro las que ya estaban creadas.
     }
 
+    // SELECT * FROM notificaciones
+    //   WHERE usuario_id = usuarioId AND tipo = 'venta_abierta'
+    //     AND leida_en IS NULL ORDER BY creada_en
     const { data, error } = await this.supS.Sup.from('notificaciones')
       .select('*')
       .eq('usuario_id', usuarioId)
@@ -86,6 +89,7 @@ export class NotificacionesService {
     this.avisos.set(nuevos);
 
     const ahora = new Date().toISOString();
+    // UPDATE notificaciones SET leida_en = ahora WHERE id = notificacion.id
     const { error } = await this.supS.Sup.from('notificaciones')
       .update({ leida_en: ahora })
       .eq('id', notificacion.id);

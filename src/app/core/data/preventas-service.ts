@@ -10,6 +10,7 @@ export class PreventasService {
 
   // Si la película nunca tuvo preventa, no hay fila y devuelvo null.
   async buscar(peliculaId: string): Promise<Preventa | null> {
+    // SELECT * FROM preventas WHERE pelicula_id = peliculaId
     const { data, error } = await this.supS.Sup.from('preventas')
       .select('*')
       .eq('pelicula_id', peliculaId)
@@ -23,6 +24,7 @@ export class PreventasService {
 
   // Hay una sola preventa por película: si ya existe la actualizo, si no la creo.
   async guardar(preventa: PreventaPorCrear): Promise<void> {
+    // INSERT INTO preventas (...) VALUES (...) ON CONFLICT (pelicula_id) DO UPDATE
     const { error } = await this.supS.Sup.from('preventas').upsert(preventa, {
       onConflict: 'pelicula_id',
     });

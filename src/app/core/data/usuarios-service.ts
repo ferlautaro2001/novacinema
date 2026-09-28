@@ -24,6 +24,8 @@ export class UsuariosService {
 
   // RLS deja leer todos los perfiles solo al personal.
   async findAllConRol(): Promise<UsuarioConRol[]> {
+    // SELECT id, nombre, apellido, email, roles(codigo) FROM usuarios
+    //   ORDER BY apellido, nombre
     const { data, error } = await this.supS.Sup.from('usuarios')
       .select('id, nombre, apellido, email, rol:roles(codigo)')
       .order('apellido')
@@ -54,6 +56,7 @@ export class UsuariosService {
   // Uso RPC porque el cliente no tiene UPDATE sobre usuarios.rol_id: la función
   // verifica que quien llama sea administrador y que no cambie su propio rol.
   async asignarRolEmpleado(usuarioId: string, empleado: boolean): Promise<void> {
+    // SELECT asignar_rol_empleado(p_usuario_id, p_empleado)
     const { error } = await this.supS.Sup.rpc('asignar_rol_empleado', {
       p_usuario_id: usuarioId,
       p_empleado: empleado,

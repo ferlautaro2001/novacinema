@@ -17,6 +17,8 @@ export class ResenasService {
   // Todas las reseñas de la película, de la más reciente a la más antigua. El
   // nombre del autor sale de v_perfiles_publicos, que el público sí puede leer.
   async listarDePelicula(peliculaId: string): Promise<ResenaConAutor[]> {
+    // SELECT id, estrellas, comentario, creada_en, usuario_id FROM resenas
+    //   WHERE pelicula_id = peliculaId ORDER BY creada_en DESC
     const { data, error } = await this.supS.Sup.from('resenas')
       .select('id, estrellas, comentario, creada_en, usuario_id')
       .eq('pelicula_id', peliculaId)
@@ -34,6 +36,7 @@ export class ResenasService {
 
     if (idsUsuarios.size !== 0) {
       const ids = [...idsUsuarios];
+      // SELECT id, nombre FROM v_perfiles_publicos WHERE id IN (...)
       const { data: perfiles, error: errorPerfiles } = await this.supS.Sup.from(
         'v_perfiles_publicos',
       )

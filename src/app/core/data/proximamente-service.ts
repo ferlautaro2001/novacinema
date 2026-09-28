@@ -19,6 +19,12 @@ export class ProximamenteService {
     const hoy = inicioDelDia(ahora);
     const limite = sumarDias(hoy, DIAS_DE_VENTANA);
 
+    // SELECT *, clasificacion:clasificaciones(codigo, edad_minima),
+    //        pelicula_generos:generos(id, nombre), preventa:preventas(habilitada, dias_antes)
+    //   FROM peliculas
+    //   WHERE activo AND estado <> 'archivada'
+    //     AND fecha_estreno BETWEEN hoy AND hoy + 28 días
+    //   ORDER BY fecha_estreno, titulo
     const { data, error } = await this.supS.Sup.from('peliculas')
       .select(SELECCION)
       .eq('activo', true)

@@ -26,6 +26,7 @@ export class FuncionesService {
   async listarEnVentaPorDia(peliculaId: string, fechaEstreno: string): Promise<DiaDeFunciones[]> {
     const ahora = new Date();
 
+    // SELECT * FROM preventas WHERE pelicula_id = peliculaId
     const { data: preventa, error: errorPreventa } = await this.supS.Sup.from('preventas')
       .select('*')
       .eq('pelicula_id', peliculaId)
@@ -39,6 +40,10 @@ export class FuncionesService {
 
     if (ventaAbierta(fechaEstreno, preventaTipada, ahora)) {
       const desde = ahora.toISOString();
+      // SELECT id, comienza_en, formatos(codigo), versiones_idioma(nombre)
+      //   FROM funciones
+      //   WHERE pelicula_id = peliculaId AND estado = 'programada'
+      //     AND comienza_en > desde ORDER BY comienza_en
       const { data, error } = await this.supS.Sup.from('funciones')
         .select('id, comienza_en, formato:formatos(codigo), version:versiones_idioma(nombre)')
         .eq('pelicula_id', peliculaId)

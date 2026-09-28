@@ -11,6 +11,8 @@ export class AlertasService {
   private supS = inject(Supabase);
 
   async estaActiva(usuarioId: string, peliculaId: string): Promise<boolean> {
+    // SELECT pelicula_id FROM alertas_estreno
+    //   WHERE usuario_id = usuarioId AND pelicula_id = peliculaId
     const { data, error } = await this.supS.Sup.from('alertas_estreno')
       .select('pelicula_id')
       .eq('usuario_id', usuarioId)
@@ -30,6 +32,7 @@ export class AlertasService {
   }
 
   async activar(usuarioId: string, peliculaId: string): Promise<void> {
+    // INSERT INTO alertas_estreno (usuario_id, pelicula_id) VALUES (...)
     const { error } = await this.supS.Sup.from('alertas_estreno').insert({
       usuario_id: usuarioId,
       pelicula_id: peliculaId,
@@ -40,6 +43,8 @@ export class AlertasService {
   }
 
   async desactivar(usuarioId: string, peliculaId: string): Promise<void> {
+    // DELETE FROM alertas_estreno
+    //   WHERE usuario_id = usuarioId AND pelicula_id = peliculaId
     const { error } = await this.supS.Sup.from('alertas_estreno')
       .delete()
       .eq('usuario_id', usuarioId)
@@ -58,6 +63,8 @@ export class AlertasService {
       // Primero marco las alertas y después aviso solo a las que marqué yo: así, si el
       // usuario ingresa al mismo tiempo, el aviso no sale dos veces.
       const ahora = new Date().toISOString();
+      // UPDATE alertas_estreno SET notificada_en = ahora RETURNING usuario_id
+      //   WHERE pelicula_id = peliculaId AND notificada_en IS NULL
       const { data, error } = await this.supS.Sup.from('alertas_estreno')
         .update({ notificada_en: ahora })
         .eq('pelicula_id', peliculaId)
@@ -81,6 +88,8 @@ export class AlertasService {
   // Lo llama la sesión al ingresar: revisa las alertas propias cuya venta abrió
   // mientras el usuario no estaba (por ejemplo, porque llegó la fecha de apertura).
   async notificarPendientesDelUsuario(usuarioId: string): Promise<void> {
+    // SELECT pelicula_id FROM alertas_estreno
+    //   WHERE usuario_id = usuarioId AND notificada_en IS NULL
     const { data, error } = await this.supS.Sup.from('alertas_estreno')
       .select('pelicula_id')
       .eq('usuario_id', usuarioId)
@@ -110,6 +119,7 @@ export class AlertasService {
   // La venta está abierta cuando llegó la fecha de apertura (preventa o estreno) y la
   // película tiene al menos una función sin cancelar. Devuelvo el título, o null si no abrió.
   private async tituloSiVentaAbierta(peliculaId: string): Promise<string | null> {
+    // SELECT titulo, fecha_estreno FROM peliculas WHERE id = peliculaId
     const { data: pelicula, error: errorPelicula } = await this.supS.Sup.from('peliculas')
       .select('titulo, fecha_estreno')
       .eq('id', peliculaId)
@@ -118,6 +128,7 @@ export class AlertasService {
       throw errorPelicula;
     }
 
+    // SELECT habilitada, dias_antes FROM preventas WHERE pelicula_id = peliculaId
     const { data: preventa, error: errorPreventa } = await this.supS.Sup.from('preventas')
       .select('habilitada, dias_antes')
       .eq('pelicula_id', peliculaId)
@@ -126,6 +137,8 @@ export class AlertasService {
       throw errorPreventa;
     }
 
+    // SELECT id FROM funciones
+    //   WHERE pelicula_id = peliculaId AND estado <> 'cancelada'   (solo el conteo)
     const { count, error: errorFunciones } = await this.supS.Sup.from('funciones')
       .select('id', { count: 'exact', head: true })
       .eq('pelicula_id', peliculaId)
@@ -148,6 +161,9 @@ export class AlertasService {
 
   private async marcarNotificada(usuarioId: string, peliculaId: string): Promise<boolean> {
     const ahora = new Date().toISOString();
+    // UPDATE alertas_estreno SET notificada_en = ahora RETURNING pelicula_id
+    //   WHERE usuario_id = usuarioId AND pelicula_id = peliculaId
+    //     AND notificada_en IS NULL
     const { data, error } = await this.supS.Sup.from('alertas_estreno')
       .update({ notificada_en: ahora })
       .eq('usuario_id', usuarioId)
@@ -169,6 +185,7 @@ export class AlertasService {
 
   private async insertarNotificaciones(notificaciones: NotificacionPorCrear[]): Promise<void> {
     if (notificaciones.length > 0) {
+      // INSERT INTO notificaciones (usuario_id, pelicula_id, tipo, titulo, mensaje) VALUES (...)
       const { error } = await this.supS.Sup.from('notificaciones').insert(notificaciones);
       if (error !== null) {
         throw error;

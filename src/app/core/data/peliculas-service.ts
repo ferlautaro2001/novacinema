@@ -52,6 +52,10 @@ export class PeliculasService {
   private supS = inject(Supabase);
 
   async listar(soloDestacadas = false): Promise<PeliculaConCatalogo[]> {
+    // SELECT *, clasificacion:clasificaciones(codigo, edad_minima),
+    //        pelicula_generos:generos(id, nombre)
+    //   FROM peliculas ORDER BY titulo
+    //   -- si soloDestacadas: WHERE destacada AND activo AND estado <> 'archivada'
     let consulta = this.supS.Sup.from('peliculas').select(SELECCION).order('titulo');
 
     if (soloDestacadas) {
@@ -69,6 +73,8 @@ export class PeliculasService {
   }
 
   async buscar(id: string): Promise<PeliculaConCatalogo> {
+    // SELECT *, clasificacion:clasificaciones(...), pelicula_generos:generos(...)
+    //   FROM peliculas WHERE id = id
     const { data, error } = await this.supS.Sup.from('peliculas')
       .select(SELECCION)
       .eq('id', id)
@@ -84,6 +90,8 @@ export class PeliculasService {
 
   // Para el enlace público cartelera/:id: null si no existe, sin error de red en consola.
   async buscarSiExiste(id: string): Promise<PeliculaConCatalogo | null> {
+    // SELECT *, clasificacion:clasificaciones(...), pelicula_generos:generos(...)
+    //   FROM peliculas WHERE id = id
     const { data, error } = await this.supS.Sup.from('peliculas')
       .select(SELECCION)
       .eq('id', id)
@@ -99,6 +107,8 @@ export class PeliculasService {
 
   async tieneFuncionesFuturas(id: string): Promise<boolean> {
     const ahora = new Date().toISOString();
+    // SELECT id FROM funciones   (solo el conteo)
+    //   WHERE pelicula_id = id AND estado = 'programada' AND comienza_en > ahora
     const { count, error } = await this.supS.Sup.from('funciones')
       .select('id', { count: 'exact', head: true })
       .eq('pelicula_id', id)
@@ -132,6 +142,7 @@ export class PeliculasService {
 
     // Uso RPC para guardar película y géneros en una sola transacción: si falla
     // una de las tablas se revierte todo y no quedan altas a medias.
+    // SELECT guardar_pelicula(p_id, p_datos, p_generos, p_version)
     const { data, error } = await this.supS.Sup.rpc('guardar_pelicula', {
       p_id: id,
       p_datos: { ...datos },
@@ -152,6 +163,8 @@ export class PeliculasService {
       destacada = false;
     }
 
+    // UPDATE peliculas SET destacada = destacada RETURNING id
+    //   WHERE id = pelicula.id AND actualizado_en = pelicula.actualizado_en
     const { error } = await this.supS.Sup.from('peliculas')
       .update({ destacada: destacada })
       .eq('id', pelicula.id)
@@ -164,6 +177,9 @@ export class PeliculasService {
   }
 
   async finalizar(pelicula: PeliculaConCatalogo): Promise<void> {
+    // UPDATE peliculas SET activo = false, estado = 'archivada', destacada = false
+    //   RETURNING id
+    //   WHERE id = pelicula.id AND actualizado_en = pelicula.actualizado_en
     const { error } = await this.supS.Sup.from('peliculas')
       .update({ activo: false, estado: 'archivada', destacada: false })
       .eq('id', pelicula.id)
@@ -176,6 +192,7 @@ export class PeliculasService {
   }
 
   async eliminar(pelicula: PeliculaConCatalogo): Promise<void> {
+    // SELECT id FROM funciones   (solo el conteo) WHERE pelicula_id = pelicula.id
     const { count, error: consultaError } = await this.supS.Sup.from('funciones')
       .select('id', { count: 'exact', head: true })
       .eq('pelicula_id', pelicula.id);
@@ -188,6 +205,8 @@ export class PeliculasService {
       throw new Error(ERROR_HISTORIAL);
     }
 
+    // DELETE FROM peliculas RETURNING id
+    //   WHERE id = pelicula.id AND actualizado_en = pelicula.actualizado_en
     const { error } = await this.supS.Sup.from('peliculas')
       .delete()
       .eq('id', pelicula.id)

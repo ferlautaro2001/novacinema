@@ -40,6 +40,8 @@ export class StorageService {
     return url;
   }
 
+  // Sube el archivo al bucket "imagenes" y devuelve la ruta, no la URL: la URL
+  // pública la arma urlPublica() en el momento de mostrarla.
   async subirPortada(archivo: File): Promise<string> {
     const invalida = validarPortada(archivo);
 
@@ -55,6 +57,7 @@ export class StorageService {
 
     const nombreArchivo = crypto.randomUUID();
     const ruta = `peliculas/${nombreArchivo}.${extension}`;
+    // Storage: INSERT en el bucket "imagenes", clave peliculas/<uuid>.<ext>
     const { error } = await this.supS.Sup.storage
       .from('imagenes')
       .upload(ruta, archivo, { upsert: false });
@@ -67,6 +70,8 @@ export class StorageService {
 
   async eliminarPortada(ruta: string): Promise<void> {
     if (ruta.startsWith('peliculas/')) {
+      // Storage: DELETE del bucket "imagenes". Las importadas de TMDB están fuera
+      // del bucket, así que no se tocan.
       const { error } = await this.supS.Sup.storage.from('imagenes').remove([ruta]);
       if (error !== null) {
         throw error;

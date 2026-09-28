@@ -71,6 +71,7 @@ export class ProgramacionService {
 
   // Si no está configurado, uso los 30 minutos que pide el enunciado.
   async obtenerMinutosLimpieza(): Promise<number> {
+    // SELECT valor FROM configuracion WHERE clave = 'minutos_limpieza'
     const { data, error } = await this.supS.Sup.from('configuracion')
       .select('valor')
       .eq('clave', 'minutos_limpieza')
@@ -98,6 +99,7 @@ export class ProgramacionService {
   }
 
   async obtenerFormatos(): Promise<FormatoInfo[]> {
+    // SELECT id, codigo, nombre FROM formatos ORDER BY id
     const { data, error } = await this.supS.Sup.from('formatos')
       .select('id, codigo, nombre')
       .order('id');
@@ -109,6 +111,7 @@ export class ProgramacionService {
   }
 
   async obtenerVersionesIdioma(): Promise<VersionIdiomaInfo[]> {
+    // SELECT id, codigo, nombre FROM versiones_idioma ORDER BY id
     const { data, error } = await this.supS.Sup.from('versiones_idioma')
       .select('id, codigo, nombre')
       .order('id');
@@ -120,6 +123,9 @@ export class ProgramacionService {
   }
 
   async consultarFuncionesDelDia(fechaStr: string): Promise<Funcion[]> {
+    // SELECT * FROM funciones
+    //   WHERE comienza_en BETWEEN fecha 00:00:00 Y fecha 23:59:59
+    //     AND estado <> 'cancelada'
     const { data, error } = await this.supS.Sup.from('funciones')
       .select('*')
       .gte('comienza_en', `${fechaStr}T00:00:00.000Z`)
@@ -214,6 +220,9 @@ export class ProgramacionService {
 
     for (const item of items) {
       if (item.asignada && item.sala !== null) {
+        // INSERT INTO funciones
+        //   (pelicula_id, sala_id, formato_id, version_idioma_id, comienza_en,
+        //    duracion_min, estado) VALUES (...)
         const { error } = await this.supS.Sup.from('funciones').insert({
           pelicula_id: peliculaId,
           sala_id: item.sala.id,
@@ -255,6 +264,8 @@ export class ProgramacionService {
   }
 
   async contarEntradasVendidas(funcionId: string): Promise<number> {
+    // SELECT * FROM entradas   (solo el conteo)
+    //   WHERE funcion_id = funcionId AND anulada_en IS NULL
     const { count, error } = await this.supS.Sup.from('entradas')
       .select('*', { count: 'exact', head: true })
       .eq('funcion_id', funcionId)
@@ -280,6 +291,7 @@ export class ProgramacionService {
       throw new Error(mensaje);
     }
 
+    // DELETE FROM funciones WHERE id = funcionId
     const { error } = await this.supS.Sup.from('funciones').delete().eq('id', funcionId);
     if (error !== null) {
       // 23503: todavía hay entradas (aunque estén anuladas) que apuntan a la función.
@@ -292,6 +304,8 @@ export class ProgramacionService {
   }
 
   async obtenerDetalleCancelacion(funcionId: string): Promise<DetalleCancelacionFuncion> {
+    // SELECT id, compras(id, codigo, usuario_id) FROM entradas
+    //   WHERE funcion_id = funcionId AND anulada_en IS NULL
     const { data, error } = await this.supS.Sup.from('entradas')
       .select('id, compras(id, codigo, usuario_id)')
       .eq('funcion_id', funcionId)
@@ -367,6 +381,7 @@ export class ProgramacionService {
   ): Promise<void> {
     const detalle = await this.obtenerDetalleCancelacion(funcionId);
 
+    // UPDATE funciones SET estado = 'cancelada' WHERE id = funcionId
     const { error } = await this.supS.Sup.from('funciones')
       .update({ estado: 'cancelada' })
       .eq('id', funcionId);
@@ -394,6 +409,7 @@ export class ProgramacionService {
 
       // Si RLS no deja insertar las notificaciones, la función ya quedó cancelada
       // igual: por eso no miro el error.
+      // INSERT INTO notificaciones (usuario_id, titulo, mensaje, tipo) VALUES (...)
       await this.supS.Sup.from('notificaciones').insert(notificaciones);
     }
   }

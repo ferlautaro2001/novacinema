@@ -7,6 +7,7 @@ export class SalasService {
   private supS = inject(Supabase);
 
   async listar(): Promise<Sala[]> {
+    // SELECT * FROM salas ORDER BY numero
     const { data, error } = await this.supS.Sup.from('salas').select('*').order('numero');
     if (error !== null) {
       throw error;
@@ -16,6 +17,7 @@ export class SalasService {
   }
 
   async buscar(id: string): Promise<Sala | null> {
+    // SELECT * FROM salas WHERE id = id
     const { data, error } = await this.supS.Sup.from('salas').select('*').eq('id', id).single();
 
     let sala: Sala | null = null;
@@ -30,6 +32,8 @@ export class SalasService {
   // Si la sala tiene funciones futuras con entradas vendidas.
   async tieneVentasFuturas(salaId: string): Promise<boolean> {
     const ahora = new Date().toISOString();
+    // SELECT id FROM funciones
+    //   WHERE sala_id = salaId AND estado <> 'cancelada' AND comienza_en >= ahora
     const { data: funciones, error } = await this.supS.Sup.from('funciones')
       .select('id')
       .eq('sala_id', salaId)
@@ -48,6 +52,8 @@ export class SalasService {
         ids.push(funcion.id);
       }
 
+      // SELECT * FROM entradas
+      //   WHERE funcion_id IN (...) AND anulada_en IS NULL
       const { count, error: errorEntradas } = await this.supS.Sup.from('entradas')
         .select('*', { count: 'exact', head: true })
         .in('funcion_id', ids)
@@ -74,6 +80,7 @@ export class SalasService {
     }
 
     const ahora = new Date().toISOString();
+    // UPDATE salas SET activa = activa, actualizado_en = ahora WHERE id = id
     const { error } = await this.supS.Sup.from('salas')
       .update({ activa: activa, actualizado_en: ahora })
       .eq('id', id);

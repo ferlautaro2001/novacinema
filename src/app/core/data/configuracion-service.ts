@@ -7,6 +7,7 @@ export class ConfiguracionService {
 
   // Los valores se guardan como texto; el que lo usa lo convierte.
   async leer(clave: string): Promise<string | null> {
+    // SELECT valor FROM configuracion WHERE clave = clave
     const { data, error } = await this.supS.Sup.from('configuracion')
       .select('valor')
       .eq('clave', clave)
