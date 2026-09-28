@@ -1,13 +1,17 @@
-import { Component, inject, OnInit, signal, viewChild } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, signal, viewChild } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { FuncionesService } from '../../../core/data/funciones-service';
 import { PreciosService } from '../../../core/data/precios-service';
 import type { FuncionParaComprar } from '../../../core/models/funcion';
+import { butacasYaVendidas, mensajeNoDisponibles } from '../../../core/reglas/butacas';
+import { RealtimeButacas, type MensajeSeleccion } from '../../../core/supabase/realtime-butacas';
 import { CargaConsulta } from '../../../shared/ui/carga-consulta/carga-consulta';
 import { FocoInicial } from '../../../shared/directivas/foco-inicial';
 import { MapaButacasComponent } from '../../../shared/ui/mapa-butacas/mapa-butacas';
 import {
+  aplicarEstados,
   generarDistribucionSala,
   type ButacaMapa,
   type TipoButaca,
@@ -35,20 +39,34 @@ interface ButacaElegida {
 // El mapa trae la selección, el tope de 10 y el panel con el total. Esta
 // pantalla le suma lo que solo ella sabe: qué función es, qué butacas están
 // ocupadas, cuánto sale cada tipo y la confirmación antes de seguir.
+//
+// Mientras está abierta escucha el canal de la función (US-07.05): las ventas
+// ajenas ocupan butacas y lo que eligen los demás aparece "En selección".
 type EstadoPantalla = 'cargando' | 'listo' | 'error';
 
 @Component({
   selector: 'nc-elegir-butacas',
-  imports: [CurrencyPipe, DatePipe, RouterLink, CargaConsulta, FocoInicial, MapaButacasComponent, Modal],
+  imports: [
+    CurrencyPipe,
+    DatePipe,
+    RouterLink,
+    CargaConsulta,
+    FocoInicial,
+    MapaButacasComponent,
+    Modal,
+  ],
   templateUrl: './elegir-butacas.html',
   styleUrl: './elegir-butacas.css',
+  // Al cerrar la pestaña no llega a correr ngOnDestroy: se sueltan las butacas acá.
+  host: { '(window:pagehide)': 'liberarPropias()' },
 })
-export class ElegirButacas implements OnInit {
+export class ElegirButacas implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private funcionesService = inject(FuncionesService);
   private preciosService = inject(PreciosService);
   private compra = inject(CompraEstado);
+  private realtime = inject(RealtimeButacas);
 
   private mapa = viewChild(MapaButacasComponent);
 
@@ -60,6 +78,17 @@ export class ElegirButacas implements OnInit {
   resumen = signal<ButacaElegida[]>([]);
   total = signal(0);
   confirmarAbierto = signal(false);
+  aviso = signal('');
+
+  // Lo que llega por el canal. Las ocupadas son ids del mapa; las ajenas, lo que
+  // eligió cada otra pestaña, por su id de cliente.
+  private ocupadas = signal<string[]>([]);
+  private ajenas = signal<Record<string, string[]>>({});
+
+  private canal: RealtimeChannel | null = null;
+  private cliente = crypto.randomUUID();
+  // Lo último que se publicó como propio, para mandar solo la diferencia.
+  private propias: string[] = [];
 
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('funcionId');
@@ -69,6 +98,16 @@ export class ElegirButacas implements OnInit {
     } else {
       this.funcion.set(null);
       this.estado.set('listo');
+    }
+  }
+
+  ngOnDestroy(): void {
+    const canal = this.canal;
+
+    if (canal !== null) {
+      this.liberarPropias();
+      this.canal = null;
+      this.realtime.desconectar(canal);
     }
   }
 
@@ -107,8 +146,10 @@ export class ElegirButacas implements OnInit {
     this.confirmarAbierto.set(false);
   }
 
-  // Reservar guarda la selección y sigue con los descuentos (US-07.06).
-  reservar(): void {
+  // Reservar guarda la selección y sigue con los descuentos (US-07.06). Antes se
+  // vuelve a mirar la ocupación: si una butaca se vendió entre el último aviso y
+  // este click, no se sigue (AC-07.05.03).
+  async reservar(): Promise<void> {
     const funcion = this.funcion();
     const resumen = this.resumen();
 
@@ -119,9 +160,39 @@ export class ElegirButacas implements OnInit {
         ids.push(elegida.id);
       }
 
-      this.compra.guardarSeleccion(funcion, ids);
-      this.router.navigate(['/comprar', funcion.id, 'descuentos']);
+      try {
+        const ocupadas = await this.funcionesService.butacasOcupadas(funcion.id);
+
+        this.revisarYSeguir(funcion, ids, ocupadas);
+      } catch {
+        this.confirmarAbierto.set(false);
+        this.aviso.set('No se pudo revisar si las butacas siguen libres. Probá de nuevo.');
+      }
     }
+  }
+
+  // El mapa avisa cada cambio de selección, también cuando saca una butaca que
+  // se vendió. Se publica solo lo que cambió: SELECCIONAR lo nuevo y LIBERAR lo
+  // que se soltó.
+  alCambiarSeleccion(nuevas: string[]): void {
+    const agregadas = diferencia(nuevas, this.propias);
+    const quitadas = diferencia(this.propias, nuevas);
+
+    this.propias = nuevas;
+    this.publicar('SELECCIONAR', agregadas);
+    this.publicar('LIBERAR', quitadas);
+
+    if (agregadas.length !== 0) {
+      this.aviso.set('');
+    }
+  }
+
+  // Suelta todo lo propio: al irse de la pantalla o al cerrar la pestaña.
+  liberarPropias(): void {
+    const propias = this.propias;
+
+    this.propias = [];
+    this.publicar('LIBERAR', propias);
   }
 
   // El precio de un tipo para el tooltip. Sale del mismo mapa de precios que se
@@ -172,12 +243,116 @@ export class ElegirButacas implements OnInit {
       accesible: comun + adicional,
     });
 
-    // Las bloqueadas ("En selección") las alimenta el Broadcast de US-07.05.
-    // Hasta entonces van vacías: la leyenda igual las muestra.
+    // Las bloqueadas ("En selección") arrancan vacías: las trae el canal.
     const distribucion = generarDistribucionSala(ocupadas, []);
 
+    this.ocupadas.set(ocupadas);
     this.butacasMapa.set(distribucion.butacas);
     this.estado.set('listo');
+    this.escucharCanal(funcion.id);
+  }
+
+  private revisarYSeguir(funcion: FuncionParaComprar, ids: string[], ocupadas: string[]): void {
+    const vendidas = butacasYaVendidas(ids, ocupadas);
+
+    if (vendidas.length === 0) {
+      this.compra.guardarSeleccion(funcion, ids);
+      this.router.navigate(['/comprar', funcion.id, 'descuentos']);
+    } else {
+      const mensaje = mensajeNoDisponibles(vendidas);
+
+      this.confirmarAbierto.set(false);
+      this.ocupadas.set(ocupadas);
+      this.repintar();
+      this.aviso.set(mensaje);
+    }
+  }
+
+  private escucharCanal(funcionId: string): void {
+    this.canal = this.realtime.conectar(funcionId, this.cliente, {
+      alCambiarOcupacion: () => this.releerOcupadas(funcionId),
+      alSeleccionar: (mensaje) => this.alSeleccionarAjena(mensaje),
+      alLiberar: (mensaje) => this.alLiberarAjena(mensaje),
+      alIrse: (cliente) => this.alIrseAjena(cliente),
+      alConectar: () => this.presentarse(),
+    });
+  }
+
+  // El aviso de la base solo dice que algo cambió: se leen de nuevo las ocupadas.
+  // Si falla, el mapa se queda como estaba y lo cubre la revisión al reservar.
+  private async releerOcupadas(funcionId: string): Promise<void> {
+    try {
+      const ocupadas = await this.funcionesService.butacasOcupadas(funcionId);
+
+      this.ocupadas.set(ocupadas);
+      this.repintar();
+    } catch {
+      // Se ignora a propósito: ver arriba.
+    }
+  }
+
+  // Al conectarse (y al reconectarse) la pestaña anuncia lo suyo. Las demás, al
+  // ver un cliente nuevo, le contestan con lo que tienen elegido; así quien entra
+  // tarde también ve lo que ya estaba "En selección".
+  private presentarse(): void {
+    const canal = this.canal;
+
+    if (canal !== null) {
+      this.realtime.seleccionar(canal, { cliente: this.cliente, butacas: this.propias });
+    }
+  }
+
+  private alSeleccionarAjena(mensaje: MensajeSeleccion): void {
+    const previas = this.ajenas()[mensaje.cliente];
+
+    let esNuevo = false;
+
+    if (previas === undefined) {
+      esNuevo = true;
+    }
+
+    if (mensaje.cliente !== '') {
+      this.ajenas.update((ajenas) => conButacas(ajenas, mensaje));
+      this.repintar();
+
+      if (esNuevo && this.propias.length !== 0) {
+        this.presentarse();
+      }
+    }
+  }
+
+  private alLiberarAjena(mensaje: MensajeSeleccion): void {
+    this.ajenas.update((ajenas) => sinButacas(ajenas, mensaje));
+    this.repintar();
+  }
+
+  // Una pestaña que se cerró sin avisar: se suelta todo lo que tenía.
+  private alIrseAjena(cliente: string): void {
+    this.ajenas.update((ajenas) => sinCliente(ajenas, cliente));
+    this.repintar();
+  }
+
+  // Cada cambio arma un array nuevo con update(): el mapa lo recibe por input y la
+  // escena 3D lo toma en ngOnChanges.
+  private repintar(): void {
+    const ocupadas = this.ocupadas();
+    const bloqueadas = todasLasAjenas(this.ajenas());
+
+    this.butacasMapa.update((actuales) => aplicarEstados(actuales, ocupadas, bloqueadas));
+  }
+
+  private publicar(evento: 'SELECCIONAR' | 'LIBERAR', butacas: string[]): void {
+    const canal = this.canal;
+
+    if (canal !== null && butacas.length !== 0) {
+      const mensaje: MensajeSeleccion = { cliente: this.cliente, butacas };
+
+      if (evento === 'SELECCIONAR') {
+        this.realtime.seleccionar(canal, mensaje);
+      } else {
+        this.realtime.liberar(canal, mensaje);
+      }
+    }
   }
 }
 
@@ -210,4 +385,82 @@ function nombreDeTipoButaca(tipo: TipoButaca): string {
   }
 
   return nombre;
+}
+
+// Los ids de la primera lista que no están en la segunda.
+function diferencia(ids: string[], otros: string[]): string[] {
+  const faltantes: string[] = [];
+
+  for (const id of ids) {
+    if (otros.includes(id) === false) {
+      faltantes.push(id);
+    }
+  }
+
+  return faltantes;
+}
+
+// Una copia de las selecciones ajenas con las butacas del mensaje sumadas a las
+// que ya tenía ese cliente.
+function conButacas(
+  ajenas: Record<string, string[]>,
+  mensaje: MensajeSeleccion,
+): Record<string, string[]> {
+  const copia = { ...ajenas };
+
+  let previas: string[] = [];
+
+  if (copia[mensaje.cliente] !== undefined) {
+    previas = copia[mensaje.cliente];
+  }
+
+  const nuevas = diferencia(mensaje.butacas, previas);
+
+  copia[mensaje.cliente] = [...previas, ...nuevas];
+
+  return copia;
+}
+
+// Una copia de las selecciones ajenas sin las butacas del mensaje. Un cliente
+// que se queda sin nada se borra: si vuelve a elegir, cuenta como nuevo.
+function sinButacas(
+  ajenas: Record<string, string[]>,
+  mensaje: MensajeSeleccion,
+): Record<string, string[]> {
+  const copia = { ...ajenas };
+  const previas = copia[mensaje.cliente];
+
+  if (previas !== undefined) {
+    const restantes = diferencia(previas, mensaje.butacas);
+
+    if (restantes.length === 0) {
+      delete copia[mensaje.cliente];
+    } else {
+      copia[mensaje.cliente] = restantes;
+    }
+  }
+
+  return copia;
+}
+
+// Una copia de las selecciones ajenas sin las de ese cliente.
+function sinCliente(ajenas: Record<string, string[]>, cliente: string): Record<string, string[]> {
+  const copia = { ...ajenas };
+
+  delete copia[cliente];
+
+  return copia;
+}
+
+// Todas las butacas que tienen elegidas las otras pestañas, en una sola lista.
+function todasLasAjenas(ajenas: Record<string, string[]>): string[] {
+  const todas: string[] = [];
+
+  for (const cliente of Object.keys(ajenas)) {
+    for (const id of ajenas[cliente]) {
+      todas.push(id);
+    }
+  }
+
+  return todas;
 }
