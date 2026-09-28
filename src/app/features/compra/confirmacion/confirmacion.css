@@ -60,3 +60,8 @@
 .volver {
   align-self: flex-start;
 }
+
+/* El botón de descarga no se estira a lo ancho de la tarjeta. */
+.descargar {
+  align-self: flex-start;
+}
