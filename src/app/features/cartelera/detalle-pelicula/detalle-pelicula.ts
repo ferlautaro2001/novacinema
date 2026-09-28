@@ -1,5 +1,6 @@
 import { Component, effect, inject, input, output, signal } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Modal } from '../../../shared/ui/modal/modal';
 import { FocoInicial } from '../../../shared/directivas/foco-inicial';
 import { Clasificacion } from '../../../shared/ui/clasificacion/clasificacion';
@@ -22,6 +23,10 @@ type EstadoDetalle = 'cargando' | 'listo' | 'no-existe' | 'error';
 
 // Modal con el detalle de una película (US-06.06). Lo abren la cartelera, Inicio y
 // el enlace directo cartelera/:id.
+//
+// Es también la entrada a la compra (AC-07.01.03): "Comprar entradas" lleva a
+// elegir la función y cada horario lleva directo a la suya. Si no ingresó, el
+// guard de la compra lo manda a ingresar y el login lo trae de vuelta.
 @Component({
   selector: 'nc-detalle-pelicula',
   imports: [
@@ -31,6 +36,7 @@ type EstadoDetalle = 'cargando' | 'listo' | 'no-existe' | 'error';
     PuntajePipe,
     DuracionPipe,
     DatePipe,
+    RouterLink,
     ResenasPelicula,
   ],
   templateUrl: './detalle-pelicula.html',

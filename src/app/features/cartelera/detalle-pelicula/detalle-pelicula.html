@@ -71,9 +71,11 @@
                 <h4 class="body-strong">{{ dia.dia | date: "EEEE d 'de' MMMM" }}</h4>
                 <ul class="horarios">
                   @for (funcion of dia.funciones; track funcion.id) {
-                    <li class="horario">
-                      <span class="body-strong">{{ funcion.comienzaEn | date: 'HH:mm' }}</span>
-                      <span class="caption">{{ funcion.formato }} · {{ funcion.idioma }}</span>
+                    <li>
+                      <a class="horario" [routerLink]="['/comprar', funcion.id, 'edad']">
+                        <span class="body-strong">{{ funcion.comienzaEn | date: 'HH:mm' }}</span>
+                        <span class="caption">{{ funcion.formato }} · {{ funcion.idioma }}</span>
+                      </a>
                     </li>
                   }
                 </ul>
@@ -89,6 +91,11 @@
     }
   }
 
+  @if (estado() === 'listo' && dias().length !== 0) {
+    <a acciones class="nc-btn nc-btn--primary" [routerLink]="['/comprar/pelicula', peliculaId()]"
+      >Comprar entradas</a
+    >
+  }
   <button
     acciones
     appFocoInicial
