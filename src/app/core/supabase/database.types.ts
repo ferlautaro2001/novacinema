@@ -1778,6 +1778,45 @@ export type Database = {
         };
         Relationships: [];
       };
+      v_funciones_para_comprar: {
+        Row: {
+          butacas_libres: number | null;
+          comienza_en: string;
+          en_preventa: boolean | null;
+          formato: string | null;
+          funcion_id: string | null;
+          idioma: string | null;
+          pelicula_id: string;
+          pelicula_titulo: string | null;
+          sala: string | null;
+          total_butacas: number | null;
+        };
+        Insert: {
+          butacas_libres?: number | null;
+          comienza_en: string;
+          en_preventa?: boolean | null;
+          formato?: string | null;
+          funcion_id?: string | null;
+          idioma?: string | null;
+          pelicula_id: string;
+          pelicula_titulo?: string | null;
+          sala?: string | null;
+          total_butacas?: number | null;
+        };
+        Update: {
+          butacas_libres?: number | null;
+          comienza_en?: string;
+          en_preventa?: boolean | null;
+          formato?: string | null;
+          funcion_id?: string | null;
+          idioma?: string | null;
+          pelicula_id?: string;
+          pelicula_titulo?: string | null;
+          sala?: string | null;
+          total_butacas?: number | null;
+        };
+        Relationships: [];
+      };
       v_pelicula_rating: {
         Row: {
           cantidad_resenas: number | null;

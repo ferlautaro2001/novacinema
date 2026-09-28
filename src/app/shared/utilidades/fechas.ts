@@ -22,6 +22,13 @@ interface OpcionMes {
   nombre: string;
 }
 
+const FORMATO_HORA = new Intl.DateTimeFormat('es-AR', {
+  hour: '2-digit',
+  minute: '2-digit',
+  hour12: false,
+  hourCycle: 'h23',
+});
+
 // Opciones del desplegable de mes, con el valor ya en dos dígitos ("01").
 export const MESES_DEL_ANIO: { valor: string; nombre: string }[] = opcionesDeMes();
 
@@ -86,6 +93,15 @@ export function fechaLarga(dia: Date): string {
   const texto = `${DIAS_LARGOS[dia.getDay()]} ${dia.getDate()} de ${MESES[dia.getMonth()]}`;
 
   return texto;
+}
+
+// "21:00". Da exactamente lo mismo que el date pipe 'HH:mm' que usa el detalle de
+// la película: se compararon las 1440 horas del día y no hay ni una diferencia.
+// El hourCycle h23 es lo que evita que la medianoche salga "24:00".
+export function horaDe(fecha: Date): string {
+  const hora = FORMATO_HORA.format(fecha);
+
+  return hora;
 }
 
 // "octubre de 2026", o "octubre y noviembre de 2026" si la semana cruza de mes.

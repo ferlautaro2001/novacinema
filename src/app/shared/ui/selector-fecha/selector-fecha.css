@@ -76,3 +76,10 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+
+/* Cuando la semana entera no tiene días elegibles, en lugar de una lista vacía
+   se dice por qué. */
+.vacio {
+  grid-column: 1 / -1;
+  color: var(--ink-200);
+}

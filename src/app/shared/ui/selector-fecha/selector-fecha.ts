@@ -1,5 +1,6 @@
 import { Component, input, OnChanges, OnInit, output, signal } from '@angular/core';
 import {
+  aISO,
   diasConsecutivos,
   etiquetaDia,
   fechaLarga,
@@ -27,6 +28,12 @@ const DIAS_POR_SEMANA = 7;
 export class SelectorFecha implements OnInit, OnChanges {
   fechaInicial = input('');
   fechaElegida = output<Date>();
+
+  // Días que se pueden elegir, como fechas ISO ("AAAA-MM-DD"). Si viene vacío se
+  // muestran todos, que es lo que necesitan las pantallas del panel. En la
+  // compra se pasan solo los días con funciones: los demás no se muestran porque
+  // no hay nada que elegir (AC-07.01.01).
+  diasDisponibles = input<string[]>([]);
 
   dias = signal<OpcionDia[]>([]);
   meses = signal('');
@@ -106,9 +113,18 @@ export class SelectorFecha implements OnInit, OnChanges {
     this.desde = inicio;
 
     const fechas = diasConsecutivos(this.desde, DIAS_POR_SEMANA);
+    const disponibles = this.diasDisponibles();
     const dias: OpcionDia[] = [];
 
     for (const fecha of fechas) {
+      if (disponibles.length !== 0) {
+        const estaDisponible = disponibles.includes(aISO(fecha));
+
+        if (estaDisponible === false) {
+          continue;
+        }
+      }
+
       const etiqueta = etiquetaDia(fecha, this.hoy);
       const descripcion = fechaLarga(fecha);
       dias.push({ fecha, etiqueta, descripcion });

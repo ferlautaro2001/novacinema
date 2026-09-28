@@ -37,6 +37,11 @@ export const routes: Routes = [
     loadChildren: () => import('./features/cuenta/cuenta.routes').then((m) => m.cuentaRoutes),
   },
   {
+    path: 'comprar',
+    canActivate: [sesionGuard],
+    loadChildren: () => import('./features/compra/compra.routes').then((m) => m.compraRoutes),
+  },
+  {
     path: 'auth',
     loadChildren: () => import('./features/auth/auth.routes').then((m) => m.authRoutes),
   },

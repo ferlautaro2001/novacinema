@@ -35,6 +35,8 @@
           <span class="solo-lector">, {{ dia.descripcion }}</span>
         </button>
       </li>
+    } @empty {
+      <li class="vacio body">No hay días con funciones en esta semana.</li>
     }
   </ul>
 </div>

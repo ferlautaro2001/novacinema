@@ -1,19 +1,28 @@
+<!-- Las agendas agotadas no se pueden tocar, pero sí se muestran: el enunciado
+     pide verlas para que el cliente sepa que la película tiene funciones ese día
+     aunque no pueda comprar en ellas. El estado no se marca solo con el color,
+     lleva la palabra "Agotada" al lado. -->
 <ul class="opciones" role="group" aria-label="Elegí un horario">
-  @for (hora of horarios(); track hora) {
+  @for (opcion of opciones(); track opcion.id) {
     <li>
       <button
         type="button"
         class="opcion body-strong"
-        [class.elegida]="elegida() === hora"
-        [attr.aria-pressed]="elegida() === hora"
-        (click)="elegir(hora)"
+        [class.elegida]="estaElegida(opcion)"
+        [class.agotada]="opcion.agotada"
+        [disabled]="opcion.agotada"
+        [attr.aria-pressed]="estaElegida(opcion)"
+        (click)="elegir(opcion)"
       >
-        @if (elegida() === hora) {
+        @if (estaElegida(opcion)) {
           <svg class="tilde" viewBox="0 0 20 20" aria-hidden="true">
             <path d="M5 10.5l3.2 3L15 6.5" />
           </svg>
         }
-        {{ hora }}
+        <span class="texto">{{ opcion.etiqueta }}</span>
+        @if (opcion.agotada) {
+          <span class="agotada caption">Agotada</span>
+        }
       </button>
     </li>
   } @empty {

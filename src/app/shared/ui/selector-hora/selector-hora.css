@@ -43,6 +43,31 @@
   background: var(--brand-tint);
 }
 
+/* Agotada: se ve pero no se toca. El texto "Agotada" ya dice el estado, el
+   gris es solo apoyo. */
+.opcion.agotada {
+  background: var(--surface-100);
+  color: var(--ink-300);
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+.opcion.agotada:hover {
+  background: var(--surface-100);
+}
+
+.texto {
+  text-align: center;
+}
+
+.agotada {
+  flex: none;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-pill);
+  color: var(--ink-300);
+}
+
 .tilde {
   flex: none;
   width: 18px;

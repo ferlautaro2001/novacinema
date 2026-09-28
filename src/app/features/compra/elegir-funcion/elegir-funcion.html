@@ -1,0 +1,40 @@
+<section class="elegir">
+  <header class="cabecera">
+    <div>
+      <p class="overline">Comprar entradas</p>
+      <h1 class="marquee-lg">Elegí la función</h1>
+    </div>
+    @if (pelicula(); as peli) {
+      <p class="body titulo">{{ peli.titulo }}</p>
+    }
+  </header>
+
+  <ng-template #vacio>
+    <div class="vacio">
+      <h2 class="body-strong">Esta película no tiene funciones a la venta</h2>
+      <p class="body">Puede que las funciones ya hayan empezado o que todavía no se vendan.</p>
+    </div>
+  </ng-template>
+
+  <ng-template #fallo let-mensaje>
+    <p class="error body" role="alert">{{ mensaje }}</p>
+    <button class="nc-btn nc-btn--secondary" (click)="recargar()">Reintentá</button>
+  </ng-template>
+
+  <ng-container *appCargando="estado(); vacio: vacio; error: fallo">
+    <div class="bloque">
+      <h2 class="overline titulo-bloque">Día</h2>
+      <nc-selector-fecha [diasDisponibles]="diasDisponibles()" (fechaElegida)="elegirDia($event)" />
+    </div>
+
+    <div class="bloque">
+      <h2 class="overline titulo-bloque">Horario</h2>
+      @if (diaElegido(); as dia) {
+        <p class="body fecha-elegida">{{ fechaLegible(dia) }}</p>
+      }
+      <nc-selector-hora [opciones]="opciones()" (horaElegida)="elegirHorario($event)" />
+    </div>
+
+    <a class="nc-btn nc-btn--ghost volver" routerLink="/cartelera">Volver a la cartelera</a>
+  </ng-container>
+</section>

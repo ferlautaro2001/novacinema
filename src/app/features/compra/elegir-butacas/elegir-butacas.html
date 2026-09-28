@@ -1,0 +1,57 @@
+<section class="butacas">
+  <header class="cabecera">
+    <div>
+      <p class="overline">Comprar entradas</p>
+      <h1 class="marquee-lg">Elegí tus butacas</h1>
+    </div>
+  </header>
+
+  @if (estado() === 'cargando') {
+    <nc-carga-consulta />
+  } @else if (estado() === 'error') {
+    <p class="error body" role="alert">{{ mensaje() }}</p>
+    <a class="nc-btn nc-btn--secondary" routerLink="/cartelera">Volver a la cartelera</a>
+  } @else if (funcion(); as elegida) {
+    <dl class="resumen">
+      <div class="dato">
+        <dt class="overline">Película</dt>
+        <dd class="body-strong">{{ elegida.peliculaTitulo }}</dd>
+      </div>
+      <div class="dato">
+        <dt class="overline">Fecha</dt>
+        <dd class="body-strong">{{ elegida.comienzaEn | date: 'dd/MM/yyyy' }}</dd>
+      </div>
+      <div class="dato">
+        <dt class="overline">Horario</dt>
+        <dd class="body-strong">
+          {{ elegida.comienzaEn | date: 'HH:mm' }} · {{ elegida.formato }} ·
+          {{ elegida.idioma }}
+        </dd>
+      </div>
+      <div class="dato">
+        <dt class="overline">Sala</dt>
+        <dd class="body-strong">{{ elegida.sala }}</dd>
+      </div>
+      <div class="dato">
+        <dt class="overline">Butacas libres</dt>
+        <dd class="body-strong">{{ elegida.butacasLibres }} de {{ elegida.totalButacas }}</dd>
+      </div>
+    </dl>
+
+    <div class="placeholder">
+      <p class="body-strong">Acá va el mapa de butacas</p>
+      <p class="body">
+        La selección de butacas es la historia siguiente. Esta pantalla ya muestra la función que
+        elegiste, que es lo que hay que confirmar antes de elegir dónde sentarse.
+      </p>
+    </div>
+
+    <a class="nc-btn nc-btn--ghost volver" routerLink="/cartelera">Volver a la cartelera</a>
+  } @else {
+    <div class="vacio">
+      <h2 class="body-strong">Esa función ya no está disponible</h2>
+      <p class="body">Puede que haya empezado o que ya no quede nada.</p>
+      <a class="nc-btn nc-btn--secondary" routerLink="/cartelera">Volver a la cartelera</a>
+    </div>
+  }
+</section>
