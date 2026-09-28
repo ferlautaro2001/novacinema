@@ -1,0 +1,14 @@
+<figure class="qr">
+  <qrcode
+    [qrdata]="codigo()"
+    [width]="tamanio()"
+    elementType="canvas"
+    errorCorrectionLevel="M"
+    [margin]="1"
+    colorDark="#1a0f12"
+    colorLight="#ffffff"
+    [ariaLabel]="'Código QR de la compra ' + codigo()"
+    [title]="codigo()"
+  />
+  <figcaption class="codigo">{{ codigo() }}</figcaption>
+</figure>

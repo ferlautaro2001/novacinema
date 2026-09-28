@@ -27,6 +27,9 @@ export class CompraEstado {
   adulto = signal<DatosAdulto | null>(null);
   descuento = signal<DescuentoElegido | null>(null);
   confirmada = signal<CompraRegistrada | null>(null);
+  // A nombre de quién quedó la entrada: el adulto responsable si lo hubo
+  // (AC-07.03.02), si no quien compró. Va en el PDF (US-07.08).
+  titular = signal('');
 
   // Una selección nueva descarta el descuento anterior: se calculó sobre otro
   // subtotal.
@@ -45,10 +48,11 @@ export class CompraEstado {
     this.descuento.set(descuento);
   }
 
-  // La compra ya está pagada: se guarda para la confirmación y se olvida el
-  // adulto, que era de esta compra.
-  confirmar(registrada: CompraRegistrada): void {
+  // La compra ya está pagada: se guarda para la confirmación, con su titular, y
+  // se olvida el adulto, que era de esta compra.
+  confirmar(registrada: CompraRegistrada, titular: string): void {
     this.confirmada.set(registrada);
+    this.titular.set(titular);
     this.adulto.set(null);
   }
 
@@ -58,5 +62,6 @@ export class CompraEstado {
     this.adulto.set(null);
     this.descuento.set(null);
     this.confirmada.set(null);
+    this.titular.set('');
   }
 }

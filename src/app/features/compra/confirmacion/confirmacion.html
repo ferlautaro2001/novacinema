@@ -9,6 +9,18 @@
       <p class="caption etiqueta">Código de la compra</p>
       <p class="codigo">{{ registrada.codigo }}</p>
       <p class="body">Mostralo en la entrada de la sala o en boletería.</p>
+      <nc-codigo-qr [codigo]="registrada.codigo" [tamanio]="180" />
+      <button
+        class="nc-btn nc-btn--primary descargar"
+        type="button"
+        [disabled]="descargando()"
+        (click)="descargar()"
+      >
+        {{ descargando() ? 'Armando el PDF…' : 'Descargar entrada' }}
+      </button>
+      @if (errorDescarga()) {
+        <p class="body" role="alert">{{ errorDescarga() }}</p>
+      }
     </div>
 
     @if (compra.funcion(); as funcion) {

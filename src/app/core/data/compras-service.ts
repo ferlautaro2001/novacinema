@@ -123,7 +123,13 @@ export class ComprasService {
 
     while (creada === null && intento < INTENTOS_CODIGO) {
       intento++;
-      creada = await this.insertarCompra(usuarioId, generarCodigoCompra());
+
+      const codigo = generarCodigoCompra();
+      const libre = await this.codigoLibre(codigo);
+
+      if (libre) {
+        creada = await this.insertarCompra(usuarioId, codigo);
+      }
     }
 
     if (creada === null) {
@@ -131,6 +137,29 @@ export class ComprasService {
     }
 
     return creada;
+  }
+
+  // Verificación de unicidad antes de usar el código (US-07.08). La RLS de
+  // compras solo deja ver las propias, así que esta consulta no ve los códigos
+  // de otros clientes: la garantía de verdad es el índice único de compras.codigo,
+  // y si choca, insertarCompra devuelve null y se prueba con otro.
+  private async codigoLibre(codigo: string): Promise<boolean> {
+    // SELECT id FROM compras WHERE codigo = codigo
+    const { data, error } = await this.supS.Sup.from('compras')
+      .select('id')
+      .eq('codigo', codigo)
+      .maybeSingle();
+    if (error !== null) {
+      throw error;
+    }
+
+    let libre = false;
+
+    if (data === null) {
+      libre = true;
+    }
+
+    return libre;
   }
 
   // Devuelve null si el código ya existía, para probar con otro.

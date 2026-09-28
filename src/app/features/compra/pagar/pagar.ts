@@ -283,11 +283,30 @@ export class Pagar implements OnInit {
         creditoDisponible: this.credito(),
       });
 
-      this.compra.confirmar(registrada);
+      const titular = this.titular();
+
+      this.compra.confirmar(registrada, titular);
       this.router.navigate(['/comprar', funcionId, 'confirmacion']);
     } catch (e) {
       this.mostrarRechazo(e);
     }
+  }
+
+  // La entrada sale a nombre del adulto responsable si lo hubo; si no, de quien
+  // compra.
+  private titular(): string {
+    const adulto = this.compra.adulto();
+    const perfil = this.auth.perfil();
+
+    let titular = '';
+
+    if (adulto !== null) {
+      titular = `${adulto.nombre} ${adulto.apellido}`;
+    } else if (perfil !== null) {
+      titular = `${perfil.nombre} ${perfil.apellido}`;
+    }
+
+    return titular;
   }
 
   private mostrarRechazo(e: unknown): void {
