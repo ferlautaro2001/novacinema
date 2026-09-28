@@ -35,3 +35,11 @@ export interface DatosProducto {
   imagenPath: string;
   precio: number;
 }
+
+// Una sección del menú del Candy (US-08.03): la categoría con sus productos
+// disponibles, en el orden de la carta.
+export interface CategoriaDelMenu {
+  id: number;
+  nombre: string;
+  productos: ProductoConPrecio[];
+}

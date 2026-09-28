@@ -1,6 +1,6 @@
 import { inject, Service } from '@angular/core';
 import { Supabase } from '../supabase/supabase-client';
-import type { DatosProducto, ProductoConPrecio } from '../models/candy';
+import type { CategoriaDelMenu, DatosProducto, ProductoConPrecio } from '../models/candy';
 
 // El error de Postgres cuando una FK impide borrar: el producto ya se usó.
 const CODIGO_EN_USO = '23503';
@@ -56,6 +56,40 @@ export class CandyService {
     }
 
     return productos;
+  }
+
+  // El menú del Candy (US-08.03): solo lo disponible, con precio vigente,
+  // agrupado por categoría en el orden de la carta (AC-08.03.01). Un producto
+  // sin precio vigente no se puede vender, así que no se muestra.
+  async listarMenu(): Promise<CategoriaDelMenu[]> {
+    // SELECT p.*, c.nombre, c.orden, pp.precio, pp.vigente_desde FROM productos p
+    //   JOIN categorias_producto c ON c.id = p.categoria_id
+    //   LEFT JOIN precios_producto pp ON pp.producto_id = p.id
+    //   WHERE p.activo ORDER BY c.orden, p.nombre
+    const { data, error } = await this.supS.Sup.from('productos')
+      .select(
+        'id, nombre, descripcion, categoria_id, imagen_path, activo, categorias_producto!inner(nombre, orden), precios_producto(precio, vigente_desde)',
+      )
+      .eq('activo', true)
+      .order('nombre');
+    if (error !== null) {
+      throw error;
+    }
+
+    const filas: FilaProducto[] = [...data];
+    const ordenadas = filas.sort(porOrdenDeCategoria);
+    const ahora = new Date();
+    const categorias: CategoriaDelMenu[] = [];
+
+    for (const fila of ordenadas) {
+      const producto = aProductoConPrecio(fila, ahora);
+
+      if (producto.precio !== null) {
+        agregarAlMenu(categorias, producto);
+      }
+    }
+
+    return categorias;
   }
 
   // Da de alta el producto disponible y su primer precio (AC-08.01.01). El
@@ -219,6 +253,22 @@ function precioVigente(
   }
 
   return vigente;
+}
+
+// Las filas llegan ordenadas por categoría: se abre una sección nueva cada vez
+// que cambia.
+function agregarAlMenu(categorias: CategoriaDelMenu[], producto: ProductoConPrecio): void {
+  const ultima = categorias[categorias.length - 1];
+
+  if (ultima !== undefined && ultima.id === producto.categoriaId) {
+    ultima.productos.push(producto);
+  } else {
+    categorias.push({
+      id: producto.categoriaId,
+      nombre: producto.categoria,
+      productos: [producto],
+    });
+  }
 }
 
 function porOrdenDeCategoria(a: FilaProducto, b: FilaProducto): number {

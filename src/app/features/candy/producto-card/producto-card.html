@@ -1,0 +1,13 @@
+<article class="card">
+  <img class="foto" [src]="imagen()" [alt]="producto().nombre" loading="lazy" />
+  <div class="cuerpo">
+    <h3 class="body-strong nombre">{{ producto().nombre }}</h3>
+    <p class="caption descripcion">{{ producto().descripcion }}</p>
+    <div class="pie">
+      <span class="precio">{{
+        producto().precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+      }}</span>
+      <ng-content select="[acciones]" />
+    </div>
+  </div>
+</article>

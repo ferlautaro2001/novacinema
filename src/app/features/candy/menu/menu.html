@@ -1,1 +1,48 @@
 <h1 class="marquee-lg">Candy</h1>
+<p class="body intro">
+  Pochoclos recién hechos, bebidas y algo dulce para la función. Elegí lo que quieras sumar a tu
+  compra.
+</p>
+
+<ng-template #vacio>
+  <div class="vacio">
+    <h2 class="body-strong">El Candy todavía no tiene productos</h2>
+    <p class="body">Volvé en un rato: estamos preparando la carta.</p>
+  </div>
+</ng-template>
+<ng-template #fallo let-mensaje>
+  <p class="error body" role="alert">{{ mensaje }}</p>
+  <button class="nc-btn nc-btn--secondary" type="button" (click)="cargar()">Reintentá</button>
+</ng-template>
+
+<ng-container *appCargando="estado(); vacio: vacio; error: fallo; let categorias">
+  @if (categorias.length > 1) {
+    <nav class="atajos" aria-label="Categorías del Candy">
+      @for (categoria of categorias; track categoria.id) {
+        <button class="atajo caption" type="button" (click)="irA(categoria)">
+          {{ categoria.nombre }}
+        </button>
+      }
+    </nav>
+  }
+
+  @for (categoria of categorias; track categoria.id) {
+    <section
+      class="categoria"
+      [id]="ancla(categoria)"
+      [attr.aria-labelledby]="ancla(categoria) + '-titulo'"
+    >
+      <header class="categoria-cabecera">
+        <h2 class="marquee-md titulo-categoria" tabindex="-1" [id]="ancla(categoria) + '-titulo'">
+          {{ categoria.nombre }}
+        </h2>
+        <span class="caption cantidad">{{ cantidad(categoria) }}</span>
+      </header>
+      <ul class="grilla">
+        @for (producto of categoria.productos; track producto.id) {
+          <li><nc-producto-card [producto]="producto" /></li>
+        }
+      </ul>
+    </section>
+  }
+</ng-container>
