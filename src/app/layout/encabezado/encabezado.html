@@ -1,8 +1,14 @@
 <header class="encabezado">
   <div class="contenido">
-    <!-- El logo no se usa por debajo de 96 px: en la barra va el nombre en marquesina. -->
-    <a class="marca marquee-md" routerLink="/inicio" aria-label="NovaCinema, ir al inicio">
-      Nova<span class="marca-acento">Cinema</span>
+    <!-- La marca es el lockup entero: NOVA, la claqueta y CINEMA. Va como imagen
+         y no como texto para que el dibujo se vea igual en cualquier pantalla.
+         El WebP pesa 36 kB contra 130 kB del PNG, que queda de respaldo para los
+         navegadores que no lo soportan. -->
+    <a class="marca" routerLink="/inicio" aria-label="NovaCinema, ir al inicio">
+      <picture>
+        <source srcset="novacinema-marca.webp" type="image/webp" />
+        <img src="novacinema-marca.png" alt="NovaCinema" width="640" height="139" />
+      </picture>
     </a>
     <nc-navegacion />
     <div class="sesion">

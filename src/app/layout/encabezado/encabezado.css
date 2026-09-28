@@ -14,13 +14,31 @@
   padding: var(--space-3) var(--space-4);
 }
 
+/* La marca es el lockup. Se dimensiona por alto y nunca por ancho: asi el
+   dibujo no se deforma en ninguna pantalla, y el alto de la barra no depende
+   de cuanto mide el archivo. */
 .marca {
-  color: var(--ink-100);
+  display: block;
+  /* Que la marca no encoja cuando la barra se aprieta con muchos accesos. */
+  flex: none;
   text-decoration: none;
 }
 
-.marca-acento {
-  color: var(--gold-500);
+.marca picture {
+  display: block;
+}
+
+.marca img {
+  display: block;
+  height: 36px;
+  width: auto;
+}
+
+/* En pantallas angostas achico la marca para que le quede lugar a la barra. */
+@media (max-width: 640px) {
+  .marca img {
+    height: 30px;
+  }
 }
 
 /* Los accesos de la sesión quedan al final de la barra. */

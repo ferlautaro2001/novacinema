@@ -5,6 +5,7 @@
 }
 
 .contenido {
+  justify-content: center;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
