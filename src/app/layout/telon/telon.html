@@ -1,0 +1,36 @@
+<!-- El telón tapa toda la pantalla. Las cortinas y el galón son decoración (el
+     galón es la franja de tela de arriba), así que van marcados como tales para
+     que el lector de pantalla no los lea. Lo único accionable es la claqueta. -->
+@if (visible()) {
+  <div class="telon" [class.telon--abriendo]="abriendo()">
+    <!-- El foro es el fondo del escenario. Se va apenas las cortinas empiezan a
+         abrirse, para que por la rendija se vea el sitio y no un rectángulo negro. -->
+    <div class="foro" aria-hidden="true"></div>
+
+    <div class="cortina cortina--izquierda" aria-hidden="true"></div>
+    <div class="cortina cortina--derecha" aria-hidden="true"></div>
+    <div class="galon" aria-hidden="true"></div>
+
+    <!-- Las luces van por encima de la tela: el haz de un proscenio ilumina la
+         cortina desde el público, no desde atrás. -->
+    <div class="escenario" aria-hidden="true">
+      <div class="haz haz--centro"></div>
+      <div class="haz haz--izquierda"></div>
+      <div class="haz haz--derecha"></div>
+      <div class="charco"></div>
+      <div class="foco"></div>
+    </div>
+
+    <div class="boca">
+      <button
+        type="button"
+        class="claqueta"
+        [disabled]="abriendo()"
+        (click)="abrir()"
+      >
+        <img class="claqueta__marca" src="novacinema-logo.png" alt="" width="220" height="220" />
+        <span class="claqueta__pista body-strong">Tocá la claqueta para entrar</span>
+      </button>
+    </div>
+  </div>
+}

@@ -1,11 +1,18 @@
-<!-- Hasta saber si hay sesión no muestro ninguna sección: podría ser una que al
-     final no le corresponde a quien entró. -->
+<!-- El telón de apertura va por encima de todo. Se guarda solo una vez por
+     sesión, así que recargar no lo trae de vuelta. -->
+
 @if (auth.cargando()) {
   <nc-pantalla-carga class="carga" />
 } @else {
-  <nc-encabezado />
-  <main class="principal">
-    <router-outlet />
-  </main>
-  <nc-pie />
+  <!-- inert deja el sitio fuera del tabulador mientras el telón está abierto:
+       si no, se podría tabular hasta el contenido que todavía no se ve. -->
+  <div class="sitio" [attr.inert]="telon.visible() ? '' : null">
+    <nc-encabezado />
+    <main class="principal">
+      <router-outlet />
+    </main>
+    <nc-pie />
+  </div>
 }
+
+<nc-telon />
