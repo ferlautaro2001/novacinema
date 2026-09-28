@@ -1,5 +1,8 @@
+/* La card ocupa toda la celda de la grilla: así las de una misma fila quedan
+   parejas aunque una descripción tenga un solo renglón. */
 :host {
   display: block;
+  height: 100%;
 }
 
 .card {
