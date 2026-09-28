@@ -22,6 +22,14 @@
   color: var(--ink-200);
 }
 
+.error {
+  margin: 0;
+  background: var(--danger-tint);
+  border-left: 3px solid var(--danger);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
 .volver {
   align-self: flex-start;
 }

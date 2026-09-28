@@ -47,6 +47,37 @@ export class CuponesService {
     return data;
   }
 
+  // El beneficio de primera compra se gasta cuando se paga una compra con ese
+  // cupón, y no vuelve aunque después se cancele (AC-07.06.01). Una compra que
+  // se pagó con otro cupón no lo gasta (AC-07.06.03). Pagada o cancelada con
+  // pagos cuenta como usada; una pendiente todavía no.
+  async primeraCompraUsada(usuarioId: string): Promise<boolean> {
+    // SELECT c.estado, count(p.id) FROM compra_cupones cc
+    //   JOIN compras c ON c.id = cc.compra_id
+    //   JOIN cupones cu ON cu.id = cc.cupon_id
+    //   LEFT JOIN pagos p ON p.compra_id = c.id
+    //   WHERE cu.tipo = 'primera_compra' AND c.usuario_id = usuarioId
+    const { data, error } = await this.supS.Sup.from('compra_cupones')
+      .select('compras!inner(estado, usuario_id, pagos(id)), cupones!inner(tipo)')
+      .eq('cupones.tipo', 'primera_compra')
+      .eq('compras.usuario_id', usuarioId);
+    if (error !== null) {
+      throw error;
+    }
+
+    let usada = false;
+
+    for (const fila of data) {
+      const compra = fila.compras;
+
+      if (compra.estado === 'pagada' || compra.pagos.length !== 0) {
+        usada = true;
+      }
+    }
+
+    return usada;
+  }
+
   async cambiarPorcentaje(id: string, porcentaje: number): Promise<void> {
     // UPDATE cupones SET porcentaje = porcentaje WHERE id = id
     const { error } = await this.supS.Sup.from('cupones')

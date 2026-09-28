@@ -1,0 +1,120 @@
+.resumen {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  max-width: 720px;
+  margin-inline: auto;
+}
+
+.cabecera .overline {
+  margin: 0;
+  color: var(--gold-600);
+}
+
+.contexto {
+  margin: 0;
+  color: var(--ink-200);
+}
+
+.tarjeta,
+.vacio {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-6);
+  background: var(--surface-100);
+  border: 1px solid var(--border-100);
+  border-radius: var(--radius-lg);
+}
+
+.vacio {
+  align-items: flex-start;
+}
+
+.titulo,
+.vacio h2,
+.vacio p {
+  margin: 0;
+  color: var(--ink-100);
+}
+
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.fila {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  color: var(--ink-100);
+}
+
+.importe {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+
+.subtotal {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-100);
+}
+
+.descuento {
+  color: var(--success);
+}
+
+.total {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-100);
+}
+
+.nota {
+  margin: 0;
+  color: var(--ink-200);
+}
+
+.cupon {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.cupon nc-campo-texto {
+  flex: 1 1 220px;
+}
+
+/* El botón se alinea con el input, no con la etiqueta. */
+.cupon .nc-btn {
+  margin-top: var(--space-6);
+}
+
+.cupon-aplicado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.cupon-aplicado p {
+  margin: 0;
+  color: var(--ink-100);
+}
+
+.error {
+  margin: 0;
+  background: var(--danger-tint);
+  border-left: 3px solid var(--danger);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+}
+
+.volver {
+  align-self: flex-start;
+}
