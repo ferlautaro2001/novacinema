@@ -63,6 +63,12 @@ export const adminRoutes: Routes = [
         loadComponent: () =>
           import('./cupones/primera-compra/primera-compra').then((m) => m.PrimeraCompra),
       },
+      {
+        path: 'productos',
+        title: 'Panel · Productos · NovaCinema',
+        canDeactivate: [cambiosPendientesGuard],
+        loadComponent: () => import('./productos/productos').then((m) => m.Productos),
+      },
       { path: '', redirectTo: 'facturacion', pathMatch: 'full' },
       {
         path: 'facturacion',

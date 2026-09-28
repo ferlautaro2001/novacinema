@@ -15,6 +15,7 @@ export class Panel {
     { ruta: 'funciones', texto: 'Funciones' },
     { ruta: 'precios', texto: 'Precios' },
     { ruta: 'cupones', texto: 'Cupones' },
+    { ruta: 'productos', texto: 'Productos' },
     { ruta: 'facturacion', texto: 'Facturación' },
     { ruta: 'actividad', texto: 'Actividad' },
     { ruta: 'empleados', texto: 'Empleados' },
