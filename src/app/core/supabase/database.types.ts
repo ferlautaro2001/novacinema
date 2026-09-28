@@ -1650,6 +1650,21 @@ export type Database = {
         };
         Relationships: [];
       };
+      v_butacas_ocupadas_mapa: {
+        Row: {
+          funcion_id: string | null;
+          mapa_id: string | null;
+        };
+        Insert: {
+          funcion_id?: string | null;
+          mapa_id?: string | null;
+        };
+        Update: {
+          funcion_id?: string | null;
+          mapa_id?: string | null;
+        };
+        Relationships: [];
+      };
       v_butacas_ocupadas: {
         Row: {
           butaca_id: string | null;
@@ -1784,6 +1799,7 @@ export type Database = {
           comienza_en: string;
           en_preventa: boolean | null;
           formato: string | null;
+          formato_id: number | null;
           funcion_id: string | null;
           idioma: string | null;
           pelicula_id: string;
@@ -1796,6 +1812,7 @@ export type Database = {
           comienza_en: string;
           en_preventa?: boolean | null;
           formato?: string | null;
+          formato_id?: number | null;
           funcion_id?: string | null;
           idioma?: string | null;
           pelicula_id: string;
@@ -1808,6 +1825,7 @@ export type Database = {
           comienza_en?: string;
           en_preventa?: boolean | null;
           formato?: string | null;
+          formato_id?: number | null;
           funcion_id?: string | null;
           idioma?: string | null;
           pelicula_id?: string;

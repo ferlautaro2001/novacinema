@@ -99,6 +99,7 @@ export class Sala3dDirective implements OnInit, OnChanges, OnDestroy {
   butacaClick = output<ButacaMapa>();
   butacaHover = output<{ butaca: ButacaMapa | null; x: number; y: number }>();
   cambioCamara = output<string>();
+  vistaButaca = output<string | null>();
   cambioModoFuncion = output<boolean>();
   notificacion = output<string>();
 
@@ -257,6 +258,17 @@ export class Sala3dDirective implements OnInit, OnChanges, OnDestroy {
     }
 
     this.cambioCamara.emit(name);
+    this.vistaButaca.emit(null);
+  }
+
+  // "Desde mi butaca": la cámara va a los ojos de la butaca pedida, igual que
+  // con el doble clic pero elegida desde el dock.
+  verDesdeButaca(id: string): void {
+    const butaca = this.porId.get(id);
+
+    if (butaca !== undefined) {
+      this.entrarPOV(butaca);
+    }
   }
 
   setModoFuncion(activo: boolean): void {
@@ -1643,6 +1655,7 @@ export class Sala3dDirective implements OnInit, OnChanges, OnDestroy {
     this.volarA(ojo, this.screenCenter, { dur: 2.2, arc: 5, pov: true });
     this.resaltar(null);
     this.cambioCamara.emit('pov');
+    this.vistaButaca.emit(butaca.id);
   }
 
   private ajustarAAncho(posicion: THREE.Vector3, objetivo: THREE.Vector3): THREE.Vector3 {

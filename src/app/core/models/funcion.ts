@@ -19,6 +19,7 @@ export interface FuncionParaComprar {
   sala: string;
   comienzaEn: Date;
   formato: string;
+  formatoId: number;
   idioma: string;
   totalButacas: number;
   butacasLibres: number;

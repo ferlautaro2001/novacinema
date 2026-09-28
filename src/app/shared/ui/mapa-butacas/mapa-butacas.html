@@ -70,6 +70,23 @@
         </span>
         <span class="ref-label">Accesible</span>
       </div>
+      <!-- Los estados no se marcan solo con color: cada uno lleva su nombre. -->
+      <div class="ref-item">
+        <span class="ref-color ref-libre"></span>
+        <span class="ref-label">Libre</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-color ref-elegida"></span>
+        <span class="ref-label">Tu selección</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-color ref-ocupada"></span>
+        <span class="ref-label">Ocupada</span>
+      </div>
+      <div class="ref-item">
+        <span class="ref-color ref-enseleccion"></span>
+        <span class="ref-label">En selección</span>
+      </div>
     </div>
   </div>
 
@@ -166,11 +183,28 @@
         (butacaClick)="tocarButaca($event)"
         (butacaHover)="onHover3D($event)"
         (cambioCamara)="camaraActiva.set($event)"
+        (vistaButaca)="vistaDesde.set($event)"
         (cambioModoFuncion)="modoFuncion.set($event)"
         (notificacion)="mostrarNotificacion($event)"
         class="scene-canvas"
         id="scene-canvas"
       ></canvas>
+
+      @if (camaraActiva() === 'pov') {
+        <div class="pov-barra" role="status">
+          @if (vistaDesde(); as desde) {
+            <span>Vista desde {{ desde }} · mové el mouse para mirar</span>
+          }
+          <button
+            type="button"
+            class="dock-btn"
+            (click)="cambiarCamara('overview')"
+            id="btn-salir-pov"
+          >
+            Salir
+          </button>
+        </div>
+      }
 
       <nav class="dock-camaras" aria-label="Controles de cámara 3D">
         <button
@@ -209,6 +243,16 @@
         >
           Desde el escenario
         </button>
+        <button
+          type="button"
+          class="dock-btn"
+          [disabled]="seleccionInterna().length === 0"
+          (click)="verDesdeUltima()"
+          id="cam-desde-mi-butaca"
+          title="Ver la pantalla desde la última butaca elegida"
+        >
+          Desde mi butaca
+        </button>
 
         <span class="dock-sep"></span>
 
@@ -239,6 +283,9 @@
               <div class="chip-butaca" [appTipoButaca]="s.tipo">
                 <span class="chip-id">{{ s.id }}</span>
                 <span class="chip-tipo">{{ nombreTipo(s.tipo) }}</span>
+                <span class="chip-precio">{{
+                  precioDe(s) | currency: 'ARS' : 'symbol-narrow' : '1.0-0'
+                }}</span>
                 <button
                   type="button"
                   class="chip-quitar"
@@ -254,7 +301,9 @@
 
         <div class="panel-total">
           <span>Total</span>
-          <strong id="total-precio">$ {{ totalPrecio() | number: '1.0-0' }}</strong>
+          <strong id="total-precio">{{
+            totalPrecio() | currency: 'ARS' : 'symbol-narrow' : '1.0-0'
+          }}</strong>
         </div>
 
         <button

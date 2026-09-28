@@ -12,39 +12,18 @@
     <p class="error body" role="alert">{{ mensaje() }}</p>
     <a class="nc-btn nc-btn--secondary" routerLink="/cartelera">Volver a la cartelera</a>
   } @else if (funcion(); as elegida) {
-    <dl class="resumen">
-      <div class="dato">
-        <dt class="overline">Película</dt>
-        <dd class="body-strong">{{ elegida.peliculaTitulo }}</dd>
-      </div>
-      <div class="dato">
-        <dt class="overline">Fecha</dt>
-        <dd class="body-strong">{{ elegida.comienzaEn | date: 'dd/MM/yyyy' }}</dd>
-      </div>
-      <div class="dato">
-        <dt class="overline">Horario</dt>
-        <dd class="body-strong">
-          {{ elegida.comienzaEn | date: 'HH:mm' }} · {{ elegida.formato }} ·
-          {{ elegida.idioma }}
-        </dd>
-      </div>
-      <div class="dato">
-        <dt class="overline">Sala</dt>
-        <dd class="body-strong">{{ elegida.sala }}</dd>
-      </div>
-      <div class="dato">
-        <dt class="overline">Butacas libres</dt>
-        <dd class="body-strong">{{ elegida.butacasLibres }} de {{ elegida.totalButacas }}</dd>
-      </div>
-    </dl>
+    <p class="body contexto">
+      {{ elegida.peliculaTitulo }} · {{ elegida.comienzaEn | date: 'dd/MM/yyyy HH:mm' }} ·
+      {{ elegida.formato }} · {{ elegida.idioma }} · {{ elegida.sala }}
+    </p>
 
-    <div class="placeholder">
-      <p class="body-strong">Acá va el mapa de butacas</p>
-      <p class="body">
-        La selección de butacas es la historia siguiente. Esta pantalla ya muestra la función que
-        elegiste, que es lo que hay que confirmar antes de elegir dónde sentarse.
-      </p>
-    </div>
+    <app-mapa-butacas
+      [modo]="'elegir'"
+      [butacas]="butacasMapa()"
+      [precios]="precios()"
+      [tooltipTemplate]="tooltipPrecio"
+      (continuar)="confirmar()"
+    />
 
     <a class="nc-btn nc-btn--ghost volver" routerLink="/cartelera">Volver a la cartelera</a>
   } @else {
@@ -54,4 +33,37 @@
       <a class="nc-btn nc-btn--secondary" routerLink="/cartelera">Volver a la cartelera</a>
     </div>
   }
+
+  @if (confirmarAbierto()) {
+    <nc-modal (cierre)="volver()">
+      <h2 titulo class="marquee-md">Confirmá tus butacas</h2>
+      <div>
+        <ul class="confirmar-lista">
+          @for (elegida of resumen(); track elegida.id) {
+            <li class="confirmar-fila">
+              <span class="body-strong">{{ elegida.id }}</span>
+              <span class="body">{{ elegida.nombre }}</span>
+              <span class="body-strong">{{
+                elegida.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-0'
+              }}</span>
+            </li>
+          }
+        </ul>
+        <p class="body-strong confirmar-total">
+          Total {{ total() | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}
+        </p>
+      </div>
+      <button acciones class="nc-btn nc-btn--secondary" (click)="volver()">Volver</button>
+      <button acciones class="nc-btn nc-btn--primary" appFocoInicial (click)="reservar()">
+        Reservar
+      </button>
+    </nc-modal>
+  }
 </section>
+
+<ng-template #tooltipPrecio let-butaca>
+  <span class="tt-texto"
+    >{{ butaca.id }} · {{ nombreDeTipo(butaca.tipo) }} ·
+    {{ precioDeTipo(butaca.tipo) | currency: 'ARS' : 'symbol-narrow' : '1.0-0' }}</span
+  >
+</ng-template>

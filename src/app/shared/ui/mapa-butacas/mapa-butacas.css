@@ -143,6 +143,25 @@
   color: var(--on-brand);
 }
 
+/* Los estados usan los mismos colores que las butacas del mapa. */
+.ref-libre {
+  background: var(--t-common);
+}
+
+.ref-elegida {
+  background: var(--t-picked);
+}
+
+.ref-ocupada {
+  background: var(--t-taken);
+  opacity: 0.6;
+}
+
+.ref-enseleccion {
+  background: var(--t-locked);
+  opacity: 0.6;
+}
+
 .ref-ic {
   width: 12px;
   height: 12px;
@@ -419,11 +438,36 @@
   color: var(--ink-100);
 }
 
+.dock-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .dock-sep {
   width: 1px;
   height: 16px;
   background: var(--border-200);
   margin: 0 3px;
+}
+
+/* Aviso de la vista POV: arriba del dock, con el mismo vidrio. */
+.pov-barra {
+  position: absolute;
+  top: var(--space-3);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--s-p);
+  border: 1px solid var(--border-200);
+  border-radius: var(--radius-pill);
+  backdrop-filter: blur(12px);
+  font-size: 0.8rem;
+  color: var(--s-t);
+  z-index: 10;
+  white-space: nowrap;
 }
 
 /* El modo función es el acento del negocio: dorado, no el naranja del original. */
@@ -494,6 +538,13 @@
 .chip-tipo {
   font-size: 0.7rem;
   color: var(--s-m);
+}
+
+.chip-precio {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--s-t);
+  white-space: nowrap;
 }
 
 .chip-quitar {

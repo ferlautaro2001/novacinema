@@ -138,6 +138,29 @@ export class FuncionesService {
 
     return resultado;
   }
+
+  // Los ids del mapa ("H11") que ya están vendidos para la función (US-07.04).
+  // La regla de qué cuenta como ocupada es la misma que la de
+  // v_funcion_disponibilidad: entradas no anuladas, sin mirar la compra.
+  async butacasOcupadas(funcionId: string): Promise<string[]> {
+    // SELECT mapa_id FROM v_butacas_ocupadas_mapa WHERE funcion_id = funcionId
+    const { data, error } = await this.supS.Sup.from('v_butacas_ocupadas_mapa')
+      .select('mapa_id')
+      .eq('funcion_id', funcionId);
+    if (error !== null) {
+      throw error;
+    }
+
+    const ocupadas: string[] = [];
+
+    for (const fila of data) {
+      if (fila.mapa_id !== null) {
+        ocupadas.push(fila.mapa_id);
+      }
+    }
+
+    return ocupadas;
+  }
 }
 
 // ─── Auxiliares ─────────────────────────────────────────────────────
@@ -211,6 +234,7 @@ function filaAFuncion(fila: FilaFuncionParaComprar): FuncionParaComprar | null {
       sala: textoDe(fila.sala),
       comienzaEn: new Date(fila.comienza_en),
       formato: textoDe(fila.formato),
+      formatoId: numeroDe(fila.formato_id),
       idioma: textoDe(fila.idioma),
       totalButacas: totalButacas,
       butacasLibres: butacasLibres,

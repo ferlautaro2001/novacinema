@@ -41,6 +41,9 @@ export class MapaButacasComponent {
   mensajeNotificacion = signal<string | null>(null);
   tooltipData = signal<{ butaca: ButacaMapa; x: number; y: number } | null>(null);
   seleccionInterna = signal<string[]>([]);
+  // La butaca desde la que se mira en la vista POV ("Desde mi butaca"). La avisa
+  // la sala 3D: con el id se muestra "Vista desde H11".
+  vistaDesde = signal<string | null>(null);
 
   sala3d = viewChild(Sala3dDirective);
 
@@ -243,6 +246,20 @@ export class MapaButacasComponent {
     }
   }
 
+  // "Desde mi butaca" del dock: la cámara va a la última butaca que se eligió.
+  // El botón viene deshabilitado sin selección; el if es por si se llama igual.
+  verDesdeUltima(): void {
+    const elegidas = this.seleccionInterna();
+
+    if (elegidas.length !== 0) {
+      const sala = this.sala3d();
+
+      if (sala !== undefined) {
+        sala.verDesdeButaca(elegidas[elegidas.length - 1]);
+      }
+    }
+  }
+
   alternarModoFuncion(): void {
     const activo = !this.modoFuncion();
     const mensaje = activo ? 'Modo función: se apagan las luces…' : 'Luces de sala encendidas';
@@ -322,6 +339,15 @@ export class MapaButacasComponent {
     if (seleccion.length > 0) {
       this.continuar.emit(seleccion);
     }
+  }
+
+  // El precio de una butaca para el chip del resumen. Los precios ya vienen con
+  // la tarifa y el adicional sumados en el input precios(), que lo arma quien
+  // usa el mapa.
+  precioDe(butaca: ButacaMapa): number {
+    const precio = this.precioDeTipo(this.precios(), butaca.tipo);
+
+    return precio;
   }
 
   // Con las flechas salto a la próxima butaca en esa dirección, pasando por encima de
