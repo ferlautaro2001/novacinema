@@ -17,22 +17,12 @@ import {
   type TipoButaca,
 } from '../../../shared/ui/mapa-butacas/distribucion';
 import { Modal } from '../../../shared/ui/modal/modal';
-import { CompraEstado } from '../compra-estado';
+import { CompraEstado, type EntradaElegida } from '../compra-estado';
 
 // Los ids de tipo_butaca de la base: 1 es común y 2 es VIP. La accesible paga
 // como común, que es lo que dice reglas/precios.
 const TIPO_COMUN = 1;
 const TIPO_VIP = 2;
-
-// Una butaca elegida con su precio ya calculado, para el modal y los pasos que
-// siguen. El precio se congela acá: si la tarifa cambia a mitad de la compra,
-// se cobra lo que se vio al elegir.
-interface ButacaElegida {
-  id: string;
-  tipo: TipoButaca;
-  nombre: string;
-  precio: number;
-}
 
 // El segundo paso de la compra: elegir butacas en el mapa (US-07.04).
 //
@@ -75,7 +65,7 @@ export class ElegirButacas implements OnInit, OnDestroy {
   mensaje = signal('');
   butacasMapa = signal<ButacaMapa[]>([]);
   precios = signal<Record<string, number>>({ comun: 0, vip: 0, accesible: 0 });
-  resumen = signal<ButacaElegida[]>([]);
+  resumen = signal<EntradaElegida[]>([]);
   total = signal(0);
   confirmarAbierto = signal(false);
   aviso = signal('');
@@ -119,13 +109,13 @@ export class ElegirButacas implements OnInit, OnDestroy {
 
     if (mapa !== undefined) {
       const detalle = mapa.seleccionDetalle();
-      const lista: ButacaElegida[] = [];
+      const lista: EntradaElegida[] = [];
 
       let total = 0;
 
       for (const butaca of detalle) {
         const precio = mapa.precioDe(butaca);
-        const elegida: ButacaElegida = {
+        const elegida: EntradaElegida = {
           id: butaca.id,
           tipo: butaca.tipo,
           nombre: nombreDeTipoButaca(butaca.tipo),
@@ -146,7 +136,7 @@ export class ElegirButacas implements OnInit, OnDestroy {
     this.confirmarAbierto.set(false);
   }
 
-  // Reservar guarda la selección y sigue con los descuentos (US-07.06). Antes se
+  // Reservar guarda la selección y sigue al resumen con los descuentos (US-07.06). Antes se
   // vuelve a mirar la ocupación: si una butaca se vendió entre el último aviso y
   // este click, no se sigue (AC-07.05.03).
   async reservar(): Promise<void> {
@@ -154,16 +144,10 @@ export class ElegirButacas implements OnInit, OnDestroy {
     const resumen = this.resumen();
 
     if (funcion !== null && resumen.length !== 0) {
-      const ids: string[] = [];
-
-      for (const elegida of resumen) {
-        ids.push(elegida.id);
-      }
-
       try {
         const ocupadas = await this.funcionesService.butacasOcupadas(funcion.id);
 
-        this.revisarYSeguir(funcion, ids, ocupadas);
+        this.revisarYSeguir(funcion, resumen, ocupadas);
       } catch {
         this.confirmarAbierto.set(false);
         this.aviso.set('No se pudo revisar si las butacas siguen libres. Probá de nuevo.');
@@ -252,12 +236,22 @@ export class ElegirButacas implements OnInit, OnDestroy {
     this.escucharCanal(funcion.id);
   }
 
-  private revisarYSeguir(funcion: FuncionParaComprar, ids: string[], ocupadas: string[]): void {
+  private revisarYSeguir(
+    funcion: FuncionParaComprar,
+    entradas: EntradaElegida[],
+    ocupadas: string[],
+  ): void {
+    const ids: string[] = [];
+
+    for (const entrada of entradas) {
+      ids.push(entrada.id);
+    }
+
     const vendidas = butacasYaVendidas(ids, ocupadas);
 
     if (vendidas.length === 0) {
-      this.compra.guardarSeleccion(funcion, ids);
-      this.router.navigate(['/comprar', funcion.id, 'descuentos']);
+      this.compra.guardarSeleccion(funcion, entradas);
+      this.router.navigate(['/comprar', funcion.id, 'pagar']);
     } else {
       const mensaje = mensajeNoDisponibles(vendidas);
 

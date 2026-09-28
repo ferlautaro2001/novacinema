@@ -57,3 +57,59 @@ export function motivoCuponRechazado(cupon: Cupon, edad: number, ahora: Date): s
 
   return motivo;
 }
+
+// El descuento que queda aplicado en la compra (US-07.06). La base vuelve a
+// calcular el monto al guardar compra_cupones: este es el que ve el cliente.
+export interface DescuentoElegido {
+  cuponId: string;
+  codigo: string;
+  porcentaje: number;
+  etiqueta: string;
+  monto: number;
+}
+
+// Cada compra admite un solo descuento y gana el de mayor porcentaje
+// (AC-07.06.03). Si empatan se queda el ingresado, así el de primera compra
+// no se gasta de más.
+export function elegirCupon(primeraCompra: Cupon | null, ingresado: Cupon | null): Cupon | null {
+  let elegido: Cupon | null = ingresado;
+
+  if (primeraCompra !== null) {
+    if (ingresado === null) {
+      elegido = primeraCompra;
+    } else if (primeraCompra.porcentaje > ingresado.porcentaje) {
+      elegido = primeraCompra;
+    }
+  }
+
+  return elegido;
+}
+
+// El monto se redondea a centavos igual que calcular_descuento en la base, así
+// el resumen y lo que se cobra no difieren en un peso.
+export function aplicarCupon(cupon: Cupon, subtotal: number): DescuentoElegido {
+  const monto = Math.round(subtotal * cupon.porcentaje) / 100;
+  const etiqueta = etiquetaDeCupon(cupon);
+  const descuento: DescuentoElegido = {
+    cuponId: cupon.id,
+    codigo: cupon.codigo,
+    porcentaje: cupon.porcentaje,
+    etiqueta,
+    monto,
+  };
+
+  return descuento;
+}
+
+// ─── Auxiliares ─────────────────────────────────────────────────────
+
+// "Descuento primera compra" (AC-07.06.01) o "Cupón MAYORES20".
+function etiquetaDeCupon(cupon: Cupon): string {
+  let etiqueta = `Cupón ${cupon.codigo}`;
+
+  if (cupon.tipo === 'primera_compra') {
+    etiqueta = 'Descuento primera compra';
+  }
+
+  return etiqueta;
+}

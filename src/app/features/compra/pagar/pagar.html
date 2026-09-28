@@ -1,0 +1,96 @@
+<section class="resumen">
+  <header class="cabecera">
+    <p class="overline">Comprar entradas</p>
+    <h1 class="marquee-lg">Resumen de tu compra</h1>
+  </header>
+
+  @if (estado() === 'cargando') {
+    <nc-carga-consulta />
+  } @else if (estado() === 'error') {
+    <p class="error body" role="alert">{{ mensaje() }}</p>
+    <a class="nc-btn nc-btn--secondary" routerLink="/cartelera">Volver a la cartelera</a>
+  } @else if (estado() === 'sin-seleccion') {
+    <div class="vacio">
+      <h2 class="body-strong">No hay butacas elegidas</h2>
+      <p class="body">Volvé a elegir la función y tus butacas para seguir con la compra.</p>
+      <a class="nc-btn nc-btn--secondary" routerLink="/cartelera">Volver a la cartelera</a>
+    </div>
+  } @else if (compra.funcion(); as funcion) {
+    <p class="body contexto">
+      {{ funcion.peliculaTitulo }} · {{ funcion.comienzaEn | date: 'dd/MM/yyyy HH:mm' }} ·
+      {{ funcion.formato }} · {{ funcion.idioma }} · {{ funcion.sala }}
+    </p>
+
+    <div class="tarjeta">
+      <h2 class="body-strong titulo">Entradas</h2>
+      <ul class="lista">
+        @for (entrada of compra.entradas(); track entrada.id) {
+          <li class="fila">
+            <span class="body-strong">{{ entrada.id }}</span>
+            <span class="body">{{ entrada.nombre }}</span>
+            <span class="body importe">{{
+              entrada.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+            }}</span>
+          </li>
+        }
+      </ul>
+
+      <div class="fila subtotal">
+        <span class="body">Subtotal</span>
+        <span class="body importe">{{
+          subtotal() | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+        }}</span>
+      </div>
+
+      @if (descuento(); as aplicado) {
+        <div class="fila descuento">
+          <span class="body">{{ aplicado.etiqueta }} ({{ aplicado.porcentaje }} %)</span>
+          <span class="body importe"
+            >−{{ aplicado.monto | currency: 'ARS' : 'symbol-narrow' : '1.0-2' }}</span
+          >
+        </div>
+      }
+
+      <div class="fila total">
+        <span class="body-strong">Total</span>
+        <span class="body-strong importe">{{
+          total() | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+        }}</span>
+      </div>
+
+      @if (nota() !== '') {
+        <p class="caption nota">{{ nota() }}</p>
+      }
+    </div>
+
+    <div class="tarjeta">
+      <h2 class="body-strong titulo">¿Tenés un cupón?</h2>
+
+      @if (ingresado(); as cupon) {
+        <div class="cupon-aplicado">
+          <p class="body">Cupón {{ cupon.codigo }} ingresado ({{ cupon.porcentaje }} %).</p>
+          <button class="nc-btn nc-btn--ghost" type="button" (click)="quitar()">Quitar</button>
+        </div>
+      } @else {
+        <form class="cupon" [formGroup]="form" (ngSubmit)="aplicar()">
+          <nc-campo-texto id="cupon" etiqueta="Código del cupón" [control]="form.controls.codigo">
+            <nc-error-campo [control]="form.controls.codigo" error="required"
+              >Ingresá el código del cupón.</nc-error-campo
+            >
+          </nc-campo-texto>
+          <button class="nc-btn nc-btn--secondary" type="submit" [disabled]="aplicando()">
+            Aplicar
+          </button>
+        </form>
+      }
+
+      @if (errorCupon() !== '') {
+        <p class="error body" role="alert">{{ errorCupon() }}</p>
+      }
+    </div>
+
+    <a class="nc-btn nc-btn--ghost volver" [routerLink]="['/comprar', funcion.id]"
+      >Volver a las butacas</a
+    >
+  }
+</section>

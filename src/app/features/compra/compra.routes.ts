@@ -5,13 +5,12 @@ import { Routes } from '@angular/router';
 // app.routes.ts sobre el grupo entero y no se repite en cada ruta.
 //
 // El orden importa: las rutas de dos segmentos van antes que la de uno, porque
-// si no "edad" o "descuentos" se leerían como un id de función.
+// si no "edad" o "pagar" se leerían como un id de función.
 export const compraRoutes: Routes = [
   {
     path: 'pelicula/:peliculaId',
     title: 'Elegí la función · NovaCinema',
-    loadComponent: () =>
-      import('./elegir-funcion/elegir-funcion').then((m) => m.ElegirFuncion),
+    loadComponent: () => import('./elegir-funcion/elegir-funcion').then((m) => m.ElegirFuncion),
   },
   {
     path: ':funcionId/edad',
@@ -19,9 +18,13 @@ export const compraRoutes: Routes = [
     loadComponent: () => import('./control-edad/control-edad').then((m) => m.ControlEdad),
   },
   {
+    path: ':funcionId/pagar',
+    title: 'Resumen de tu compra · NovaCinema',
+    loadComponent: () => import('./pagar/pagar').then((m) => m.Pagar),
+  },
+  {
     path: ':funcionId',
     title: 'Elegí tus butacas · NovaCinema',
-    loadComponent: () =>
-      import('./elegir-butacas/elegir-butacas').then((m) => m.ElegirButacas),
+    loadComponent: () => import('./elegir-butacas/elegir-butacas').then((m) => m.ElegirButacas),
   },
 ];
