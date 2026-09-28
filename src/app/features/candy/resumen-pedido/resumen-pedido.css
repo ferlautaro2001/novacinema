@@ -1,0 +1,92 @@
+:host {
+  display: block;
+}
+
+.pedido {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background: var(--cine-panel, var(--surface-200));
+  border: 1px solid var(--cine-edge, var(--border-100));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--cine-shadow, var(--shadow-md));
+}
+
+.titulo {
+  margin: 0;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border-100);
+  font-size: 18px;
+  color: var(--ink-100);
+}
+
+.vacio {
+  margin: 0;
+  color: var(--ink-200);
+}
+
+.lista {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    'datos subtotal'
+    'cantidad cantidad';
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+}
+
+.datos {
+  grid-area: datos;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nombre {
+  color: var(--ink-100);
+  overflow-wrap: anywhere;
+}
+
+.precio-unitario {
+  color: var(--ink-300);
+  font-family: var(--font-mono);
+}
+
+.item nc-cantidad {
+  grid-area: cantidad;
+}
+
+.subtotal {
+  grid-area: subtotal;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--ink-100);
+}
+
+.total {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border-100);
+  color: var(--ink-100);
+}
+
+.importe {
+  font-family: var(--font-mono);
+  font-size: clamp(19px, 3vw, 22px);
+  font-variant-numeric: tabular-nums;
+  color: var(--gold-600);
+}

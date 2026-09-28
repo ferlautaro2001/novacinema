@@ -1,0 +1,38 @@
+<aside class="pedido" aria-labelledby="titulo-pedido">
+  <h2 class="body-strong titulo" id="titulo-pedido">Tu pedido</h2>
+
+  @if (pedido.items().length === 0) {
+    <p class="caption vacio">Todavía no agregaste nada. Elegí del menú lo que quieras.</p>
+  } @else {
+    <ul class="lista">
+      @for (item of pedido.items(); track item.producto.id) {
+        <li class="item">
+          <div class="datos">
+            <span class="body nombre">{{ item.producto.nombre }}</span>
+            <span class="caption precio-unitario">{{
+              item.producto.precio | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+            }}</span>
+          </div>
+          <nc-cantidad
+            [cantidad]="item.cantidad"
+            [producto]="item.producto.nombre"
+            (sumar)="sumar(item.producto)"
+            (restar)="pedido.restar(item.producto)"
+          />
+          <span class="body subtotal">{{
+            subtotal(item) | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+          }}</span>
+        </li>
+      }
+    </ul>
+
+    <div class="total">
+      <span class="body-strong">Total</span>
+      <span class="importe">{{
+        pedido.total() | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+      }}</span>
+    </div>
+  }
+
+  <ng-content select="[acciones]" />
+</aside>
