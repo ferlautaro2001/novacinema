@@ -37,12 +37,10 @@ export class SelectorHora implements OnChanges {
   }
 
   elegir(opcion: OpcionHora): void {
-    if (opcion.agotada) {
-      return;
+    if (opcion.agotada === false) {
+      this.elegida.set(opcion.id);
+      this.horaElegida.emit(opcion);
     }
-
-    this.elegida.set(opcion.id);
-    this.horaElegida.emit(opcion);
   }
 
   estaElegida(opcion: OpcionHora): boolean {

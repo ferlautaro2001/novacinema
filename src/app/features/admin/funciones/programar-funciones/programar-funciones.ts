@@ -10,6 +10,7 @@ import {
 import { FormularioConCambios } from '../../../../core/guards/cambios-pendientes-guard';
 import type { PeliculaConCatalogo } from '../../../../core/models/pelicula';
 import { SelectorFecha } from '../../../../shared/ui/selector-fecha/selector-fecha';
+import { mensajeDeError } from '../../../../shared/utilidades/errores';
 
 @Component({
   selector: 'nc-programar-funciones',
@@ -119,7 +120,7 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
       if (idiomas.length > 0) {
         this.versionIdiomaSeleccionada.set(idiomas[0].id);
       }
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al cargar datos iniciales');
       this.error.set(mensaje);
     }
@@ -299,7 +300,7 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
       });
 
       this.resumen.set(resultado);
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al calcular la programación');
       this.error.set(mensaje);
     } finally {
@@ -331,7 +332,7 @@ export class ProgramarFunciones implements OnInit, FormularioConCambios {
         // Espero un poco antes de volver al listado para que se llegue a leer el aviso.
         setTimeout(() => this.volverAlListado(), 1200);
       }
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al guardar la programación');
       this.error.set(mensaje);
     } finally {
@@ -409,18 +410,4 @@ function duracionOPorDefecto(duracion: number | null): number {
   }
 
   return minutos;
-}
-
-function mensajeDeError(error: any, porDefecto: string): string {
-  let mensaje = porDefecto;
-
-  if (error !== null && error !== undefined) {
-    const mensajeOriginal = error.message;
-
-    if (mensajeOriginal !== undefined && mensajeOriginal !== null && mensajeOriginal !== '') {
-      mensaje = mensajeOriginal;
-    }
-  }
-
-  return mensaje;
 }

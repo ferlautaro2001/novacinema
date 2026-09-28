@@ -43,27 +43,25 @@ export class ElegirFuncion implements OnInit {
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('peliculaId');
 
-    if (id === null || id === '') {
-      this.marcarError();
+    if (id !== null && id !== '') {
+      this.estado.set({ tipo: 'cargando' });
 
-      return;
-    }
+      try {
+        const pelicula = await this.peliculasService.buscar(id);
+        const dias = await this.funcionesService.listarParaComprar(id);
 
-    this.estado.set({ tipo: 'cargando' });
+        this.pelicula.set(pelicula);
+        this.dias.set(dias);
+        this.estado.set({ tipo: 'datos', datos: dias });
+        this.actualizarDiasDisponibles();
 
-    try {
-      const pelicula = await this.peliculasService.buscar(id);
-      const dias = await this.funcionesService.listarParaComprar(id);
-
-      this.pelicula.set(pelicula);
-      this.dias.set(dias);
-      this.estado.set({ tipo: 'datos', datos: dias });
-      this.actualizarDiasDisponibles();
-
-      if (dias.length !== 0) {
-        this.elegirDia(dias[0].dia);
+        if (dias.length !== 0) {
+          this.elegirDia(dias[0].dia);
+        }
+      } catch {
+        this.marcarError();
       }
-    } catch {
+    } else {
       this.marcarError();
     }
   }

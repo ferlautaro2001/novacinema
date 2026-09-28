@@ -3,6 +3,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { SalasService } from '../../../../core/data/salas-service';
 import type { Sala } from '../../../../core/models/sala';
 import { MapaButacasComponent } from '../../../../shared/ui/mapa-butacas/mapa-butacas';
+import { mensajeDeError } from '../../../../shared/utilidades/errores';
 
 @Component({
   selector: 'nc-sala-detalle',
@@ -38,25 +39,10 @@ export class SalaDetalle implements OnInit {
         this.error.set('No se encontró la sala');
       }
     } catch (e) {
-      const mensaje = mensajeDeError(e);
+      const mensaje = mensajeDeError(e, 'Error al cargar la sala');
       this.error.set(mensaje);
     } finally {
       this.cargando.set(false);
     }
   }
-}
-
-// ─── Auxiliares ─────────────────────────────────────────────────────
-
-function mensajeDeError(e: unknown): string {
-  let mensaje = 'Error al cargar la sala';
-  const error = e as { message?: string } | null | undefined;
-
-  if (error !== null && error !== undefined) {
-    if (error.message !== undefined && error.message !== '') {
-      mensaje = error.message;
-    }
-  }
-
-  return mensaje;
 }

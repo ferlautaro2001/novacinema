@@ -57,12 +57,10 @@ export class Actividad implements OnInit {
   }
 
   elegirGrupo(clave: GrupoActividad | 'todos'): void {
-    if (this.grupo() === clave) {
-      return;
+    if (this.grupo() !== clave) {
+      this.grupo.set(clave);
+      this.cargar();
     }
-
-    this.grupo.set(clave);
-    this.cargar();
   }
 
   // El color del badge viene del grupo, pero nunca lo dice solo: al lado está

@@ -15,6 +15,7 @@ import { TablaDatos } from '../../../../shared/ui/tabla-datos/tabla-datos';
 import { Cargando, EstadoConsulta } from '../../../../shared/directivas/cargando';
 import { Modal } from '../../../../shared/ui/modal/modal';
 import { FocoInicial } from '../../../../shared/directivas/foco-inicial';
+import { mensajeDeError } from '../../../../shared/utilidades/errores';
 
 interface FuncionFila {
   id: string;
@@ -91,7 +92,7 @@ export class Funciones implements OnInit {
 
       const fecha = this.fechaSeleccionada();
       await this.cargarFunciones(fecha);
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al cargar datos');
       this.error.set(mensaje);
       this.estado.set({ tipo: 'error', mensaje });
@@ -131,7 +132,7 @@ export class Funciones implements OnInit {
       }
 
       this.estado.set({ tipo: 'datos', datos: grupos });
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al consultar las funciones del día');
       this.error.set(mensaje);
       this.estado.set({ tipo: 'error', mensaje });
@@ -149,7 +150,7 @@ export class Funciones implements OnInit {
       } else {
         this.confirmacion.set(funcion);
       }
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al verificar las entradas vendidas');
       this.error.set(mensaje);
     }
@@ -166,7 +167,7 @@ export class Funciones implements OnInit {
 
       const fecha = this.fechaSeleccionada();
       await this.cargarFunciones(fecha);
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al eliminar la función');
       this.error.set(mensaje);
       this.confirmacion.set(null);
@@ -181,7 +182,7 @@ export class Funciones implements OnInit {
     try {
       const detalle = await this.programacionService.obtenerDetalleCancelacion(funcion.id);
       this.confirmacionCancelar.set({ funcion, detalle });
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al consultar las compras de la función');
       this.error.set(mensaje);
     }
@@ -202,7 +203,7 @@ export class Funciones implements OnInit {
 
       const fecha = this.fechaSeleccionada();
       await this.cargarFunciones(fecha);
-    } catch (e: any) {
+    } catch (e) {
       const mensaje = mensajeDeError(e, 'Error al cancelar la función');
       this.error.set(mensaje);
       this.confirmacionCancelar.set(null);
@@ -319,18 +320,4 @@ function textoOPorDefecto(valor: string | undefined, porDefecto: string): string
   }
 
   return texto;
-}
-
-function mensajeDeError(error: any, porDefecto: string): string {
-  let mensaje = porDefecto;
-
-  if (error !== null && error !== undefined) {
-    const mensajeOriginal = error.message;
-
-    if (mensajeOriginal !== undefined && mensajeOriginal !== null && mensajeOriginal !== '') {
-      mensaje = mensajeOriginal;
-    }
-  }
-
-  return mensaje;
 }

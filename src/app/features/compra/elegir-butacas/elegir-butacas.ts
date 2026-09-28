@@ -30,23 +30,21 @@ export class ElegirButacas implements OnInit {
   async ngOnInit(): Promise<void> {
     const id = this.route.snapshot.paramMap.get('funcionId');
 
-    if (id === null || id === '') {
+    if (id !== null && id !== '') {
+      this.estado.set('cargando');
+
+      try {
+        const funcion = await this.funcionesService.buscarParaComprar(id);
+
+        this.funcion.set(funcion);
+        this.estado.set('listo');
+      } catch {
+        this.estado.set('error');
+        this.mensaje.set('No se pudo cargar la función elegida. Probá de nuevo.');
+      }
+    } else {
       this.funcion.set(null);
       this.estado.set('listo');
-
-      return;
-    }
-
-    this.estado.set('cargando');
-
-    try {
-      const funcion = await this.funcionesService.buscarParaComprar(id);
-
-      this.funcion.set(funcion);
-      this.estado.set('listo');
-    } catch {
-      this.estado.set('error');
-      this.mensaje.set('No se pudo cargar la función elegida. Probá de nuevo.');
     }
   }
 }
