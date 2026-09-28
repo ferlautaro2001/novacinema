@@ -1,0 +1,56 @@
+<section class="confirmacion">
+  @if (compra.confirmada(); as registrada) {
+    <header class="cabecera">
+      <p class="overline">Comprar entradas</p>
+      <h1 class="marquee-lg">¡Compra confirmada!</h1>
+    </header>
+
+    <div class="tarjeta">
+      <p class="caption etiqueta">Código de la compra</p>
+      <p class="codigo">{{ registrada.codigo }}</p>
+      <p class="body">Mostralo en la entrada de la sala o en boletería.</p>
+    </div>
+
+    @if (compra.funcion(); as funcion) {
+      <div class="tarjeta">
+        <h2 class="body-strong titulo">{{ funcion.peliculaTitulo }}</h2>
+        <p class="body">
+          {{ funcion.comienzaEn | date: 'dd/MM/yyyy HH:mm' }} · {{ funcion.formato }} ·
+          {{ funcion.idioma }} · {{ funcion.sala }}
+        </p>
+        <p class="body">Butacas: {{ butacas() }}</p>
+
+        <div class="fila total">
+          <span class="body-strong">Total</span>
+          <span class="body-strong importe">{{
+            registrada.total | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+          }}</span>
+        </div>
+        @if (registrada.credito > 0) {
+          <div class="fila">
+            <span class="body">Con crédito</span>
+            <span class="body importe">{{
+              registrada.credito | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+            }}</span>
+          </div>
+        }
+        @if (registrada.tarjeta > 0) {
+          <div class="fila">
+            <span class="body">Con tarjeta</span>
+            <span class="body importe">{{
+              registrada.tarjeta | currency: 'ARS' : 'symbol-narrow' : '1.0-2'
+            }}</span>
+          </div>
+        }
+      </div>
+    }
+
+    <a class="nc-btn nc-btn--secondary volver" routerLink="/cartelera">Volver a la cartelera</a>
+  } @else {
+    <div class="tarjeta">
+      <h1 class="body-strong titulo">No hay una compra para mostrar</h1>
+      <p class="body">Tus compras van a estar en tu cuenta.</p>
+      <a class="nc-btn nc-btn--secondary volver" routerLink="/cartelera">Volver a la cartelera</a>
+    </div>
+  }
+</section>

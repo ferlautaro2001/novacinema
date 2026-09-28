@@ -1,8 +1,10 @@
 import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../core/auth/auth-service';
+import { CompraRechazada, ComprasService } from '../../../core/data/compras-service';
+import { CreditoService } from '../../../core/data/credito-service';
 import { CuponesService } from '../../../core/data/cupones-service';
 import { UsuariosService } from '../../../core/data/usuarios-service';
 import type { Cupon } from '../../../core/models/precio';
@@ -17,14 +19,16 @@ import { edadEn } from '../../../core/reglas/edad';
 import { CampoTexto } from '../../../shared/ui/campo-texto/campo-texto';
 import { CargaConsulta } from '../../../shared/ui/carga-consulta/carga-consulta';
 import { ErrorCampo } from '../../../shared/ui/error-campo/error-campo';
+import { PATRON_VENCIMIENTO, tarjetaNoVencida } from '../../../shared/validadores/tarjeta';
 import { CompraEstado } from '../compra-estado';
 
-// El resumen de la compra, antes de pagar (US-07.06). Muestra las entradas
-// elegidas y aplica el descuento que corresponde: el de primera compra solo, o
-// el cupón que ingrese el cliente si es mayor. Nunca los dos (AC-07.06.03).
+// El resumen de la compra y el pago. Muestra las entradas elegidas y aplica el
+// descuento que corresponde (US-07.06): el de primera compra solo, o el cupón
+// que ingrese el cliente si es mayor. Nunca los dos (AC-07.06.03).
 //
-// El pago en sí llega con US-07.07. El descuento elegido queda en CompraEstado
-// para que ese paso lo guarde en compra_cupones.
+// Después se paga (US-07.07): primero con el crédito de la cuenta, si el
+// cliente lo elige, y el resto con tarjeta. Los datos de la tarjeta se validan
+// acá y no se mandan a ningún lado: no hay procesador de pagos.
 type EstadoPantalla = 'cargando' | 'listo' | 'sin-seleccion' | 'error';
 
 @Component({
@@ -46,6 +50,9 @@ export class Pagar implements OnInit {
   private auth = inject(AuthService);
   private cuponesService = inject(CuponesService);
   private usuariosService = inject(UsuariosService);
+  private creditoService = inject(CreditoService);
+  private comprasService = inject(ComprasService);
+  private router = inject(Router);
   compra = inject(CompraEstado);
 
   estado = signal<EstadoPantalla>('cargando');
@@ -56,10 +63,39 @@ export class Pagar implements OnInit {
   errorCupon = signal('');
   aplicando = signal(false);
 
+  saldo = signal(0);
+  usarCredito = signal(false);
+  pagando = signal(false);
+  errorPago = signal('');
+  // Si una butaca se vendió mientras pagaba, se ofrece volver al mapa.
+  butacaPerdida = signal(false);
+
   // Un grupo aunque tenga un solo campo: sin [formGroup] el <form> no lo maneja
   // Angular y Enter recargaría la página.
   form = new FormGroup({
     codigo: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+  });
+
+  // Los datos de la tarjeta (AC-07.07.02). El número admite espacios cada
+  // cuatro dígitos, que es como viene impreso.
+  tarjeta = new FormGroup({
+    numero: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/^\d{4} ?\d{4} ?\d{4} ?\d{4}$/)],
+    }),
+    titular: new FormControl('', { nonNullable: true, validators: [Validators.required] }),
+    vencimiento: new FormControl('', {
+      nonNullable: true,
+      validators: [
+        Validators.required,
+        Validators.pattern(PATRON_VENCIMIENTO),
+        tarjetaNoVencida(() => new Date()),
+      ],
+    }),
+    codigo: new FormControl('', {
+      nonNullable: true,
+      validators: [Validators.required, Validators.pattern(/^\d{3}$/)],
+    }),
   });
 
   subtotal = computed(() => {
@@ -96,6 +132,34 @@ export class Pagar implements OnInit {
     return total;
   });
 
+  // El crédito cubre hasta el total, nunca más (AC-07.07.01).
+  credito = computed(() => {
+    let credito = 0;
+
+    if (this.usarCredito()) {
+      credito = Math.min(this.saldo(), this.total());
+    }
+
+    return credito;
+  });
+
+  aTarjeta = computed(() => {
+    const resto = this.total() - this.credito();
+
+    return resto;
+  });
+
+  // Si el crédito cubre todo no se piden datos de tarjeta.
+  pideTarjeta = computed(() => {
+    let pide = false;
+
+    if (this.aTarjeta() > 0) {
+      pide = true;
+    }
+
+    return pide;
+  });
+
   // Aclara por qué se aplica uno solo cuando hay dos en juego (AC-07.06.03).
   nota = computed(() => {
     const primera = this.primeraCompra();
@@ -130,12 +194,18 @@ export class Pagar implements OnInit {
 
     let haySeleccion = false;
 
-    if (funcion !== null && funcion.id === id && entradas.length !== 0) {
+    // Una compra ya confirmada no se vuelve a pagar, aunque se vuelva atrás.
+    if (
+      funcion !== null &&
+      funcion.id === id &&
+      entradas.length !== 0 &&
+      this.compra.confirmada() === null
+    ) {
       haySeleccion = true;
     }
 
     if (haySeleccion) {
-      await this.cargarPrimeraCompra();
+      await this.cargarResumen();
     } else {
       this.estado.set('sin-seleccion');
     }
@@ -167,11 +237,82 @@ export class Pagar implements OnInit {
     this.form.reset();
   }
 
-  private async cargarPrimeraCompra(): Promise<void> {
+  alternarCredito(): void {
+    const usar = !this.usarCredito();
+
+    this.usarCredito.set(usar);
+  }
+
+  async pagar(): Promise<void> {
+    const funcion = this.compra.funcion();
+    const usuario = this.auth.usuario();
+
+    this.errorPago.set('');
+    this.butacaPerdida.set(false);
+
+    if (this.pideTarjeta() && this.tarjeta.invalid) {
+      this.tarjeta.markAllAsTouched();
+    } else if (funcion !== null && usuario !== null) {
+      this.pagando.set(true);
+      await this.registrar(funcion.id, usuario.id);
+      this.pagando.set(false);
+    }
+  }
+
+  private async registrar(funcionId: string, usuarioId: string): Promise<void> {
+    const butacas: string[] = [];
+
+    for (const entrada of this.compra.entradas()) {
+      butacas.push(entrada.id);
+    }
+
+    let cuponId: string | null = null;
+    const descuento = this.descuento();
+
+    if (descuento !== null) {
+      cuponId = descuento.cuponId;
+    }
+
+    try {
+      const registrada = await this.comprasService.registrar({
+        usuarioId,
+        funcionId,
+        butacas,
+        adulto: this.compra.adulto(),
+        cuponId,
+        creditoDisponible: this.credito(),
+      });
+
+      this.compra.confirmar(registrada);
+      this.router.navigate(['/comprar', funcionId, 'confirmacion']);
+    } catch (e) {
+      this.mostrarRechazo(e);
+    }
+  }
+
+  private mostrarRechazo(e: unknown): void {
+    let mensaje = 'No se pudo completar el pago. No se cobró nada: probá de nuevo.';
+
+    if (e instanceof CompraRechazada) {
+      mensaje = e.message;
+
+      if (mensaje.includes('Elegí otra butaca')) {
+        this.butacaPerdida.set(true);
+      }
+    }
+
+    this.errorPago.set(mensaje);
+  }
+
+  private async cargarResumen(): Promise<void> {
     const usuario = this.auth.usuario();
 
     try {
       if (usuario !== null) {
+        const saldo = await this.creditoService.saldo(usuario.id);
+
+        this.saldo.set(saldo);
+
         const cupon = await this.cuponesService.primeraCompra();
         const usada = await this.cuponesService.primeraCompraUsada(usuario.id);
         const ahora = new Date();

@@ -115,6 +115,36 @@
   border-radius: var(--radius-md);
 }
 
+.credito {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--ink-100);
+  cursor: pointer;
+}
+
+.datos-tarjeta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dos-columnas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 480px) {
+  .dos-columnas {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pagar {
+  align-self: flex-end;
+}
+
 .volver {
   align-self: flex-start;
 }
